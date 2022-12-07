@@ -1,0 +1,293 @@
+unit Model.DocumentoFiscal;
+
+interface
+
+uses Model.Base, Model.Estabelecimento, Model.Parceiro, Model.Historico,
+  Model.Operacao, Model.Item, Model.Unidade, Model.Municipio, Model.Conta,
+  Model.OrigemDaMercadoria, Model.NCM, Model.CEST, Model.CFOP, Model.CSTICMS,
+  Model.CSTIPI, Model.CSTPISCOFINS, Model.Moeda;
+
+const
+  DOCUMENTOFISCAL_MODELO_NFe = '55';
+  DOCUMENTOFISCAL_MODELO_NFCE = '65';
+  DOCUMENTOFISCAL_MODELO_CFE = '59';
+
+type
+  TDocumentoFiscalCFe = class(TBase)
+  private
+    festabelecimento: TEstabelecimento;
+    fnumero: Integer;
+    fserie: int64;
+    fchave: string;
+    fchaveCancelamento: string;
+    fstatus: integer;
+    fxml: string;
+    fxmlCancelamento: string;
+    fformaDeEmissao: smallint;
+    fsessao: integer;
+  public
+    property estabelecimento: TEstabelecimento read festabelecimento write festabelecimento;
+    property numero: Integer read fnumero write fnumero;
+    property serie: int64 read fserie write fserie;
+    property chave: string read fchave write fchave;
+    property chaveCancelamento: string read fchaveCancelamento write fchaveCancelamento;
+    property status: integer read fstatus write fstatus;
+    property xml: string read fxml write fxml;
+    property xmlCancelamento: string read fxmlCancelamento write fxmlCancelamento;
+    property formaDeEmissao: smallint read fformaDeEmissao write fformaDeEmissao;
+    property sessao: integer read fsessao write fsessao;
+  end;
+
+  TDocumentoFiscalPagamento = class(TBase)
+  private
+    festabelecimento: TEstabelecimento;
+    fformaIndicador: string;
+    fvalor: currency;
+    ftroco: currency;
+    fcartaoCredenciadora: string;
+  public
+    property estabelecimento: TEstabelecimento read festabelecimento write festabelecimento;
+    property formaIndicador: string read fformaIndicador write fformaIndicador;
+    property valor: currency read fvalor write fvalor;
+    property troco: currency read ftroco write ftroco;
+    property cartaoCredenciadora: string read fcartaoCredenciadora write fcartaoCredenciadora;
+  end;
+
+  TDocumentoFiscalItem = class(TBase)
+  private
+    festabelecimento: TEstabelecimento;
+    foperacao: TOperacao;
+    fsequencial: Integer;
+    fitem: TItem;
+    funidade: TUnidade;
+    fconta: TConta;
+    fvalor: Currency;
+    fquantidade: Currency;
+    fsubtotal: Currency;
+    fdesconto: Currency;
+    ffrete: Currency;
+    ffreteICMS: Currency;
+    fseguro: Currency;
+    foutrasDespesas: Currency;
+    ftotal: Currency;
+    ftotalImpostoAproximado: Currency;
+    forigemDaMercadoria: TOrigemDaMercadoria;
+    fncm: TNCM;
+    fcest: TCEST;
+    fcfop: TCFOP;
+    fpesoBruto: Currency;
+    fpesoLiquido: Currency;
+    fcstICMS: TCSTICMS;
+    ficmsBC: Currency;
+    ficmsAliquota: Currency;
+    ficmsValor: Currency;
+    ficmsSTBC: Currency;
+    ficmsSTAliquota: Currency;
+    ficmsSTValor: Currency;
+    fsimplesAliquotaDeCredito: Currency;
+    fsimplesICMSAproveitado: Currency;
+    fcstIPI: TCSTIPI;
+    fipiCNPJProdutor: string;
+    fipiSeloDeControle: string;
+    fipiQuantidadeDoSelo: Currency;
+    fipiDevolucaoPercentualMercadoria: Currency;
+    fipiDevolucaoValorDevolvido: Currency;
+    fipiBC: Currency;
+    fipiAliquota: Currency;
+    fipiValor: Currency;
+    fcstPIS: TCSTPISCOFINS;
+    fpisBC: Currency;
+    fpisAliquota: Currency;
+    fpisValor: Currency;
+    fpisSTBC: Currency;
+    fpisSTAliquota: Currency;
+    fpisSTValor: Currency;
+    fpisSTCompoeValorDeProduto: boolean;
+    fcstCOFINS: TCSTPISCOFINS;
+    fcofinsBC: Currency;
+    fcofinsAliquota: Currency;
+    fcofinsValor: Currency;
+    fcofinsSTBC: Currency;
+    fcofinsSTAliquota: Currency;
+    fcofinsSTValor: Currency;
+    fcofinsSTCompoeValorDeProduto: boolean;
+    fiiBC: Currency;
+    fiiAliquota: Currency;
+    fiiValor: Currency;
+    fiiDespesasAduaneiras: Currency;
+    fiiIOF: Currency;
+    ffcpPercentualUFDestino: Currency;
+    ffcpBCUFDestinatario: Currency;
+    ffcpAliquotaInternaUFDestinatario: Currency;
+    ffcpValorICMSUFDestinatario: Currency;
+    ffcpValorICMSUFRemetente: Currency;
+    ffcpValorICMSRelativoFCPUDDestino: Currency;
+    fpedidoNumero: Integer;
+    fpedidoItem: Integer;
+    finformacoesAdicionais: string;
+  public
+    property estabelecimento: TEstabelecimento read festabelecimento write festabelecimento;
+    property operacao: TOperacao read foperacao write foperacao;
+    property sequencial: Integer read fsequencial write fsequencial;
+    property item: TItem read fitem write fitem;
+    property unidade: TUnidade read funidade write funidade;
+    property conta: TConta read fconta write fconta;
+    property valor: Currency read fvalor write fvalor;
+    property quantidade: Currency read fquantidade write fquantidade;
+    property subtotal: Currency read fsubtotal write fsubtotal;
+    property desconto: Currency read fdesconto write fdesconto;
+    property frete: Currency read ffrete write ffrete;
+    property freteICMS: Currency read ffreteICMS write ffreteICMS;
+    property seguro: Currency read fseguro write fseguro;
+    property outrasDespesas: Currency read foutrasDespesas write foutrasDespesas;
+    property total: Currency read ftotal write ftotal;
+    property totalImpostoAproximado: Currency read ftotalImpostoAproximado write ftotalImpostoAproximado;
+    property origemDaMercadoria: TOrigemDaMercadoria read forigemDaMercadoria write forigemDaMercadoria;
+    property ncm: TNCM read fncm write fncm;
+    property cest: TCEST read fcest write fcest;
+    property cfop: TCFOP read fcfop write fcfop;
+    property pesoBruto: Currency read fpesoBruto write fpesoBruto;
+    property pesoLiquido: Currency read fpesoLiquido write fpesoLiquido;
+    property cstICMS: TCSTICMS read fcstICMS write fcstICMS;
+    property icmsBC: Currency read ficmsBC write ficmsBC;
+    property icmsAliquota: Currency read ficmsAliquota write ficmsAliquota;
+    property icmsValor: Currency read ficmsValor write ficmsValor;
+    property icmsSTBC: Currency read ficmsSTBC write ficmsSTBC;
+    property icmsSTAliquota: Currency read ficmsSTAliquota write ficmsSTAliquota;
+    property icmsSTValor: Currency read ficmsSTValor write ficmsSTValor;
+    property simplesAliquotaDeCredito: Currency read fsimplesAliquotaDeCredito write fsimplesAliquotaDeCredito;
+    property simplesICMSAproveitado: Currency read fsimplesICMSAproveitado write fsimplesICMSAproveitado;
+    property cstIPI: TCSTIPI read fcstIPI write fcstIPI;
+    property ipiCNPJProdutor: string read fipiCNPJProdutor write fipiCNPJProdutor;
+    property ipiSeloDeControle: string read fipiSeloDeControle write fipiSeloDeControle;
+    property ipiQuantidadeDoSelo: Currency read fipiQuantidadeDoSelo write fipiQuantidadeDoSelo;
+    property ipiDevolucaoPercentualMercadoria: Currency read fipiDevolucaoPercentualMercadoria write fipiDevolucaoPercentualMercadoria;
+    property ipiDevolucaoValorDevolvido: Currency read fipiDevolucaoValorDevolvido write fipiDevolucaoValorDevolvido;
+    property ipiBC: Currency read fipiBC write fipiBC;
+    property ipiAliquota: Currency read fipiAliquota write fipiAliquota;
+    property ipiValor: Currency read fipiValor write fipiValor;
+    property cstPIS: TCSTPISCOFINS read fcstPIS write fcstPIS;
+    property pisBC: Currency read fpisBC write fpisBC;
+    property pisAliquota: Currency read fpisAliquota write fpisAliquota;
+    property pisValor: Currency read fpisValor write fpisValor;
+    property pisSTBC: Currency read fpisSTBC write fpisSTBC;
+    property pisSTAliquota: Currency read fpisSTAliquota write fpisSTAliquota;
+    property pisSTValor: Currency read fpisSTValor write fpisSTValor;
+    property pisSTCompoeValorDeProduto: boolean read fpisSTCompoeValorDeProduto write fpisSTCompoeValorDeProduto;
+    property cstCOFINS: TCSTPISCOFINS read fcstCOFINS write fcstCOFINS;
+    property cofinsBC: Currency read fcofinsBC write fcofinsBC;
+    property cofinsAliquota: Currency read fcofinsAliquota write fcofinsAliquota;
+    property cofinsValor: Currency read fcofinsValor write fcofinsValor;
+    property cofinsSTBC: Currency read fcofinsSTBC write fcofinsSTBC;
+    property cofinsSTAliquota: Currency read fcofinsSTAliquota write fcofinsSTAliquota;
+    property cofinsSTValor: Currency read fcofinsSTValor write fcofinsSTValor;
+    property cofinsSTCompoeValorDeProduto: boolean read fcofinsSTCompoeValorDeProduto write fcofinsSTCompoeValorDeProduto;
+    property iiBC: Currency read fiiBC write fiiBC;
+    property iiAliquota: Currency read fiiAliquota write fiiAliquota;
+    property iiValor: Currency read fiiValor write fiiValor;
+    property iiDespesasAduaneiras: Currency read fiiDespesasAduaneiras write fiiDespesasAduaneiras;
+    property iiIOF: Currency read fiiIOF write fiiIOF;
+    property fcpPercentualUFDestino: Currency read ffcpPercentualUFDestino write ffcpPercentualUFDestino;
+    property fcpBCUFDestinatario: Currency read ffcpBCUFDestinatario write ffcpBCUFDestinatario;
+    property fcpAliquotaInternaUFDestinatario: Currency read ffcpAliquotaInternaUFDestinatario write ffcpAliquotaInternaUFDestinatario;
+    property fcpValorICMSUFDestinatario: Currency read ffcpValorICMSUFDestinatario write ffcpValorICMSUFDestinatario;
+    property fcpValorICMSUFRemetente: Currency read ffcpValorICMSUFRemetente write ffcpValorICMSUFRemetente;
+    property fcpValorICMSRelativoFCPUDDestino: Currency read ffcpValorICMSRelativoFCPUDDestino write ffcpValorICMSRelativoFCPUDDestino;
+    property pedidoNumero: Integer read fpedidoNumero write fpedidoNumero;
+    property pedidoItem: Integer read fpedidoItem write fpedidoItem;
+    property informacoesAdicionais: string read finformacoesAdicionais write finformacoesAdicionais;
+  end;
+
+type
+  TDocumentoFiscal = class(TBase)
+  private
+    festabelecimento: TEstabelecimentoC;
+    femissao: TDateTime;
+    fsaida: TDateTime;
+    fambiente: Integer;
+    fmodelo: string;
+    fmoeda: TMoeda;
+    fparceiro: TParceiroC;
+    fhistorico: THistorico;
+    fsubtotal: Currency;
+    fdesconto: Currency;
+    ffrete: Currency;
+    foutrasDespesas: Currency;
+    ftotal: Currency;
+    ficmsBC: Currency;
+    ficmsValor: Currency;
+    ficmsSTBC: Currency;
+    ficmsSTValor: Currency;
+    fipiBC: Currency;
+    fipiValor: Currency;
+    fpisBC: Currency;
+    fpisValor: Currency;
+    fpisSTBC: Currency;
+    fpisSTValor: Currency;
+    fcofinsBC: Currency;
+    fcofinsValor: Currency;
+    fcofinsSTBC: Currency;
+    fcofinsSTValor: Currency;
+    fiiBC: Currency;
+    fiiValor: Currency;
+    fissBC: Currency;
+    fissValor: Currency;
+    finssValor: Currency;
+    fdocumentoFiscalCFe: TDocumentoFiscalCFe;
+    fdocumentoFiscalItens: TArray<TDocumentoFiscalItem>;
+    fdocumentoFiscalPagamentos: TArray<TDocumentoFiscalPagamento>;
+  public
+    constructor Create(aid: string; anome: string);
+    destructor Destroy;
+    property estabelecimento: TEstabelecimentoC read festabelecimento write festabelecimento;
+    property emissao: TDateTime read femissao write femissao;
+    property saida: TDateTime read fsaida write fsaida;
+    property ambiente: Integer read fambiente write fambiente;
+    property modelo: string read fmodelo write fmodelo;
+    property moeda: TMoeda read fmoeda write fmoeda;
+    property parceiro: TParceiroC read fparceiro write fparceiro;
+    property historico: THistorico read fhistorico write fhistorico;
+    property subtotal: Currency read fsubtotal write fsubtotal;
+    property desconto: Currency read fdesconto write fdesconto;
+    property frete: Currency read ffrete write ffrete;
+    property outrasDespesas: Currency read foutrasDespesas write foutrasDespesas;
+    property total: Currency read ftotal write ftotal;
+    property icmsBC: Currency read ficmsBC write ficmsBC;
+    property icmsValor: Currency read ficmsValor write ficmsValor;
+    property icmsSTBC: Currency read ficmsSTBC write ficmsSTBC;
+    property icmsSTValor: Currency read ficmsSTValor write ficmsSTValor;
+    property ipiBC: Currency read fipiBC write fipiBC;
+    property ipiValor: Currency read fipiValor write fipiValor;
+    property pisBC: Currency read fpisBC write fpisBC;
+    property pisValor: Currency read fpisValor write fpisValor;
+    property pisSTBC: Currency read fpisSTBC write fpisSTBC;
+    property pisSTValor: Currency read fpisSTValor write fpisSTValor;
+    property cofinsBC: Currency read fcofinsBC write fcofinsBC;
+    property cofinsValor: Currency read fcofinsValor write fcofinsValor;
+    property cofinsSTBC: Currency read fcofinsSTBC write fcofinsSTBC;
+    property cofinsSTValor: Currency read fcofinsSTValor write fcofinsSTValor;
+    property iiBC: Currency read fiiBC write fiiBC;
+    property iiValor: Currency read fiiValor write fiiValor;
+    property issBC: Currency read fissBC write fissBC;
+    property issValor: Currency read fissValor write fissValor;
+    property inssValor: Currency read finssValor write finssValor;
+    property documentoFiscalCFe: TDocumentoFiscalCFe read fdocumentoFiscalCFe write fdocumentoFiscalCFe;
+    property documentoFiscalItens: TArray<TDocumentoFiscalItem> read fdocumentoFiscalItens write fdocumentoFiscalItens;
+    property documentoFiscalPagamentos: TArray<TDocumentoFiscalPagamento> read fdocumentoFiscalPagamentos write fdocumentoFiscalPagamentos;
+  end;
+  TDocumentosFiscais = TArray<TDocumentoFiscal>;
+
+implementation
+
+constructor TDocumentoFiscal.Create(aid: string; anome: string);
+begin
+  inherited Create(aid);
+  fdocumentoFiscalCFe := TDocumentoFiscalCFe.Create;
+end;
+
+destructor TDocumentoFiscal.Destroy;
+begin
+  fdocumentoFiscalCFe.Free;
+end;
+
+end.
