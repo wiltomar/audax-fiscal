@@ -6,7 +6,7 @@ uses
   Model.Base;
 
 type
-  TCEST = class(TBase);
+  TCEST = class(TBaseTR);
   TCESTs = TArray<TCEST>;
 
 implementation

@@ -154,7 +154,7 @@ end;
 
 function Tcomponents.CancelarVendaCFe(DocumentoFiscal: TDocumentoFiscal): TDocumentoFiscal;
 var
-  xmlOriginal: String;
+  xmlOriginal, xmlCancelamento: String;
 begin
   xmlOriginal := DocumentoFiscal.documentoFiscalCFe.xml;
 
@@ -165,8 +165,10 @@ begin
     sat.CFe.SetXMLString(xmlOriginal);
     sat.CFe2CFeCanc;
 
-    sat.CFeCanc.GerarXML(True);
-    sat.CancelarUltimaVenda;
+    xmlCancelamento := sat.CFeCanc.GerarXML(True);
+
+    sat.CFeCanc.AsXMLString := xmlCancelamento;
+    sat.CancelarUltimaVenda(sat.CFeCanc.infCFe.chCanc, xmlCancelamento);
 
     if sat.Resposta.codigoDeRetorno = 7000 then
     begin
