@@ -55,17 +55,17 @@ begin
 
 end;
 
-procedure gerarCFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
+procedure emiteDFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 var
-  DocumentoFiscalCFe: TDocumentoFiscal;
+  DocumentoFiscal: TDocumentoFiscal;
   Resposta: TJSONObject;
   Components: Tcomponents;
 begin
-  DocumentoFiscalCFe := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
+  DocumentoFiscal := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
 
   Components := Tcomponents.Create(nil);
   try
-    Resposta := TJSon.ObjectToJsonObject(Components.EnviarVendaCFe(DocumentoFiscalCFe));
+    Resposta := TJSon.ObjectToJsonObject(Components.EmiteDFe(DocumentoFiscal));
 
     Res
       .Send<TJSONObject>(Resposta);
@@ -84,7 +84,7 @@ begin
 
   Components := Tcomponents.Create(nil);
   try
-    Resposta := TJson.ObjectToJsonObject(Components.CancelarVendaCFe(DocumentoFiscalCFe));
+    Resposta := TJson.ObjectToJsonObject(Components.CancelarDFe(DocumentoFiscalCFe));
 
     Res
       .Send<TJSONObject>(Resposta);
@@ -99,7 +99,7 @@ begin
     .Use(Jhonson)
     .Get(apiVersion + '/', index)
     .Get(apiVersion + '/fiscal/documentofiscal/mfe/conecta', conectaMFe)
-    .Post(apiVersion + '/fiscal/documentofiscal/emite', gerarCFe)
+    .Post(apiVersion + '/fiscal/documentofiscal/emite', emiteDFe)
     .Post(apiVersion + '/fiscal/documentofiscal/estorna', estornaCFe)
 end;
 

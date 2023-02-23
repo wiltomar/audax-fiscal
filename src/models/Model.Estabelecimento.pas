@@ -3,7 +3,7 @@ unit Model.Estabelecimento;
 interface
 
 uses
-  Model.Base;
+  Model.Base, Model.UF, Model.Municipio;
 
 const
   ESTABELECIMENTO_SITUACAO_ATIVO = 1;
@@ -44,7 +44,7 @@ type
     property documentoNumero: AnsiString read fdocumentoNumero write fdocumentoNumero;
     property inscricaoEstadual: AnsiString read finscricaoEstadual write finscricaoEstadual;
     property inscricaoMunicipal: AnsiString read finscricaoMunicipal write finscricaoMunicipal;
-    property inscricaoMunicipalSubstitutoTributario: AnsiString read finscricaoEstadualSubstitutoTributario write finscricaoEstadualSubstitutoTributario;
+    property inscricaoEstadualSubstitutoTributario: AnsiString read finscricaoEstadualSubstitutoTributario write finscricaoEstadualSubstitutoTributario;
     property regimeTributarioICMS: SmallInt read fregimeTributarioICMS write fregimeTributarioICMS;
     property regimeTributarioISSQN: SmallInt read fregimeTributarioISSQN write fregimeTributarioISSQN;
     property indicadorDeRateioISSQN: SmallInt read findicadorDeRateioISSQN write findicadorDeRateioISSQN;
@@ -56,6 +56,40 @@ type
     property ambienteEmissaoMDFe: SmallInt read fambienteEmissaoMDFe write fambienteEmissaoMDFe;
   end;
   TEstabelecimentoCDocumentos = TArray<TEstabelecimentoCDocumento>;
+
+  TEstabelecimentoCEndereco = class(TBaseR)
+  private
+    fnome: string;
+    ffavorito: boolean;
+    fentrega: boolean;
+    fcorrespondencia: boolean;
+    ffaturamento: boolean;
+    fretirada: boolean;
+    fcep: string;
+    flogradouro: string;
+    fnumero: integer;
+    fcomplemento: string;
+    fbairro: string;
+    fuf: TUf;
+    fmunicipio: TMunicipio;
+    freferencia: string;
+  public
+    property nome: string read fnome write fnome;
+    property favorito: boolean read ffavorito write ffavorito;
+    property entrega: boolean read fentrega write fentrega;
+    property correspondencia: boolean read fcorrespondencia write fcorrespondencia;
+    property faturamento: boolean read ffaturamento write ffaturamento;
+    property retirada: boolean read fretirada write fretirada;
+    property cep: string read fcep write fcep;
+    property logradouro: string read flogradouro write flogradouro;
+    property numero: integer read fnumero write fnumero;
+    property complemento: string read fcomplemento write fcomplemento;
+    property bairro: string read fbairro write fbairro;
+    property uf: TUF read fuf write fuf;
+    property municipio: TMunicipio read fmunicipio write fmunicipio;
+    property referencia: string read freferencia write freferencia;
+  end;
+  TEstabelecimentoCEnderecos = TArray<TEstabelecimentoCEndereco>;
 
 type
   TEstabelecimentoCAmbiente = class(TBaseR)
@@ -90,6 +124,7 @@ type
     festabelecimentoAmbientes: TEstabelecimentoCAmbientes;
     festabelecimentoDepartamentos: TEstabelecimentoCDepartamentos;
     festabelecimentoDocumentos: TEstabelecimentoCDocumentos;
+    festabelecimentoEnderecos: TEstabelecimentoCEnderecos;
   public
     constructor Create(aid: string; anome: string);
     destructor Destroy();
@@ -99,6 +134,7 @@ type
     property estabelecimentoAmbientes: TEstabelecimentoCAmbientes read festabelecimentoAmbientes write festabelecimentoAmbientes;
     property estabelecimentoDepartamentos: TEstabelecimentoCDepartamentos read festabelecimentoDepartamentos write festabelecimentoDepartamentos;
     property estabelecimentoDocumentos: TEstabelecimentoCDocumentos read festabelecimentoDocumentos write festabelecimentoDocumentos;
+    property estabelecimentoEnderecos: TEstabelecimentoCEnderecos read festabelecimentoEnderecos write festabelecimentoEnderecos;
   end;
 
 implementation

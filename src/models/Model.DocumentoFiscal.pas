@@ -9,10 +9,47 @@ uses Model.Base, Model.Estabelecimento, Model.Parceiro, Model.Historico,
 
 const
   DOCUMENTOFISCAL_MODELO_NFe = '55';
-  DOCUMENTOFISCAL_MODELO_NFCE = '65';
   DOCUMENTOFISCAL_MODELO_CFE = '59';
+  DOCUMENTOFISCAL_MODELO_NFCE = '65';
 
 type
+  TDocumentoFiscalNFe = class(TBase)
+  private
+    festabelecimento: TEstabelecimento;
+    fnumero: Integer;
+    fserie: Integer;
+    fchave: string;
+    fstatus: integer;
+    fxml: string;
+    fprotocolo: string;
+    fformaDeEmissao: smallint;
+    findicadorIntermediador: smallint;
+    ftipoImpressao: char;
+    ffinalidadeEmissao: smallint;
+    fconsumidorFinal: smallint;
+    ftipoDeAtendimento: smallint;
+    finformacoesAdicionaisContribuinte: string;
+    finformacoesAdicionaisFisco: string;
+    fmsgRetorno: string;
+  public
+    property estabelecimento: TEstabelecimento read festabelecimento write festabelecimento;
+    property numero: Integer read fnumero write fnumero;
+    property serie: Integer read fserie write fserie;
+    property chave: String read fchave write fchave;
+    property status: Integer read fstatus write fstatus;
+    property xml: String read fxml write fxml;
+    property protocolo: String read fprotocolo write fprotocolo;
+    property formaDeEmissao: smallint read fformaDeEmissao write fformaDeEmissao;
+    property indicadorIntermediador: smallint read findicadorIntermediador write findicadorIntermediador;
+    property tipoImpressao: char read ftipoImpressao write ftipoImpressao;
+    property finalidadeEmissao: smallint read ffinalidadeEmissao write ffinalidadeEmissao;
+    property consumidorFinal: smallint read fconsumidorFinal write fconsumidorFinal;
+    property tipoDeAtendimento: smallint read ftipoDeAtendimento write ftipoDeAtendimento;
+    property informacoesAdicionaisContribuinte: string read finformacoesAdicionaisContribuinte write finformacoesAdicionaisContribuinte;
+    property informacoesAdicionaisFisco: string read finformacoesAdicionaisFisco write finformacoesAdicionaisFisco;
+    property msgRetorno: string read fmsgRetorno write fmsgRetorno;
+  end;
+
   TDocumentoFiscalCFe = class(TBase)
   private
     festabelecimento: TEstabelecimento;
@@ -25,6 +62,7 @@ type
     fxmlCancelamento: string;
     fformaDeEmissao: smallint;
     fsessao: integer;
+    fmsgRetorno: string;
   public
     property estabelecimento: TEstabelecimento read festabelecimento write festabelecimento;
     property numero: Integer read fnumero write fnumero;
@@ -36,6 +74,7 @@ type
     property xmlCancelamento: string read fxmlCancelamento write fxmlCancelamento;
     property formaDeEmissao: smallint read fformaDeEmissao write fformaDeEmissao;
     property sessao: integer read fsessao write fsessao;
+    property msgRetorno: string read fmsgRetorno write fmsgRetorno;
   end;
 
   TDocumentoFiscalPagamento = class(TBase)
@@ -209,6 +248,7 @@ type
     fmoeda: TMoeda;
     fparceiro: TParceiroC;
     fhistorico: THistorico;
+    fcpfInformado: string;
     fsubtotal: Currency;
     fdesconto: Currency;
     ffrete: Currency;
@@ -233,6 +273,7 @@ type
     fissBC: Currency;
     fissValor: Currency;
     finssValor: Currency;
+    fdocumentoFiscalNFe: TDocumentoFiscalNFe;
     fdocumentoFiscalCFe: TDocumentoFiscalCFe;
     fdocumentoFiscalItens: TArray<TDocumentoFiscalItem>;
     fdocumentoFiscalPagamentos: TArray<TDocumentoFiscalPagamento>;
@@ -247,6 +288,7 @@ type
     property moeda: TMoeda read fmoeda write fmoeda;
     property parceiro: TParceiroC read fparceiro write fparceiro;
     property historico: THistorico read fhistorico write fhistorico;
+    property cpfInformado: string read fcpfInformado write fcpfInformado;
     property subtotal: Currency read fsubtotal write fsubtotal;
     property desconto: Currency read fdesconto write fdesconto;
     property frete: Currency read ffrete write ffrete;
@@ -271,6 +313,7 @@ type
     property issBC: Currency read fissBC write fissBC;
     property issValor: Currency read fissValor write fissValor;
     property inssValor: Currency read finssValor write finssValor;
+    property documentoFiscalNFe: TDocumentoFiscalNFe read fdocumentoFiscalNFe write fdocumentoFiscalNFe;
     property documentoFiscalCFe: TDocumentoFiscalCFe read fdocumentoFiscalCFe write fdocumentoFiscalCFe;
     property documentoFiscalItens: TArray<TDocumentoFiscalItem> read fdocumentoFiscalItens write fdocumentoFiscalItens;
     property documentoFiscalPagamentos: TArray<TDocumentoFiscalPagamento> read fdocumentoFiscalPagamentos write fdocumentoFiscalPagamentos;
@@ -283,11 +326,13 @@ constructor TDocumentoFiscal.Create(aid: string; anome: string);
 begin
   inherited Create(aid);
   fdocumentoFiscalCFe := TDocumentoFiscalCFe.Create;
+  fdocumentoFiscalNFe := TDocumentoFiscalNFe.Create;
 end;
 
 destructor TDocumentoFiscal.Destroy;
 begin
   fdocumentoFiscalCFe.Free;
+  fdocumentoFiscalNFe.Free;
 end;
 
 end.
