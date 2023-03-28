@@ -151,6 +151,7 @@
         <DCCReference Include="models\Model.CSTIPI.pas"/>
         <DCCReference Include="models\Model.CSTPISCOFINS.pas"/>
         <DCCReference Include="models\Model.Moeda.pas"/>
+        <DCCReference Include="models\Model.CNAE.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

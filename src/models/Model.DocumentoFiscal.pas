@@ -9,6 +9,9 @@ uses Model.Base, Model.Estabelecimento, Model.Parceiro, Model.Historico,
 
 const
   DOCUMENTOFISCAL_MODELO_NFe = '55';
+  DOCUMENTOFISCAL_MODELO_NFSe = '56';
+  DOCUMENTOFISCAL_MODELO_CTe = '57';
+  DOCUMENTOFISCAL_MODELO_MDFe = '58';
   DOCUMENTOFISCAL_MODELO_CFE = '59';
   DOCUMENTOFISCAL_MODELO_NFCE = '65';
 
@@ -31,6 +34,9 @@ type
     finformacoesAdicionaisContribuinte: string;
     finformacoesAdicionaisFisco: string;
     fmsgRetorno: string;
+    fcancelamentoProtocolo: string;
+    fcancelamentoData: TDateTime;
+    fcancelamentoJustificativa: string;
   public
     property estabelecimento: TEstabelecimento read festabelecimento write festabelecimento;
     property numero: Integer read fnumero write fnumero;
@@ -48,6 +54,9 @@ type
     property informacoesAdicionaisContribuinte: string read finformacoesAdicionaisContribuinte write finformacoesAdicionaisContribuinte;
     property informacoesAdicionaisFisco: string read finformacoesAdicionaisFisco write finformacoesAdicionaisFisco;
     property msgRetorno: string read fmsgRetorno write fmsgRetorno;
+    property cancelamentoProtocolo: string read fcancelamentoProtocolo write fcancelamentoProtocolo;
+    property cancelamentoData: TDateTime read fcancelamentoData write fcancelamentoData;
+    property cancelamentoJustificativa: string read fcancelamentoJustificativa write fcancelamentoJustificativa;
   end;
 
   TDocumentoFiscalCFe = class(TBase)
@@ -92,6 +101,19 @@ type
     property cartaoCredenciadora: string read fcartaoCredenciadora write fcartaoCredenciadora;
   end;
 
+  TDocumentoFiscalCobranca = class(TBase)
+  private
+    festabelecimento: TEstabelecimento;
+    fduplicata: Smallint;
+    fvencimento: TDate;
+    fvalor: Currency;
+  public
+    property estabelecimento: TEstabelecimento read festabelecimento write festabelecimento;
+    property duplicata: Smallint read fduplicata write fduplicata;
+    property vencimento: TDate read fvencimento write fvencimento;
+    property valor: Currency read fvalor write fvalor;
+  end;
+
   TDocumentoFiscalItem = class(TBase)
   private
     festabelecimento: TEstabelecimento;
@@ -127,8 +149,9 @@ type
     fsimplesICMSAproveitado: Currency;
     fcstIPI: TCSTIPI;
     fipiCNPJProdutor: string;
+    fipiCodigoEnquadramento: string;
     fipiSeloDeControle: string;
-    fipiQuantidadeDoSelo: Currency;
+    fipiQuantidadeDoSelo: smallint;
     fipiDevolucaoPercentualMercadoria: Currency;
     fipiDevolucaoValorDevolvido: Currency;
     fipiBC: Currency;
@@ -198,8 +221,9 @@ type
     property simplesICMSAproveitado: Currency read fsimplesICMSAproveitado write fsimplesICMSAproveitado;
     property cstIPI: TCSTIPI read fcstIPI write fcstIPI;
     property ipiCNPJProdutor: string read fipiCNPJProdutor write fipiCNPJProdutor;
+    property ipiCodigoEnquadramento: string read fipiCodigoEnquadramento write fipiCodigoEnquadramento;
     property ipiSeloDeControle: string read fipiSeloDeControle write fipiSeloDeControle;
-    property ipiQuantidadeDoSelo: Currency read fipiQuantidadeDoSelo write fipiQuantidadeDoSelo;
+    property ipiQuantidadeDoSelo: smallint read fipiQuantidadeDoSelo write fipiQuantidadeDoSelo;
     property ipiDevolucaoPercentualMercadoria: Currency read fipiDevolucaoPercentualMercadoria write fipiDevolucaoPercentualMercadoria;
     property ipiDevolucaoValorDevolvido: Currency read fipiDevolucaoValorDevolvido write fipiDevolucaoValorDevolvido;
     property ipiBC: Currency read fipiBC write fipiBC;
@@ -277,6 +301,7 @@ type
     fdocumentoFiscalCFe: TDocumentoFiscalCFe;
     fdocumentoFiscalItens: TArray<TDocumentoFiscalItem>;
     fdocumentoFiscalPagamentos: TArray<TDocumentoFiscalPagamento>;
+    fdocumentoFiscalCobrancas: TArray<TDocumentoFiscalCobranca>;
   public
     constructor Create(aid: string; anome: string);
     destructor Destroy;
@@ -317,6 +342,7 @@ type
     property documentoFiscalCFe: TDocumentoFiscalCFe read fdocumentoFiscalCFe write fdocumentoFiscalCFe;
     property documentoFiscalItens: TArray<TDocumentoFiscalItem> read fdocumentoFiscalItens write fdocumentoFiscalItens;
     property documentoFiscalPagamentos: TArray<TDocumentoFiscalPagamento> read fdocumentoFiscalPagamentos write fdocumentoFiscalPagamentos;
+    property documentoFiscalCobrancas: TArray<TDocumentoFiscalCobranca> read fdocumentoFiscalCobrancas write fdocumentoFiscalCobrancas;
   end;
   TDocumentosFiscais = TArray<TDocumentoFiscal>;
 

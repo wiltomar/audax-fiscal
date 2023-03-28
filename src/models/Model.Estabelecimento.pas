@@ -3,7 +3,7 @@ unit Model.Estabelecimento;
 interface
 
 uses
-  Model.Base, Model.UF, Model.Municipio;
+  Model.Base, Model.UF, Model.Municipio, Model.CNAE;
 
 const
   ESTABELECIMENTO_SITUACAO_ATIVO = 1;
@@ -30,6 +30,7 @@ type
     fregimeTributarioICMS: SmallInt;
     fregimeTributarioISSQN: SmallInt;
     findicadorDeRateioISSQN: SmallInt;
+    fcnae: TCnae;
     fambienteEmissaoNFe: SmallInt;
     fambienteEmissaoNFCe: SmallInt;
     fambienteEmissaoCFe: SmallInt;
@@ -48,6 +49,7 @@ type
     property regimeTributarioICMS: SmallInt read fregimeTributarioICMS write fregimeTributarioICMS;
     property regimeTributarioISSQN: SmallInt read fregimeTributarioISSQN write fregimeTributarioISSQN;
     property indicadorDeRateioISSQN: SmallInt read findicadorDeRateioISSQN write findicadorDeRateioISSQN;
+    property cnae: TCnae read fcnae write fcnae;
     property ambienteEmissaoNFe: SmallInt read fambienteEmissaoNFe write fambienteEmissaoNFe;
     property ambienteEmissaoNFCe: SmallInt read fambienteEmissaoNFCe write fambienteEmissaoNFCe;
     property ambienteEmissaoCFe: SmallInt read fambienteEmissaoCFe write fambienteEmissaoCFe;

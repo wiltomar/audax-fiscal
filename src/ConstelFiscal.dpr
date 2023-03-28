@@ -34,7 +34,8 @@ uses
   Model.CSTICMS in 'models\Model.CSTICMS.pas',
   Model.CSTIPI in 'models\Model.CSTIPI.pas',
   Model.CSTPISCOFINS in 'models\Model.CSTPISCOFINS.pas',
-  Model.Moeda in 'models\Model.Moeda.pas';
+  Model.Moeda in 'models\Model.Moeda.pas',
+  Model.CNAE in 'models\Model.CNAE.pas';
 
 function startApi: boolean;
 begin
