@@ -428,7 +428,7 @@ begin
 
     with nfe.Configuracoes.WebServices do
     begin
-      Visualizar              := Ini.ReadBool('WebServices - NFe', 'Visualizar', True);
+      Visualizar              := Ini.ReadBool('WebServices - NFe', 'Visualizar', False);
       Salvar                  := Ini.ReadBool('WebServices - NFe', 'Salvar', True);
       AjustaAguardaConsultaRet:= Ini.ReadBool('WebServices - NFe', 'AjustaAguardaConsultaRet', True);
       AguardarConsultaRet     := Ini.ReadInteger('WebServices - NFe', 'AguardarConsultaRet', 30000);
@@ -480,6 +480,7 @@ var
   vTotalICMS,
   vTotalItens,
   vTotalDescontos: Double;
+  Count: TNFe;
 begin
   vBaseDeCalculo := 0;
   vTotalICMS := 0;
@@ -719,8 +720,6 @@ begin
             indSomaCOFINSST :=  iscNenhum;
           end;
         end;
-
-
       end;
     end;
 
@@ -840,11 +839,21 @@ begin
 
   // YA. Informações de pagamento
 
-    with NotaF.NFe.pag.New do
+    const indicador = ['01', '02', '03', '04', '05', '10', '11', '12', '13', '15', '16', '17', '18', '19', '90', '99'];
+
+    for nCont := 0 to Length(documentoFiscalPagamentos) - 1 do
     begin
-      indPag := ipVista;
-      tPag   := fpDinheiro;
-      vPag   := documentoFiscal.Total - documentoFiscal.Desconto;
+      with NotaF.NFe.pag.New do
+      begin
+        case AnsiIndexStr(documentoFiscalPagamentos[nCont].formaIndicador, indicador) of
+          0, 3, 10, 11, 12: indPag := ipVista;
+          1, 2, 4, 5, 6, 7, 8, 9, 13: indPag := ipPrazo;
+          14: indPag := ipNenhum;
+          15: indPag := ipOutras;
+        end;
+        tPag   := StrToFormaPagamento(lOk, documentoFiscalPagamentos[nCont].formaIndicador);
+        vPag   := documentoFiscalPagamentos[nCont].valor;
+      end;
     end;
 
   // Exemplo de pagamento integrado.

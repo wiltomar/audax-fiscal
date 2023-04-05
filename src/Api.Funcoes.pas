@@ -3,7 +3,7 @@ unit Api.Funcoes;
 interface
 
 uses
-  Classes, SysUtils, IniFiles, Horse;
+  Classes, SysUtils, IniFiles, Horse, IdSSLOpenSSL, Forms;
 
 const
   cKey = 31987;
@@ -32,13 +32,23 @@ end;
 procedure startApi;
 var
   ini: TIniFile;
-  arq: String;
+  arq, lPemPath: String;
   porta: Integer;
 begin
   arq := ChangeFileExt(ParamStr(0), '.ini');
+  lPemPath := ExtractFilePath(Application.ExeName);
   try
     ini := TIniFile.Create(arq);
     try
+      if ini.ReadBool('Config', 'AmbienteSeguro', True) then
+      begin
+        THorse.IOHandleSSL.CertFile := lPemPath + 'constel.crt';
+        THorse.IOHandleSSL.KeyFile  := lPemPath + 'constel.key';
+        THorse.IOHandleSSL.SSLVersions := [sslvSSLv2, sslvSSLv23, sslvSSLv3, sslvTLSv1, sslvTLSv1_1, sslvTLSv1_2];
+        THorse.IOHandleSSL.Method := sslvSSLv2;
+        THorse.IOHandleSSL.Active := True;
+      end;
+
       Porta := ini.ReadInteger('Config', 'Porta', 9000);
 
       THorse.Listen(Porta, Api.Funcoes.onListen);

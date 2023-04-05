@@ -109,6 +109,7 @@
         <DCC_Define>NOGUI;$(DCC_Define)</DCC_Define>
         <DCC_Namespace>Vcl;$(DCC_Namespace)</DCC_Namespace>
         <Debugger_RunParams>start</Debugger_RunParams>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
