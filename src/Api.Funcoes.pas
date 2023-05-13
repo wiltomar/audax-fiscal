@@ -10,7 +10,6 @@ const
   C1 = 77543;
   C2 = 59381;
 
-procedure onListen(Horse: THorse);
 procedure startApi;
 procedure stopApi;
 procedure statusApi;
@@ -20,13 +19,12 @@ function decrypt(const S: AnsiString): AnsiString;
 
 implementation
 
-procedure onListen(Horse: THorse);
+procedure onStop(Horse: THorse);
 begin
   if THorse.IsRunning then
-    Writeln(Format('Api fiscal em execução e escutando na porta %d', [Horse.Port]))
+    Writeln(Format('Api fiscal será encerrada na porta %d', [Horse.Port]))
   else
-    Writeln('A api fiscal não está sendo executada no momento.');
-  exit;
+    Writeln('A api fiscal foi encerrada corretamente.');
 end;
 
 procedure startApi;
@@ -40,18 +38,27 @@ begin
   try
     ini := TIniFile.Create(arq);
     try
-      if ini.ReadBool('Config', 'AmbienteSeguro', True) then
+      if ini.ReadBool('Config', 'AmbienteSeguro', False) then
       begin
-        THorse.IOHandleSSL.CertFile := lPemPath + 'constel.crt';
-        THorse.IOHandleSSL.KeyFile  := lPemPath + 'constel.key';
-        THorse.IOHandleSSL.SSLVersions := [sslvSSLv2, sslvSSLv23, sslvSSLv3, sslvTLSv1, sslvTLSv1_1, sslvTLSv1_2];
-        THorse.IOHandleSSL.Method := sslvSSLv2;
-        THorse.IOHandleSSL.Active := True;
+        THorse.IOHandleSSL.CertFile(lPemPath + 'constel.crt');
+        THorse.IOHandleSSL.KeyFile(lPemPath + 'constel.key');
+        THorse.IOHandleSSL.SSLVersions([sslvSSLv2, sslvSSLv23, sslvSSLv3, sslvTLSv1, sslvTLSv1_1, sslvTLSv1_2]);
+        THorse.IOHandleSSL.Method(sslvSSLv2);
+        THorse.IOHandleSSL.Active(True);
       end;
 
       Porta := ini.ReadInteger('Config', 'Porta', 9000);
 
-      THorse.Listen(Porta, Api.Funcoes.onListen);
+      THorse.Listen(Porta,
+        procedure
+        begin
+          if THorse.IsRunning then
+            Writeln(Format('Api fiscal em execução e escutando na porta %d', [Porta]))
+          else
+            Writeln('A api fiscal não está sendo executada no momento.');
+        end
+      );
+
     finally
       ini.Free;
     end;
