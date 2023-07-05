@@ -3,8 +3,13 @@ unit Api.Funcoes;
 interface
 
 uses
-  Classes, SysUtils, IniFiles, Horse, IdSSLOpenSSL, Forms;
+  Classes, SysUtils, Horse, IdSSLOpenSSL, Forms, Model.Config, System.JSON, Rest.Json,
+  WinApi.Windows;
 
+type
+  TGetPasswordSSL = class
+    procedure OnGetPassword(var Password: String);
+  end;
 const
   cKey = 31987;
   C1 = 77543;
@@ -13,11 +18,44 @@ const
 procedure startApi;
 procedure stopApi;
 procedure statusApi;
+procedure InfoConfig(var FConfig: TConfig);
 
 function encrypt(const S: AnsiString): AnsiString;
 function decrypt(const S: AnsiString): AnsiString;
 
+
 implementation
+
+procedure IHorseProviderIOHandleSSLGetPassword(var Password: String);
+begin
+  Password := '1234';
+end;
+
+procedure InfoConfig(var FConfig: TConfig);
+begin
+  if Assigned(FConfig) then
+    Exit;
+  const FileName = ExtractFilePath(Application.ExeName) + 'config.json';
+  if not FileExists(FileName) then
+  begin
+    Application.MessageBox(PChar(Format('Desculpe, o arquivo de configuração "%s" não foi encontrado.', [FileName])), 'Erro', MB_ICONERROR);
+    Application.Terminate;
+  end;
+  var jo: TJSONObject;
+  var sl := TStringList.Create();
+  try
+    sl.LoadFromFile(FileName);
+    jo := (TJSONObject.ParseJSONValue(sl.Text) as TJSONObject);
+  finally
+    sl.Free();
+  end;
+  try
+    FConfig := TJSON.JsonToObject<TConfig>(jo);
+  except
+    Application.MessageBox(PChar('Desculpe, arquivo de configuração danificado'), 'Erro', MB_ICONERROR);
+    Application.Terminate;
+  end;
+end;
 
 procedure onStop(Horse: THorse);
 begin
@@ -29,42 +67,34 @@ end;
 
 procedure startApi;
 var
-  ini: TIniFile;
-  arq, lPemPath: String;
   porta: Integer;
+  FConfig: TConfig;
+  //LGetSSLPassword: TGetPasswordSSL;
 begin
-  arq := ChangeFileExt(ParamStr(0), '.ini');
-  lPemPath := ExtractFilePath(Application.ExeName);
-  try
-    ini := TIniFile.Create(arq);
-    try
-      if ini.ReadBool('Config', 'AmbienteSeguro', False) then
-      begin
-        THorse.IOHandleSSL.CertFile(lPemPath + 'constel.crt');
-        THorse.IOHandleSSL.KeyFile(lPemPath + 'constel.key');
-        THorse.IOHandleSSL.SSLVersions([sslvSSLv2, sslvSSLv23, sslvSSLv3, sslvTLSv1, sslvTLSv1_1, sslvTLSv1_2]);
-        THorse.IOHandleSSL.Method(sslvSSLv2);
-        THorse.IOHandleSSL.Active(True);
-      end;
+  InfoConfig(FConfig);
+  if FConfig.ambienteseguro then
+  begin
+    THorse.IOHandleSSL
+    .CertFile(FConfig.emitente.certificado.caminhoraiz + '\constel.crt')
+    .KeyFile(FConfig.emitente.certificado.caminhoraiz + '\constel.key');
+    //THorse.IOHandleSSL.OnGetPassword(LGetSSLPassword.OnGetPassword);
 
-      Porta := ini.ReadInteger('Config', 'Porta', 9000);
-
-      THorse.Listen(Porta,
-        procedure
-        begin
-          if THorse.IsRunning then
-            Writeln(Format('Api fiscal em execução e escutando na porta %d', [Porta]))
-          else
-            Writeln('A api fiscal não está sendo executada no momento.');
-        end
-      );
-
-    finally
-      ini.Free;
-    end;
-  except
-    Writeln(Format('Não foi possível carregar o arquivo de configuração em %s. \nA aplicação será encerrada!', [ChangeFileExt(ParamStr(0), '.ini')]));
+    THorse.IOHandleSSL.SSLVersions([sslvSSLv2, sslvSSLv23, sslvSSLv3, sslvTLSv1, sslvTLSv1_1, sslvTLSv1_2]);
+    THorse.IOHandleSSL.Method(sslvSSLv23);
+    THorse.IOHandleSSL.Active(True);
   end;
+
+  Porta := FConfig.porta;
+
+  THorse.Listen(Porta,
+    procedure
+    begin
+      if THorse.IsRunning then
+        Writeln(Format('Api fiscal em execução e escutando na porta %d', [Porta]))
+      else
+        Writeln('A api fiscal não está sendo executada no momento.');
+    end
+  );
 end;
 
 procedure stopApi;
@@ -212,6 +242,13 @@ end;
 function encrypt(const S: AnsiString): AnsiString;
 begin
   Result := PostProcess(InternalEncrypt(S, cKey))
+end;
+
+{ TGetPasswordSSL }
+
+procedure TGetPasswordSSL.OnGetPassword(var Password: String);
+begin
+  Password := '1234';
 end;
 
 end.

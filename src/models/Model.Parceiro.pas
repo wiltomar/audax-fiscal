@@ -55,6 +55,15 @@ type
     Fixo = 1,
     Movel = 3
   );
+type
+  TParceiroCDocumentoTipo =
+  (
+    CNPJ = 1,
+    CPF = 2,
+    ProdutorRural = 3,
+    SeguradoEspecial = 4,
+    DocumentoDeEstrangeiro = 9
+  );
 const
   TParceiroCTelefonesMobilidadeNomes: array[0..1] of TComboItem =
   (
@@ -70,7 +79,6 @@ type
     finscricaoMunicipal: AnsiString;
     fregimeTributarioICMS: SmallInt;
     fregimeTributarioISSQN: SmallInt;
-    fatributos: TArray<string>;
     finicio: TDateTime;
     fconclusao: TDateTime;
   public
@@ -80,6 +88,8 @@ type
     property inscricaoMunicipal: AnsiString read finscricaoMunicipal write finscricaoMunicipal;
     property regimeTributarioICMS: SmallInt read fregimeTributarioICMS write fregimeTributarioICMS;
     property regimeTributarioISSQN: SmallInt read fregimeTributarioISSQN write fregimeTributarioISSQN;
+    property inicio: TDateTime read finicio write finicio;
+    property conclusao: TDateTime read fconclusao write fconclusao;
   end;
   TParceiroCDocumentos = TArray<TParceiroCDocumento>;
 type

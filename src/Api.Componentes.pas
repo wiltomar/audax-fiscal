@@ -6,7 +6,7 @@ uses
   System.SysUtils, System.StrUtils, System.Classes, IniFiles, ACBrBase, ACBrSAT,
   ACBrDFeSSL, ACBrSATClass, pcnConversao, pcnConversaoNFe, Model.DocumentoFiscal,
   pcnCFe, ACBrDFe, ACBrNFe, ACBrMail, ACBrUtil, ACBrDFeUtil, ACBrNFeNotasFiscais,
-  pcnNFe, Api.Funcoes, System.Math;
+  pcnNFe, Api.Funcoes, System.Math, Model.Config;
 
 const
   docModelos: TArray<String> = ['55', '56', '57', '58', '59', '65'];
@@ -22,6 +22,7 @@ type
   private
     FsatCodigoDeAtivacao: AnsiString;
     FsatAssinaturaAC: AnsiString;
+    Fconfig: TConfig;
 
     property satCodigoDeAtivacao: AnsiString read FsatCodigoDeAtivacao write FsatCodigoDeAtivacao;
     property satAssinaturaAC: AnsiString read FsatAssinaturaAC write FsatAssinaturaAC;
@@ -56,69 +57,68 @@ implementation
 { Tcomponents }
 
 procedure Tcomponents.carregaSAT;
-var
-  IniFile: String;
-  ini: TIniFile;
 begin
   try
-    IniFile := ChangeFileExt(ParamStr(0), '.ini');
+    InfoConfig(FConfig);
 
-    ini := TIniFile.Create(IniFile);
+    with sat do
+    begin
+      SSL.SSLCryptLib                     := cryOpenSSL;
+      SSL.SSLXmlSignLib                   := xsLibXml2;
 
-    try
-      with ini do
-      begin
-        with sat do
-        begin
-          SSL.SSLCryptLib                 := cryOpenSSL;
-          SSL.SSLXmlSignLib               := xsLibXml2;
+      CFe.IdentarXML                      := True;
+      CFe.TamanhoIdentacao                := 3;
+      CFe.RetirarAcentos                  := True;
 
-          Config.ArqSchema                := ReadString('Config - CFe', 'Schemas', 'Schemas');
-          Config.PaginaDeCodigo           := ReadInteger('Config - CFe', 'PaginaDeCodigo', 1252);
-          Config.EhUTF8                   := ReadBool('Config - CFe', 'UTF', True);
-          Config.infCFe_versaoDadosEnt    := ReadFloat('Config - CFe', 'VersaoLayout', 0.07);
+      SSL.SSLCryptLib                     := cryOpenSSL;
+      SSL.SSLXmlSignLib                   := xsLibXml2;
 
-          Modelo                          := TACBrSATModelo(ReadInteger('Config - CFe', 'Modelo', 1)) ;
-          ArqLOG                          := ReadString('Config - CFe', 'ArqLOG', 'audax-cfe.log');
-          NomeDLL                         := ReadString('Config - CFe', 'NomeDLL', '/opt/sefaz/drs/libmfe.so');
+      Config.ArqSchema                    := FConfig.cfe.schemas;
+      Config.PaginaDeCodigo               := FConfig.cfe.paginadecodigo;
+      Config.EhUTF8                       := FConfig.cfe.utf;
+      Config.infCFe_versaoDadosEnt        := FConfig.cfe.versaolayout;
 
-          Config.ide_numeroCaixa          := ReadInteger('Config - CFe', 'Caixa', 1);
-          Config.ide_tpAmb                := TpcnTipoAmbiente(ReadInteger('Config - CFe', 'Ambiente', 2));
-          Config.ide_CNPJ                 := ReadString('SwHouse - CFe', 'CNPJ', '04528001000164');
+      Modelo                              := TACBrSATModelo(FConfig.cfe.modelo) ;
+      ArqLOG                              := FConfig.cfe.arquivolog;
+      NomeDLL                             := FConfig.cfe.caminhodll;
 
-          Config.emit_CNPJ                := ReadString('Emitente', 'CNPJ', '');
-          Config.emit_IE                  := ReadString('Emitente', 'IE', '');
-          Config.emit_IM                  := ReadString('Emitente', 'IM', '');
-          Config.emit_cRegTrib            := TpcnRegTrib(ReadInteger('Emitente', 'RegimeICMS', 0));
-          Config.emit_cRegTribISSQN       := TpcnRegTribISSQN(ReadInteger('Emitente', 'RegimeISSQN', 0));
-          Config.emit_indRatISSQN         := TpcnindRatISSQN(ReadInteger('Emitente', 'IndicadorDeRateio', 1));
+      Config.ide_numeroCaixa              := FConfig.cfe.caixa;
+      Config.ide_tpAmb                    := TpcnTipoAmbiente(FConfig.cfe.ambiente);
+      Config.ide_CNPJ                     := FConfig.cfe.swhouse.cnpj;
 
-          ConfigArquivos.SalvarCFe        := ReadBool('Arquivos - CFe', 'SalvarCFe', True);
-          ConfigArquivos.SalvarCFeCanc    := ReadBool('Arquivos - CFe', 'SalvarCancelamento', True);
-          ConfigArquivos.SalvarEnvio      := ReadBool('Arquivos - CFe', 'SalvarEnvio', True);
-          ConfigArquivos.SepararPorCNPJ   := ReadBool('Arquivos - CFe', 'SalvarPorCNPJ', True);
-          ConfigArquivos.SepararPorModelo := ReadBool('Arquivos - CFe', 'SepararPorModelo', True);
-          ConfigArquivos.SepararPorDia    := ReadBool('Arquivos - CFe', 'SepararPorDia', False);
-          ConfigArquivos.SepararPorMes    := ReadBool('Arquivos - CFe', 'SepararPorMes', True);
-          ConfigArquivos.SepararPorAno    := ReadBool('Arquivos - CFe', 'SepararPorAno', True);
+      Config.emit_CNPJ                    := FConfig.emitente.cnpj;
+      Config.emit_IE                      := FConfig.emitente.ie;
+      Config.emit_IM                      := FConfig.emitente.im;
+      Config.emit_cRegTrib                := TpcnRegTrib(FConfig.emitente.regimeicms);
+      Config.emit_cRegTribISSQN           := TpcnRegTribISSQN(FConfig.emitente.regimeiss);
+      Config.emit_indRatISSQN             := TpcnindRatISSQN(FConfig.emitente.indicadorderateio);
 
-          FsatCodigoDeAtivacao            := AnsiString(ReadString('Config - CFe', 'CodigoDeAtivacao', '123456789'));
-          FsatAssinaturaAC                := AnsiString(ReadString('SwHouse - CFe', 'Assinatura', ''));
+      ConfigArquivos.PastaCFeVenda        := FConfig.cfe.arquivos.pathvenda;
+      ConfigArquivos.PastaEnvio           := FConfig.cfe.arquivos.pathenvio;
+      ConfigArquivos.PastaCFeCancelamento := FConfig.cfe.arquivos.pathcancelamento;
+      ConfigArquivos.SalvarCFe            := FConfig.cfe.arquivos.salvarcfe;
+      ConfigArquivos.SalvarCFeCanc        := FConfig.cfe.arquivos.salvarcancelamento;
+      ConfigArquivos.SalvarEnvio          := FConfig.cfe.arquivos.salvarenvio;
+      ConfigArquivos.SepararPorCNPJ       := FConfig.cfe.arquivos.separarporcnpj;
+      ConfigArquivos.SepararPorModelo     := FConfig.cfe.arquivos.separarpormodelo;
+      ConfigArquivos.SepararPorDia        := FConfig.cfe.arquivos.separarpordia;
+      ConfigArquivos.SepararPorMes        := FConfig.cfe.arquivos.separarpormes;
+      ConfigArquivos.SepararPorAno        := FConfig.cfe.arquivos.separarporano;
 
-          CFe.IdentarXML                  := True;
-          CFe.TamanhoIdentacao            := 3;
-          CFe.RetirarAcentos              := True;
-        end;
-      end;
-    finally
-      if Assigned(ini) then
-        FreeAndNil(ini);
+      FsatCodigoDeAtivacao                := FConfig.cfe.codigodeativacao;
+      FsatAssinaturaAC                    := FConfig.cfe.swhouse.assinatura;
+
+      CFe.IdentarXML                      := True;
+      CFe.TamanhoIdentacao                := 3;
+      CFe.RetirarAcentos                  := True;
     end;
 
   except
     on E:Exception do
     begin
-      Write(Format('%s - Impossível carregar o SAT. Verificar com suporte, o erro %s.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now), E.Message]));
+      Write(Format('%s - Impossível carregar o SAT. Verificar com suporte, o erro %s.',
+                                                                                      [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
+                                                                                      E.Message]));
     end;
   end;
 end;
@@ -151,7 +151,8 @@ begin
             DocumentoFiscal.documentoFiscalNFe.protocolo := nfe.WebServices.Enviar.Protocolo;
 
             WriteLn(Format('%s - Emitida a NFe de número: %d com chave: %s.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
-                                                                                nfe.NotasFiscais.Items[0].NFe.Ide.nNF, nfe.NotasFiscais.Items[0].NumID]));
+                                                                                nfe.NotasFiscais.Items[0].NFe.Ide.nNF,
+                                                                                nfe.NotasFiscais.Items[0].NumID]));
           end
           else
             WriteLn(Format('%s - Não foi possível emitir a NFe, o seguinte erro ocorreu: %s.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
@@ -201,7 +202,8 @@ begin
             DocumentoFiscal.documentoFiscalNFe.protocolo := nfe.WebServices.Enviar.Protocolo;
 
             WriteLn(Format('%s - Emitida a NFCe de número: %d com chave: %s.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
-                                                                                nfe.NotasFiscais.Items[0].NFe.Ide.nNF, nfe.NotasFiscais.Items[0].NumID]));
+                                                                                nfe.NotasFiscais.Items[0].NFe.Ide.nNF,
+                                                                                nfe.NotasFiscais.Items[0].NumID]));
           end
           else
             WriteLn(Format('%s - Não foi possível emitir a NFCe, o seguinte erro ocorreu: %s.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
@@ -214,7 +216,9 @@ begin
   except
     on E: Exception do
     begin
-      WriteLn(Format('%s - Houve um erro na tentativa de enviar o documento. Verifique a mensagem a seguir: %s.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now), E.Message]));
+      WriteLn(Format('%s - Houve um erro na tentativa de enviar o documento. Verifique a mensagem a seguir: %s.',
+                                                                                                                [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
+                                                                                                                E.Message]));
       Result := nil;
     end;
   end;
@@ -265,7 +269,8 @@ begin
         DocumentoFiscal.documentoFiscalNFe.cancelamentoJustificativa := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.xMotivo;
 
         WriteLn(Format('%s - Cupom fiscal: %d com chave: %s, cancelado com sucesso.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
-                                                                                       DocumentoFiscal.documentoFiscalNFe.numero, DocumentoFiscal.documentoFiscalNFe.chave]));
+                                                                                       DocumentoFiscal.documentoFiscalNFe.numero,
+                                                                                       DocumentoFiscal.documentoFiscalNFe.chave]));
        end
       else
       begin
@@ -284,7 +289,8 @@ begin
         DocumentoFiscal.documentoFiscalNFe.cancelamentoJustificativa := nfe.WebServices.Consulta.retCancNFe.xMotivo;
 
         WriteLn(Format('%s - Cupom fiscal: %d com chave: %s, já cancelado anteriormente.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
-                                                                                            DocumentoFiscal.documentoFiscalNFe.numero, DocumentoFiscal.documentoFiscalNFe.chave]));
+                                                                                            DocumentoFiscal.documentoFiscalNFe.numero,
+                                                                                            DocumentoFiscal.documentoFiscalNFe.chave]));
       end;
     end;
 
@@ -292,7 +298,9 @@ begin
   except
     on E: Exception do
     begin
-      WriteLn(Format('%s - Houve um erro na tentativa de inicializar o equipamento MFe. Verifique a mensagem a seguir: %s.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now), E.Message]));
+      WriteLn(Format('%s - Houve um erro na tentativa de inicializar o equipamento MFe. Verifique a mensagem a seguir: %s.',
+                                                                                                                            [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
+                                                                                                                            E.Message]));
       Result := nil;
     end;
   end;
@@ -334,7 +342,8 @@ begin
         DocumentoFiscal.documentoFiscalNFe.cancelamentoJustificativa := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.xMotivo;
 
         WriteLn(Format('%s - Nota fiscal: %d com chave: %s, cancelada com sucesso.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
-                                                                                      DocumentoFiscal.documentoFiscalNFe.numero, DocumentoFiscal.documentoFiscalNFe.chave]));
+                                                                                      DocumentoFiscal.documentoFiscalNFe.numero,
+                                                                                      DocumentoFiscal.documentoFiscalNFe.chave]));
        end
       else
       begin
@@ -353,7 +362,8 @@ begin
         DocumentoFiscal.documentoFiscalNFe.cancelamentoJustificativa := nfe.WebServices.Consulta.retCancNFe.xMotivo;
 
         WriteLn(Format('%s - Nota fiscal: %d com chave: %s, já cancelada anteriormente.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
-                                                                                           DocumentoFiscal.documentoFiscalNFe.numero, DocumentoFiscal.documentoFiscalNFe.chave]));
+                                                                                           DocumentoFiscal.documentoFiscalNFe.numero,
+                                                                                           DocumentoFiscal.documentoFiscalNFe.chave]));
       end;
     end;
 
@@ -361,7 +371,9 @@ begin
   except
     on E: Exception do
     begin
-      WriteLn(Format('%s - Houve um erro na tentativa de cancelar o documento. Verifique a mensagem a seguir: %s.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now), E.Message]));
+      WriteLn(Format('%s - Houve um erro na tentativa de cancelar o documento. Verifique a mensagem a seguir: %s.',
+                                                                                                                  [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
+                                                                                                                  E.Message]));
       Result := nil;
     end;
   end;
@@ -392,18 +404,25 @@ begin
       DocumentoFiscal.documentoFiscalCFe.status := sat.Resposta.codigoDeRetorno;
       DocumentoFiscal.documentoFiscalCFe.sessao := sat.Resposta.numeroSessao;
 
-      WriteLn(Format('%s - Cupom fiscal: %d com chave: %s, cancelado com sucesso.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now), sat.CFe.ide.nCFe, sat.CFe.infCFe.ID]));
+      WriteLn(Format('%s - Cupom fiscal: %d com chave: %s, cancelado com sucesso.',
+                                                                                  [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
+                                                                                  sat.CFe.ide.nCFe,
+                                                                                  sat.CFe.infCFe.ID]));
 
       Result := DocumentoFiscal;
 
     end
     else
-      WriteLn(Format('%s - Não foi possivel cancelar o cupom fiscal, o seguinte erro ocorreu: %s.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now), sat.Resposta.mensagemRetorno]));
+      WriteLn(Format('%s - Não foi possivel cancelar o cupom fiscal, o seguinte erro ocorreu: %s.',
+                                                                                                  [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
+                                                                                                  sat.Resposta.mensagemRetorno]));
 
   except
     on E: Exception do
     begin
-      WriteLn(Format('%s - Houve um erro na tentativa de inicializar o equipamento MFe. Verifique a mensagem a seguir: %s.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now), E.Message]));
+      WriteLn(Format('%s - Houve um erro na tentativa de inicializar o equipamento MFe. Verifique a mensagem a seguir: %s.',
+                                                                                                                            [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
+                                                                                                                            E.Message]));
       Result := nil;
     end;
   end;
@@ -432,103 +451,86 @@ end;
 
 procedure Tcomponents.carregaNFe(const modelo: string = '55');
 var
-  IniFile: String;
-  Ini: TIniFile;
   lOk: Boolean;
 begin
-  IniFile := ChangeFileExt(ParamStr(0), '.ini');
+  InfoConfig(FConfig);
 
-  Ini := TIniFile.Create(IniFile);
-  try
-    nfe.SSL.DescarregarCertificado;
+  nfe.SSL.DescarregarCertificado;
+  with nfe.Configuracoes.Geral do
+  begin
+    SSLLib                  := TSSLLib(FConfig.nfe.ssl.lib);
+    SSLCryptLib             := TSSLCryptLib(FConfig.nfe.ssl.cryptlib);
+    SSLHttpLib              := TSSLHttpLib(FConfig.nfe.ssl.httplib);
+    SSLXmlSignLib           := TSSLXmlSignLib(FConfig.nfe.ssl.xmlsignlib);
 
-    with nfe.Configuracoes.Geral do
-    begin
-      SSLLib                  := TSSLLib(Ini.ReadInteger('SSL - NFe', 'Lib', 0));
-      SSLCryptLib             := TSSLCryptLib(Ini.ReadInteger('SSL - NFe', 'CryptLib', 0));
-      SSLHttpLib              := TSSLHttpLib(Ini.ReadInteger('SSL - NFe', 'HttpLib', 0));
-      SSLXmlSignLib           := TSSLXmlSignLib(Ini.ReadInteger('SSL - NFe', 'XmlSignLib', 0));
+    Salvar                  := FConfig.nfe.geral.salvar;
+    RetirarAcentos          := FConfig.nfe.geral.retiraracentos;
+    AtualizarXMLCancelado   := FConfig.nfe.geral.atualizarxml;
+    ExibirErroSchema        := FConfig.nfe.geral.exibirerroschema;
+    FormaEmissao            := TpcnTipoEmissao(FConfig.nfe.geral.formaemissao);
+    VersaoDF                := StrToVersaoDF(lOk, FConfig.nfe.geral.versaodf);
 
-      Salvar                  := Ini.ReadBool('Geral - NFe', 'Salvar', True);
-      RetirarAcentos          := Ini.ReadBool('Geral - NFe', 'RetirarAcentos', True);
-      AtualizarXMLCancelado   := Ini.ReadBool('Geral - NFe', 'AtualizarXML', True);
-      ExibirErroSchema        := Ini.ReadBool('Geral - NFe', 'ExibirErroSchema', True);
-      FormaEmissao            := TpcnTipoEmissao(Ini.ReadInteger('Geral - NFe', 'FormaEmissao', 0));
-      VersaoDF                := StrToVersaoDF(lOk, Ini.ReadString('Geral - NFe', 'VersaoDF', '4.00'));
+    ModeloDF        := StrToModeloDF(lOk, modelo);
+    FormatoAlerta   := 'TAG:%TAGNIVEL% ID:%ID%/%TAG%(%DESCRICAO%) - %MSG%.';
 
-      ModeloDF                := StrToModeloDF(lOk, modelo);
-      FormatoAlerta           := 'TAG:%TAGNIVEL% ID:%ID%/%TAG%(%DESCRICAO%) - %MSG%.';
+    IdCSC                 := FConfig.nfse.IdCSC;
+    CSC                   := FConfig.nfse.CSC;
+    VersaoQRCode          := veqr200;
 
-      if modelo = docModelos[2] then
-      begin
-        IdCSC                 := Ini.ReadString('Identificacao - NFSe', 'IdToken', '');
-        CSC                   := Ini.ReadString('Identificacao - NFSe', 'CSC', '');
-        VersaoQRCode          := veqr200;
-      end
-      else
-      begin
-        nfe.Configuracoes.RespTec.idCSRT  := 0;
-        nfe.Configuracoes.RespTec.CSRT    := '';
-      end;
-    end;
-
-    with nfe.Configuracoes.Arquivos do
-    begin
-      Salvar                  := Ini.ReadBool('Arquivos - NFe', 'Salvar', False);
-      SepararPorMes           := Ini.ReadBool('Arquivos - NFe', 'SepararPorMes', True);
-      AdicionarLiteral        := Ini.ReadBool('Arquivos - NFe', 'AdicionarLiteral', True);
-      EmissaoPathNFe          := Ini.ReadBool('Arquivos - NFe', 'EmissaoPathNFe', True);
-      SalvarEvento            := Ini.ReadBool('Arquivos - NFe', 'SalvarEvento', True);
-      SepararPorCNPJ          := Ini.ReadBool('Arquivos - NFe', 'SepararPorCNPJ', True);
-      SepararPorModelo        := Ini.ReadBool('Arquivos - NFe', 'SepararPorModelo', True);
-      PathSchemas             := Ini.ReadString('Arquivos - NFe', 'PathSchemas', '');
-      PathNFe                 := Ini.ReadString('Arquivos - NFe', 'PathNFe', '');
-      PathInu                 := Ini.ReadString('Arquivos - NFe', 'PathInu', '');
-      PathEvento              := Ini.ReadString('Arquivos - NFe', 'PathEvento', '');
-      PathSalvar              := Ini.ReadString('Arquivos - NFe', 'PathSalvar', '');
-    end;
-
-    with nfe.Configuracoes.Certificados do
-    begin
-      URLPFX                  := Ini.ReadString('Certificado - NFe', 'URL', '');
-      ArquivoPFX              := Ini.ReadString('Certificado - NFe', 'CaminhoPFX', '');
-      Senha                   := Ini.ReadString('Certificado - NFe', 'SenhaCertificado', '');
-      NumeroSerie             := Ini.ReadString('Certificado - NFe', 'NumeroSerie', '');
-    end;
-
-    with nfe.Configuracoes.WebServices do
-    begin
-      Visualizar              := Ini.ReadBool('WebServices - NFe', 'Visualizar', False);
-      Salvar                  := Ini.ReadBool('WebServices - NFe', 'Salvar', True);
-      AjustaAguardaConsultaRet:= Ini.ReadBool('WebServices - NFe', 'AjustaAguardaConsultaRet', True);
-      AguardarConsultaRet     := Ini.ReadInteger('WebServices - NFe', 'AguardarConsultaRet', 30000);
-      Tentativas              := Ini.ReadInteger('WebServices - NFe', 'Tentativas', 3);
-      IntervaloTentativas     := Ini.ReadInteger('WebServices - NFe', 'IntervaloTentativas', 1000);
-      TimeOut                 := Ini.ReadInteger('WebServices - NFe', 'TimeOut', 30);
-      ProxyHost               := Ini.ReadString('WebServices - NFe', 'ProxyHost', '');
-      ProxyPort               := Ini.ReadString('WebServices - NFe', 'ProxyPort', '8080');
-      ProxyUser               := Ini.ReadString('WebServices - NFe', 'ProxyUser', '');
-      ProxyPass               := Ini.ReadString('WebServices - NFe', 'ProxyPass', '');
-    end;
-
-    with mail do
-    begin
-      Host                    := Ini.ReadString('Email', 'Servidor', '');
-      Port                    := InttoStr(Ini.ReadInteger('Email', 'Porta', 587));
-      Username                := Ini.ReadString('Email', 'Usuario', '');
-      Password                := decrypt(Ini.ReadString('Email', 'Senha', ''));
-      From                    := Ini.ReadString('Email', 'Origem', '');
-      SetSSL                  := True;                                                    // SSL - Conexao Segura
-      SetTLS                  := True;                                                    // Auto TLS
-      ReadingConfirmation     := False;                                                   // Pede confirmacao de leitura do email
-      UseThread               := False;                                                   // Aguarda Envio do Email(nao usa thread)
-      FromName                := 'Constel Cloud DFe';
-    end;
-
-  finally
-    Ini.Free;
   end;
 
+  with nfe.Configuracoes.Arquivos do
+  begin
+    Salvar                  := FConfig.nfe.arquivos.salvar;
+    SepararPorMes           := FConfig.nfe.arquivos.separarpormes;
+    AdicionarLiteral        := FConfig.nfe.arquivos.adicionarliteral;
+    EmissaoPathNFe          := FConfig.nfe.arquivos.emissaopathnfe;
+    SalvarEvento            := FConfig.nfe.arquivos.salvarevento;
+    SepararPorCNPJ          := FConfig.nfe.arquivos.separarporcnpj;
+    SepararPorModelo        := FConfig.nfe.arquivos.separarpormodelo;
+    PathSchemas             := FConfig.nfe.arquivos.pathschemas;
+    PathNFe                 := FConfig.nfe.arquivos.pathnfe;
+    PathInu                 := FConfig.nfe.arquivos.pathinu;
+    PathEvento              := FConfig.nfe.arquivos.pathevento;
+    PathSalvar              := FConfig.nfe.arquivos.pathsalvar;
+  end;
+
+  with nfe.Configuracoes.Certificados do
+  begin
+    URLPFX                  := FConfig.emitente.certificado.url;
+    ArquivoPFX              := FConfig.emitente.certificado.caminhopfx;
+    Senha                   := FConfig.emitente.certificado.senhadocertificado;
+    NumeroSerie             := FConfig.emitente.certificado.numerodeserie;
+  end;
+
+  with nfe.Configuracoes.WebServices do
+  begin
+    Visualizar              := FConfig.nfe.webservice.visualizar;
+    Salvar                  := FConfig.nfe.webservice.salvar;
+    AjustaAguardaConsultaRet:= FConfig.nfe.webservice.ajustaaguardaconsultaret;
+    AguardarConsultaRet     := FConfig.nfe.webservice.aguardarconsultaret;
+    Tentativas              := FConfig.nfe.webservice.tentativas;
+    IntervaloTentativas     := FConfig.nfe.webservice.intervalotentativas;
+    TimeOut                 := FConfig.nfe.webservice.timeout;
+    ProxyHost               := FConfig.nfe.webservice.proxyhost;
+    ProxyPort               := FConfig.nfe.webservice.proxyport;
+    ProxyUser               := FConfig.nfe.webservice.proxyuser;
+    ProxyPass               := FConfig.nfe.webservice.proxypass;
+  end;
+
+  with mail do
+  begin
+    Host                    := FConfig.emitente.email.servidor;
+    Port                    := FConfig.emitente.email.porta;
+    Username                := FConfig.emitente.email.usuario;
+    Password                := decrypt(FConfig.emitente.email.senha);
+    From                    := FConfig.emitente.email.origem;
+    SetSSL                  := FConfig.emitente.email.usassl;
+    SetTLS                  := FConfig.emitente.email.usatls;
+    ReadingConfirmation     := FConfig.emitente.email.confirmaleitura;
+    UseThread               := FConfig.emitente.email.usathread;
+    FromName                := FConfig.emitente.email.remetente;
+  end;
 end;
 
 procedure Tcomponents.satGetcodigoDeAtivacao(var Chave: AnsiString);
@@ -558,12 +560,6 @@ begin
   vTotalDescontos := 0;
 
   carregaNFe;
-
-  with nfe.Configuracoes.WebServices do
-  begin
-    UF            := DocumentoFiscal.estabelecimento.estabelecimentoEnderecos[0].uf.sigla;
-    Ambiente      := StrToTpAmb(lOk, IntToStr(DocumentoFiscal.ambiente));
-  end;
 
   nfe.NotasFiscais.Clear;
 
@@ -626,16 +622,19 @@ begin
     infRespTec.email        := 'myron@solucaosistemas.net';
     infRespTec.fone	        := '8533076262';
 
-    Dest.CNPJCPF            := parceiro.parceiroDocumentos[0].documentoNumero;
-
-    if ((parceiro.parceiroDocumentos[0].documentoTipo = 1) or (parceiro.parceiroDocumentos[0].documentoTipo = 2)) and (parceiro.parceiroDocumentos[0].inscricaoEstadual > '') then
-      Dest.indIEDest        := inContribuinte
-    else if (parceiro.parceiroDocumentos[0].documentoTipo = 1) and (parceiro.parceiroDocumentos[0].inscricaoEstadual = '') then
-      Dest.indIEDest        := inIsento
-    else
+    if length(parceiro.parceiroDocumentos) > 0 then
     begin
-      Ide.indFinal          := cfConsumidorFinal;
-      Dest.indIEDest        := inNaoContribuinte;
+      Dest.CNPJCPF            := parceiro.parceiroDocumentos[0].documentoNumero;
+
+      if (parceiro.parceiroDocumentos[0].documentoTipo in [1, 2]) and (UpperCase(parceiro.parceiroDocumentos[0].inscricaoEstadual) = 'ISENTO') then
+        Dest.indIEDest        := inIsento
+      else if ((parceiro.parceiroDocumentos[0].documentoTipo in [1, 2])) and (parceiro.parceiroDocumentos[0].inscricaoEstadual > '') then
+        Dest.indIEDest        := inContribuinte
+      else
+      begin
+        Ide.indFinal          := cfConsumidorFinal;
+        Dest.indIEDest        := inNaoContribuinte;
+      end;
     end;
 
     Dest.IE	                := parceiro.parceiroDocumentos[0].inscricaoEstadual;
@@ -897,25 +896,6 @@ begin
 
     NotaF.NFe.InfAdic.infCpl     :=  '';
     NotaF.NFe.InfAdic.infAdFisco :=  '';
-   {
-    with NotaF.NFe.InfAdic.obsCont.New do
-    begin
-      xCampo := '.';
-      xTexto := '.';
-    end;
-
-    with NotaF.NFe.InfAdic.obsFisco.New do
-    begin
-      xCampo := '.';
-      xTexto := '.';
-    end;
-   }
-  //Processo referenciado
-    (*
-    ProcReferenciado := NotaF.Nfe.InfAdic.procRef.Add;
-    ProcReferenciado.nProc := '';
-    ProcReferenciado.indProc := ipSEFAZ;
-    *)
 
     NotaF.NFe.exporta.UFembarq   := '';;
     NotaF.NFe.exporta.xLocEmbarq := '';
@@ -923,8 +903,6 @@ begin
     NotaF.NFe.compra.xNEmp := '';
     NotaF.NFe.compra.xPed  := '';
     NotaF.NFe.compra.xCont := '';
-
-  // YA. Informações de pagamento
 
     const indicador = ['01', '02', '03', '04', '05', '10', '11', '12', '13', '15', '16', '17', '18', '19', '90', '99'];
 
@@ -944,7 +922,7 @@ begin
        end;
     end;
 
-  // Exemplo de pagamento integrado.
+    // Exemplo de pagamento integrado.
 
     //InfoPgto := NotaF.NFe.pag.New;
     //InfoPgto.indPag := ipVista;
@@ -1021,12 +999,6 @@ begin
         Prod.indRegra := irTruncamento;
         Prod.vDesc := DocumentoFiscalItens[Counter].desconto;
 
-        {with Prod.obsFiscoDet.New do
-        begin
-          xCampoDet := 'campo';
-          xTextoDet := 'texto';
-        end;}
-
         TotalItem := RoundABNT((Prod.qCom * Prod.vUnCom) + Prod.vOutro - Prod.vDesc, -2);
         TotalGeral := TotalGeral + TotalItem;
         Imposto.vItem12741 := TotalItem * (icmsAliquota/100);
@@ -1089,6 +1061,8 @@ begin
   vTotalDescontos := 0;
 
   carregaNFe('65');
+
+  nfe.NotasFiscais.Clear;
 
   with nfe.Configuracoes.WebServices do
   begin
@@ -1344,17 +1318,6 @@ begin
     InfAdic.infCpl     :=  '';
     InfAdic.infAdFisco :=  '';
 
-    {with InfAdic.obsCont.New do
-    begin
-      xCampo := 'ObsCont';
-      xTexto := 'Texto';
-    end;
-
-    with InfAdic.obsFisco.New do
-    begin
-      xCampo := 'ObsFisco';
-      xTexto := 'Texto';
-    end;}
   end;
 
   nfe.NotasFiscais.GerarNFe;
