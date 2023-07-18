@@ -563,11 +563,12 @@ begin
 
   nfe.NotasFiscais.Clear;
 
+  nfe.Configuracoes.WebServices.Ambiente := StrToTpAmb(lOk, IntToStr(DocumentoFiscal.ambiente));
+
   NotaF := nfe.NotasFiscais.Add;
   with NotaF.NFe, DocumentoFiscal do
   begin
     Ide.natOp   := historico.nome;
-    Ide.indPag  := ipVista; // Ver depois de onde pegar essa informação.
     Ide.modelo  := 55;
     Ide.serie   := documentoFiscalNFe.serie;
     Ide.nNF     := documentoFiscalNFe.numero;
@@ -584,6 +585,14 @@ begin
     Ide.finNFe  := StrToFinNFe(lOk, IntToStr(documentoFiscalNFe.finalidadeEmissao));
     Ide.indIntermed := TindIntermed(documentoFiscalNFe.indicadorIntermediador);
     Ide.indFinal    := cfNao;
+    if DocumentoFiscal.estabelecimento.estabelecimentoEnderecos[0].uf.sigla =
+       DocumentoFiscal.parceiro.parceiroEnderecos[0].uf.sigla then
+      Ide.idDest  := doInterna
+    else if DocumentoFiscal.parceiro.parceiroEnderecos[0].uf.sigla = 'EX' then
+      Ide.idDest  := doExterior
+    else
+      Ide.idDest  := doInterestadual;
+
 
     if documentoFiscalNFe.tipoImpressao = 'R' then
       Ide.tpImp := tiRetrato
@@ -664,7 +673,11 @@ begin
         Prod.xProd := item.nome;
         Prod.NCM := StringReplace(ncm.codigo, '.', '', [rfReplaceAll]);
         Prod.EXTIPI := '';
-        Prod.CFOP := cfop.codigo;
+        if DocumentoFiscal.estabelecimento.estabelecimentoEnderecos[0].uf.sigla =
+           DocumentoFiscal.parceiro.parceiroEnderecos[0].uf.sigla then
+          Prod.CFOP := cfop.codigo
+        else
+          Prod.CFOP := IntToStr(1000 + StrToInt(cfop.codigo));
         Prod.uCom := unidade.codigo;
         Prod.qCom := quantidade;
         Prod.vUnCom := valor;
@@ -911,10 +924,26 @@ begin
       with NotaF.NFe.pag.New do
       begin
         case AnsiIndexStr(documentoFiscalPagamentos[nCont].formaIndicador, indicador) of
-          0, 3, 10, 11, 12: indPag := ipVista;
-          1, 2, 4, 5, 6, 7, 8, 9, 13: indPag := ipPrazo;
-          14: indPag := ipNenhum;
-          15: indPag := ipOutras;
+          0, 3, 10, 11, 12:
+            begin
+              Ide.indPag := ipVista;
+              indPag := ipVista;
+            end;
+          1, 2, 4, 5, 6, 7, 8, 9, 13:
+            begin
+              Ide.indPag := ipPrazo;
+              indPag := ipPrazo;
+            end;
+          14:
+            begin
+              Ide.indPag := ipNenhum;
+              indPag := ipNenhum;
+            end;
+          15:
+            begin
+              Ide.indPag := ipOutras;
+              indPag := ipOutras;
+            end;
         end;
         tPag   := StrToFormaPagamento(lOk, documentoFiscalPagamentos[nCont].formaIndicador);
         vPag   := documentoFiscalPagamentos[nCont].valor;
@@ -1011,6 +1040,7 @@ begin
           Imposto.ICMS.CST := StrToCSTICMS(lOk, cstICMS.codigo);
 
         Imposto.ICMS.pICMS := icmsAliquota;
+        Imposto.ICMS.vICMS := icmsValor;
 
         Imposto.PIS.CST := StrToCSTPIS(lOk, cstPIS.codigo);
         Imposto.PIS.vBC := TotalItem;
@@ -1024,7 +1054,7 @@ begin
       end;
     end;
 
-    sat.CFe.Total.DescAcrEntr.vDescSubtot := DocumentoFiscal.desconto;
+    //sat.CFe.Total.DescAcrEntr.vDescSubtot := DocumentoFiscal.desconto;
     sat.CFe.Total.vCFeLei12741 := TotalImposto;
 
     for Counter := 0 to Length(DocumentoFiscalPagamentos) - 1 do

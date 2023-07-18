@@ -20,16 +20,11 @@ procedure stopApi;
 procedure statusApi;
 procedure InfoConfig(var FConfig: TConfig);
 
-function encrypt(const S: AnsiString): AnsiString;
-function decrypt(const S: AnsiString): AnsiString;
+function encrypt(const S: string): string;
+function decrypt(const S: string): string;
 
 
 implementation
-
-procedure IHorseProviderIOHandleSSLGetPassword(var Password: String);
-begin
-  Password := '1234';
-end;
 
 procedure InfoConfig(var FConfig: TConfig);
 begin
@@ -75,12 +70,12 @@ begin
   if FConfig.ambienteseguro then
   begin
     THorse.IOHandleSSL
-    .CertFile(FConfig.emitente.certificado.caminhoraiz + '\constel.crt')
-    .KeyFile(FConfig.emitente.certificado.caminhoraiz + '\constel.key');
+    .CertFile(FConfig.emitente.certificado.caminhoraiz + '\allserver.crt')
+    .KeyFile(FConfig.emitente.certificado.caminhoraiz + '\allserver.key');
     //THorse.IOHandleSSL.OnGetPassword(LGetSSLPassword.OnGetPassword);
 
     THorse.IOHandleSSL.SSLVersions([sslvSSLv2, sslvSSLv23, sslvSSLv3, sslvTLSv1, sslvTLSv1_1, sslvTLSv1_2]);
-    THorse.IOHandleSSL.Method(sslvSSLv23);
+    THorse.IOHandleSSL.Method(sslvTLSv1_2);
     THorse.IOHandleSSL.Active(True);
   end;
 
@@ -159,9 +154,9 @@ begin
   end
 end;
 
-function PreProcess(const S: AnsiString): AnsiString;
+function PreProcess(const S: string): string;
 var
-  SS: AnsiString;
+  SS: string;
 begin
   SS := S;
   Result := '';
@@ -172,7 +167,7 @@ begin
   end
 end;
 
-function InternalDecrypt(const S: AnsiString; Key: Word): AnsiString;
+function InternalDecrypt(const S: string; Key: Word): string;
 var
   I: Word;
   Seed: Word;
@@ -181,17 +176,17 @@ begin
   Seed := Key;
   for I := 1 to Length(Result) do
   begin
-    Result[I] := AnsiChar(Byte(Result[I]) xor (Seed shr 8));
+    Result[I] := Char(Byte(Result[I]) xor (Seed shr 8));
     Seed := (Byte(S[I]) + Seed) * Word(C1) + Word(C2)
   end
 end;
 
-function decrypt(const S: AnsiString): AnsiString;
+function decrypt(const S: string): string;
 begin
   Result := InternalDecrypt(PreProcess(S), cKey)
 end;
 
-function Encode(const S: AnsiString): AnsiString;
+function Encode(const S: string): string;
 const
   Map: array[0..63] of Char = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' +
     'abcdefghijklmnopqrstuvwxyz0123456789+/';
@@ -212,9 +207,9 @@ begin
   end
 end;
 
-function PostProcess(const S: AnsiString): AnsiString;
+function PostProcess(const S: string): string;
 var
-  SS: AnsiString;
+  SS: string;
 begin
   SS := S;
   Result := '';
@@ -225,7 +220,7 @@ begin
   end
 end;
 
-function InternalEncrypt(const S: AnsiString; Key: Word): AnsiString;
+function InternalEncrypt(const S: string; Key: Word): string;
 var
   I: Word;
   Seed: Word;
@@ -234,12 +229,12 @@ begin
   Seed := Key;
   for I := 1 to Length(Result) do
   begin
-    Result[I] := AnsiChar(Byte(Result[I]) xor (Seed shr 8));
+    Result[I] := Char(Byte(Result[I]) xor (Seed shr 8));
     Seed := (Byte(Result[I]) + Seed) * Word(C1) + Word(C2)
   end
 end;
 
-function encrypt(const S: AnsiString): AnsiString;
+function encrypt(const S: string): string;
 begin
   Result := PostProcess(InternalEncrypt(S, cKey))
 end;
