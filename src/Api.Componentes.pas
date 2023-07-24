@@ -70,9 +70,6 @@ begin
       CFe.TamanhoIdentacao                := 3;
       CFe.RetirarAcentos                  := True;
 
-      SSL.SSLCryptLib                     := cryOpenSSL;
-      SSL.SSLXmlSignLib                   := xsLibXml2;
-
       Config.ArqSchema                    := FConfig.cfe.schemas;
       Config.PaginaDeCodigo               := FConfig.cfe.paginadecodigo;
       Config.EhUTF8                       := FConfig.cfe.utf;
@@ -693,7 +690,7 @@ begin
         Prod.vSeg      := 0;
         infAdProd := 'Informacao Adicional do Produto';
 
-        Prod.vProd := RoundABNT((Prod.qCom * Prod.vUnCom) + Prod.vOutro - Prod.vDesc, -2);
+        Prod.vProd := RoundABNT((Prod.qCom * Prod.vUnCom) + Prod.vOutro, -2);
 
         vTotalItens := vTotalItens + subtotal;
         vTotalDescontos := vTotalDescontos + DocumentoFiscal.DocumentoFiscalItens[nCont].desconto;
@@ -892,9 +889,9 @@ begin
     end;
 }
     NotaF.NFe.Cobr.Fat.nFat  := IntToStr(documentoFiscal.DocumentoFiscalNFe.numero);
-    NotaF.NFe.Cobr.Fat.vOrig := documentoFiscal.Total;
+    NotaF.NFe.Cobr.Fat.vOrig := documentoFiscal.subtotal;
     NotaF.NFe.Cobr.Fat.vDesc := documentoFiscal.Desconto;
-    NotaF.NFe.Cobr.Fat.vLiq  := documentoFiscal.Total - documentoFiscal.Desconto;
+    NotaF.NFe.Cobr.Fat.vLiq  := documentoFiscal.subtotal - documentoFiscal.Desconto;
 
 
     for nCont := 0 to Length(DocumentoFiscal.DocumentoFiscalCobrancas) - 1 do
