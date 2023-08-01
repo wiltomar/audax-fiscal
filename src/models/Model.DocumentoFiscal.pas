@@ -273,6 +273,7 @@ type
     fparceiro: TParceiroC;
     fhistorico: THistorico;
     fcpfInformado: string;
+    fcnpjInformado: string;
     fsubtotal: Currency;
     fdesconto: Currency;
     ffrete: Currency;
@@ -314,6 +315,7 @@ type
     property parceiro: TParceiroC read fparceiro write fparceiro;
     property historico: THistorico read fhistorico write fhistorico;
     property cpfInformado: string read fcpfInformado write fcpfInformado;
+    property cnpjInformado: string read fcnpjInformado write fcnpjInformado;
     property subtotal: Currency read fsubtotal write fsubtotal;
     property desconto: Currency read fdesconto write fdesconto;
     property frete: Currency read ffrete write ffrete;

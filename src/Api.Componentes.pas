@@ -961,16 +961,16 @@ begin
       se tPag for fpOutro devemos incluir o campo xPag
     InfoPgto.xPag := 'Caderneta';
     }
-//    InfoPgto.vPag   := 75;
-//    InfoPgto.tpIntegra := tiPagIntegrado;
-//    InfoPgto.CNPJ      := '05481336000137';
-//    InfoPgto.tBand     := bcVisa;
-//    InfoPgto.cAut      := '1234567890123456';
+    //    InfoPgto.vPag   := 75;
+    //    InfoPgto.tpIntegra := tiPagIntegrado;
+    //    InfoPgto.CNPJ      := '05481336000137';
+    //    InfoPgto.tBand     := bcVisa;
+    //    InfoPgto.cAut      := '1234567890123456';
 
-  // YA09 Troco
-  // Regra opcional: Informar se valor dos pagamentos maior que valor da nota.
-  // Regra obrigatória: Se informado, Não pode diferir de "(+) vPag (id:YA03) (-) vNF (id:W16)"
-  //  NotaF.NFe.pag.vTroco := 75;
+    // YA09 Troco
+    // Regra opcional: Informar se valor dos pagamentos maior que valor da nota.
+    // Regra obrigatória: Se informado, Não pode diferir de "(+) vPag (id:YA03) (-) vNF (id:W16)"
+    //  NotaF.NFe.pag.vTroco := 75;
 
     {
       abaixo o campo incluido no layout a partir da NT 2020/006
@@ -1008,6 +1008,8 @@ begin
 
     if Length(cpfInformado) > 0 then
       Dest.CNPJCPF            := cpfInformado;
+    if Length(cnpjInformado) > 0 then
+      Dest.CNPJCPF            := cnpjInformado;
 
     For Counter := 0 to Length(DocumentoFiscalItens) - 1 do
     begin
@@ -1051,7 +1053,6 @@ begin
       end;
     end;
 
-    //sat.CFe.Total.DescAcrEntr.vDescSubtot := DocumentoFiscal.desconto;
     sat.CFe.Total.vCFeLei12741 := TotalImposto;
 
     for Counter := 0 to Length(DocumentoFiscalPagamentos) - 1 do
@@ -1060,7 +1061,7 @@ begin
       begin
         cMP := StrToCodigoMP(lOk, DocumentoFiscalPagamentos[Counter].formaIndicador);
         vMP := DocumentoFiscalPagamentos[Counter].valor;
-        if StrToCodigoMP(lOk, DocumentoFiscalPagamentos[Counter].formaIndicador) in [MPCartaodeCredito, mpCartaodeDebito] then
+        if StrToCodigoMP(lOk, DocumentoFiscalPagamentos[Counter].formaIndicador) in [mpCartaodeCredito, mpCartaodeDebito] then
           cAdmC := StrToIntDef(DocumentoFiscalPagamentos[Counter].cartaoCredenciadora, 999);
       end;
     end;
