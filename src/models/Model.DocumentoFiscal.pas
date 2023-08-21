@@ -16,7 +16,7 @@ const
   DOCUMENTOFISCAL_MODELO_NFCE = '65';
 
 type
-  TDocumentoFiscalNFe = class(TBase)
+  TDocumentoFiscalNFe = class
   private
     festabelecimento: TEstabelecimento;
     fnumero: Integer;
@@ -59,7 +59,7 @@ type
     property cancelamentoJustificativa: string read fcancelamentoJustificativa write fcancelamentoJustificativa;
   end;
 
-  TDocumentoFiscalCFe = class(TBase)
+  TDocumentoFiscalCFe = class
   private
     festabelecimento: TEstabelecimento;
     fnumero: Integer;
@@ -86,7 +86,7 @@ type
     property msgRetorno: string read fmsgRetorno write fmsgRetorno;
   end;
 
-  TDocumentoFiscalPagamento = class(TBase)
+  TDocumentoFiscalPagamento = class
   private
     festabelecimento: TEstabelecimento;
     fformaIndicador: string;
@@ -101,7 +101,7 @@ type
     property cartaoCredenciadora: string read fcartaoCredenciadora write fcartaoCredenciadora;
   end;
 
-  TDocumentoFiscalCobranca = class(TBase)
+  TDocumentoFiscalCobranca = class
   private
     festabelecimento: TEstabelecimento;
     fduplicata: Smallint;
@@ -114,7 +114,7 @@ type
     property valor: Currency read fvalor write fvalor;
   end;
 
-  TDocumentoFiscalItem = class(TBase)
+  TDocumentoFiscalItem = class
   private
     festabelecimento: TEstabelecimento;
     foperacao: TOperacao;
@@ -262,9 +262,10 @@ type
   end;
 
 type
-  TDocumentoFiscal = class(TBase)
+  TDocumentoFiscal = class
   private
     festabelecimento: TEstabelecimentoC;
+    fsituacao: SmallInt;
     femissao: TDateTime;
     fsaida: TDateTime;
     fambiente: Integer;
@@ -304,9 +305,10 @@ type
     fdocumentoFiscalPagamentos: TArray<TDocumentoFiscalPagamento>;
     fdocumentoFiscalCobrancas: TArray<TDocumentoFiscalCobranca>;
   public
-    constructor Create(aid: string; anome: string);
+    constructor Create;
     destructor Destroy;
     property estabelecimento: TEstabelecimentoC read festabelecimento write festabelecimento;
+    property situacao: SmallInt read fsituacao write fsituacao;
     property emissao: TDateTime read femissao write femissao;
     property saida: TDateTime read fsaida write fsaida;
     property ambiente: Integer read fambiente write fambiente;
@@ -350,9 +352,9 @@ type
 
 implementation
 
-constructor TDocumentoFiscal.Create(aid: string; anome: string);
+constructor TDocumentoFiscal.Create;
 begin
-  inherited Create(aid);
+  inherited Create();
   fdocumentoFiscalCFe := TDocumentoFiscalCFe.Create;
   fdocumentoFiscalNFe := TDocumentoFiscalNFe.Create;
 end;

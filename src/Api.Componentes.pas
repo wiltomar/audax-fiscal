@@ -40,7 +40,7 @@ type
     function CancelarCFe(DocumentoFiscal: TDocumentoFiscal): TDocumentoFiscal;
     function CancelarNFCe(DocumentoFiscal: TDocumentoFiscal): TDocumentoFiscal;
   public
-    function EmiteDFe(DocumentoFiscal: TDocumentoFiscal): TDocumentoFiscal;
+    function EmiteDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
     function CancelarDFe(DocumentoFiscal: TDocumentoFiscal): TDocumentoFiscal;
 
   end;
@@ -125,7 +125,7 @@ begin
   RemoveDataModule(self);
 end;
 
-function Tcomponents.EmiteDFe(DocumentoFiscal: TDocumentoFiscal): TDocumentoFiscal;
+function Tcomponents.EmiteDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
 var
   xmlDocumento: string;
 begin
@@ -150,10 +150,14 @@ begin
             WriteLn(Format('%s - Emitida a NFe de número: %d com chave: %s.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
                                                                                 nfe.NotasFiscais.Items[0].NFe.Ide.nNF,
                                                                                 nfe.NotasFiscais.Items[0].NumID]));
+            Msg := nfe.NotasFiscais.Items[0].Msg;
           end
           else
+          begin
             WriteLn(Format('%s - Não foi possível emitir a NFe, o seguinte erro ocorreu: %s.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
                                                                                                 nfe.WebServices.Retorno.Msg]));
+            Error := nfe.WebServices.Retorno.Msg;
+          end;
 
           Result := DocumentoFiscal;
         end;
@@ -175,12 +179,18 @@ begin
 
             WriteLn(Format('%s - Emitido o cupom fiscal: %d com chave: %s.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
                                                                               sat.CFe.ide.nCFe, sat.CFe.infCFe.ID]));
+            Msg := sat.Resposta.mensagemRetorno;
 
-            Result := DocumentoFiscal;
+
           end
           else
+          begin
             WriteLn(Format('%s - Não foi possivel emitir o cupom fiscal, o seguinte erro ocorreu: %s.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
                                                                                                          sat.Resposta.mensagemRetorno]));
+            Error := sat.Resposta.mensagemRetorno;
+          end;
+
+          Result := DocumentoFiscal;
         end;
       5:
         begin
@@ -201,10 +211,14 @@ begin
             WriteLn(Format('%s - Emitida a NFCe de número: %d com chave: %s.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
                                                                                 nfe.NotasFiscais.Items[0].NFe.Ide.nNF,
                                                                                 nfe.NotasFiscais.Items[0].NumID]));
+            Msg := nfe.WebServices.Retorno.Msg;
           end
           else
+          begin
             WriteLn(Format('%s - Não foi possível emitir a NFCe, o seguinte erro ocorreu: %s.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
                                                                                                  nfe.WebServices.Retorno.Msg]));
+            Error := nfe.WebServices.Retorno.Msg;
+          end;
 
           Result := DocumentoFiscal;
         end;
@@ -216,6 +230,7 @@ begin
       WriteLn(Format('%s - Houve um erro na tentativa de enviar o documento. Verifique a mensagem a seguir: %s.',
                                                                                                                 [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
                                                                                                                 E.Message]));
+      Error := E.Message;
       Result := nil;
     end;
   end;
@@ -836,13 +851,13 @@ begin
     NotaF.NFe.Total.ICMSTot.vProd   := vTotalItens;
     NotaF.NFe.Total.ICMSTot.vFrete  := 0;
     NotaF.NFe.Total.ICMSTot.vSeg    := 0;
-    NotaF.NFe.Total.ICMSTot.vDesc   := vTotalDescontos;
+    NotaF.NFe.Total.ICMSTot.vDesc   := vTotalDescontos + DocumentoFiscal.desconto;
     NotaF.NFe.Total.ICMSTot.vII     := 0;
     NotaF.NFe.Total.ICMSTot.vIPI    := 0;
     NotaF.NFe.Total.ICMSTot.vPIS    := 0;
     NotaF.NFe.Total.ICMSTot.vCOFINS := 0;
     NotaF.NFe.Total.ICMSTot.vOutro  := 0;
-    NotaF.NFe.Total.ICMSTot.vNF     := vTotalItens - vTotalDescontos;
+    NotaF.NFe.Total.ICMSTot.vNF     := vTotalItens - DocumentoFiscal.desconto - vTotalDescontos;
 
     // lei da transparencia de impostos
     NotaF.NFe.Total.ICMSTot.vTotTrib := 0;
@@ -898,9 +913,9 @@ begin
     begin
       with NotaF.NFe.Cobr.Dup.New do
       begin
-        nDup := IntToStr(DocumentoFiscal.documentoFiscalCobrancas[nCont].duplicata);
+        nDup := PadLeft(IntToStr(DocumentoFiscal.documentoFiscalCobrancas[nCont].duplicata), 3, '0');
         dVenc := DocumentoFiscal.documentoFiscalCobrancas[nCont].vencimento;
-        vDup := DocumentoFiscal.DocumentoFiscalPagamentos[nCont].valor;
+        vDup := DocumentoFiscal.documentoFiscalCobrancas[nCont].valor;
       end;
     end;
 
@@ -948,39 +963,7 @@ begin
        end;
     end;
 
-    // Exemplo de pagamento integrado.
-
-    //InfoPgto := NotaF.NFe.pag.New;
-    //InfoPgto.indPag := ipVista;
-    //InfoPgto.tPag   := fpCartaoCredito;
-
-    {
-      abaixo o campo incluido no layout a partir da NT 2020/006
-    }
-    {
-      se tPag for fpOutro devemos incluir o campo xPag
-    InfoPgto.xPag := 'Caderneta';
-    }
-    //    InfoPgto.vPag   := 75;
-    //    InfoPgto.tpIntegra := tiPagIntegrado;
-    //    InfoPgto.CNPJ      := '05481336000137';
-    //    InfoPgto.tBand     := bcVisa;
-    //    InfoPgto.cAut      := '1234567890123456';
-
-    // YA09 Troco
-    // Regra opcional: Informar se valor dos pagamentos maior que valor da nota.
-    // Regra obrigatória: Se informado, Não pode diferir de "(+) vPag (id:YA03) (-) vNF (id:W16)"
-    //  NotaF.NFe.pag.vTroco := 75;
-
-    {
-      abaixo o campo incluido no layout a partir da NT 2020/006
-    }
-    // CNPJ do Intermediador da Transação (agenciador, plataforma de delivery,
-    // marketplace e similar) de serviços e de negócios.
     NotaF.NFe.infIntermed.CNPJ := '';
-    // Nome do usuário ou identificação do perfil do vendedor no site do intermediador
-    // (agenciador, plataforma de delivery, marketplace e similar) de serviços e de
-    // negócios.
     NotaF.NFe.infIntermed.idCadIntTran := '';
   end;
 
@@ -1052,7 +1035,7 @@ begin
         infAdProd := '';
       end;
     end;
-
+    sat.CFe.Total.vCFe := TotalGeral - DocumentoFiscal.desconto;
     sat.CFe.Total.vCFeLei12741 := TotalImposto;
 
     for Counter := 0 to Length(DocumentoFiscalPagamentos) - 1 do

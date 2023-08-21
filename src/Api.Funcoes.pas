@@ -62,21 +62,20 @@ end;
 
 procedure startApi;
 var
-  porta: Integer;
+  Porta: Integer;
   FConfig: TConfig;
-  //LGetSSLPassword: TGetPasswordSSL;
+  LGetSSLPassword: TGetPasswordSSL;
 begin
   InfoConfig(FConfig);
   if FConfig.ambienteseguro then
   begin
     THorse.IOHandleSSL
-    .CertFile(FConfig.emitente.certificado.caminhoraiz + '\allserver.crt')
-    .KeyFile(FConfig.emitente.certificado.caminhoraiz + '\allserver.key');
-    //THorse.IOHandleSSL.OnGetPassword(LGetSSLPassword.OnGetPassword);
-
-    THorse.IOHandleSSL.SSLVersions([sslvSSLv2, sslvSSLv23, sslvSSLv3, sslvTLSv1, sslvTLSv1_1, sslvTLSv1_2]);
-    THorse.IOHandleSSL.Method(sslvTLSv1_2);
-    THorse.IOHandleSSL.Active(True);
+    .CertFile(FConfig.emitente.certificado.caminhoraiz + '\constel.crt')
+    .KeyFile(FConfig.emitente.certificado.caminhoraiz + '\constel.key')
+    .OnGetPassword(LGetSSLPassword.OnGetPassword)
+    .SSLVersions([sslvTLSv1_2])
+    .Method(sslvTLSv1_2)
+    .Active(True);
   end;
 
   Porta := FConfig.porta;
@@ -243,7 +242,7 @@ end;
 
 procedure TGetPasswordSSL.OnGetPassword(var Password: String);
 begin
-  Password := '1234';
+  Password := '';
 end;
 
 end.
