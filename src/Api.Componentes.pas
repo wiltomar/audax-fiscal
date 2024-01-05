@@ -6,7 +6,8 @@ uses
   System.SysUtils, System.StrUtils, System.Classes, IniFiles, ACBrBase, ACBrSAT,
   ACBrDFeSSL, ACBrSATClass, pcnConversao, pcnConversaoNFe, Model.DocumentoFiscal,
   pcnCFe, ACBrDFe, ACBrNFe, ACBrMail, ACBrUtil, ACBrDFeUtil, ACBrNFeNotasFiscais,
-  pcnNFe, Api.Funcoes, System.Math, Model.Config;
+  ACBrNFeDANFeRLClass, pcnNFe, Api.Funcoes, System.Math, System.NetEncoding,
+  System.IOUtils, Model.Config, ActiveX, Soap.EncdDecd;
 
 const
   docModelos: TArray<String> = ['55', '56', '57', '58', '59', '65'];
@@ -42,6 +43,7 @@ type
   public
     function EmiteDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
     function CancelarDFe(DocumentoFiscal: TDocumentoFiscal): TDocumentoFiscal;
+    function ImprimirDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
 
   end;
 
@@ -70,6 +72,7 @@ begin
       CFe.TamanhoIdentacao                := 3;
       CFe.RetirarAcentos                  := True;
 
+      Config.XmlSignLib                   := SSL.SSLXmlSignLib;
       Config.ArqSchema                    := FConfig.cfe.schemas;
       Config.PaginaDeCodigo               := FConfig.cfe.paginadecodigo;
       Config.EhUTF8                       := FConfig.cfe.utf;
@@ -125,6 +128,73 @@ begin
   RemoveDataModule(self);
 end;
 
+function Tcomponents.ImprimirDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
+var
+  xmlDocumento, documento: String;
+  stream: TMemoryStream;
+begin
+  CoInitialize(nil);
+  try
+    case AnsiIndexStr(DocumentoFiscal.modelo, docModelos) of
+      0:
+        begin
+          if (DocumentoFiscal.documentoFiscalNFe.chave > '') and (DocumentoFiscal.documentoFiscalNFe.status = 100) and (DocumentoFiscal.documentoFiscalNFe.protocolo > '') then
+          begin
+            var nfe: TACBrNFe;
+            var danfe: TACBrNFeDANFeRL;
+
+            xmlDocumento := DocumentoFiscal.documentoFiscalNFe.xml;
+
+            nfe := TACBrNFe.Create(nil);
+            danfe := TACBrNFeDANFeRL.Create(nil);
+
+            try
+              with danfe do
+              begin
+                Sistema := 'Audax Constel';
+                Site    := 'https://constel.cloud';
+              end;
+
+              nfe.DANFE := danfe;
+              nfe.NotasFiscais.Clear;
+
+              if nfe.NotasFiscais.LoadFromString(xmlDocumento) then
+              begin
+                nfe.DANFE.PathPDF := ExtractFilePath(GetCurrentDir) + 'DocumentosFiscais\PDF';
+                nfe.DANFE.ImprimirDANFEPDF;
+
+                stream := TMemoryStream.Create;
+                try
+                  stream.LoadFromFile(nfe.DANFE.ArquivoPDF);
+                  documento := StringReplace(EncodeBase64(stream.Memory, stream.Size), #13#10, '', [rfReplaceAll]);
+                  documentoFiscal.documentoFiscalNFe.danfe := documento;
+                finally
+                  if FileExists(nfe.DANFE.ArquivoPDF) then
+                    DeleteFile(nfe.DANFE.ArquivoPDF);
+                  stream.Free;
+                end;
+              end;
+
+            finally
+              danfe.Free;
+              nfe.Free;
+            end;
+          end;
+        end;
+      4:
+        begin
+          xmlDocumento := DocumentoFiscal.documentoFiscalCFe.xml;
+        end;
+      5:
+        begin
+          xmlDocumento := DocumentoFiscal.documentoFiscalNFe.xml;
+        end;
+    end;
+  finally
+    Result := documentoFiscal;
+  end;
+
+end;
 function Tcomponents.EmiteDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
 var
   xmlDocumento: string;
@@ -165,6 +235,10 @@ begin
         begin
           xmlDocumento := GerarCFe(DocumentoFiscal);
 
+          var
+            erro: string;
+
+          sat.ValidarDadosVenda(xmlDocumento, erro);
           sat.EnviarDadosVenda(xmlDocumento);
 
           if sat.Resposta.codigoDeRetorno = 6000 then
@@ -187,7 +261,7 @@ begin
           begin
             WriteLn(Format('%s - Não foi possivel emitir o cupom fiscal, o seguinte erro ocorreu: %s.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
                                                                                                          sat.Resposta.mensagemRetorno]));
-            Error := sat.Resposta.mensagemRetorno;
+            Error := erro;
           end;
 
           Result := DocumentoFiscal;
@@ -348,7 +422,7 @@ begin
 
       if nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.cStat = 135 then
       begin
-        DocumentoFiscal.documentoFiscalNFe.status := nfe.WebServices.EnvEvento.cStat;
+        DocumentoFiscal.documentoFiscalNFe.status := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.cStat;
         DocumentoFiscal.documentoFiscalNFe.cancelamentoProtocolo := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.nProt;
         DocumentoFiscal.documentoFiscalNFe.cancelamentoData := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.dhRegEvento;
         DocumentoFiscal.documentoFiscalNFe.cancelamentoJustificativa := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.xMotivo;
@@ -356,7 +430,7 @@ begin
         WriteLn(Format('%s - Nota fiscal: %d com chave: %s, cancelada com sucesso.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
                                                                                       DocumentoFiscal.documentoFiscalNFe.numero,
                                                                                       DocumentoFiscal.documentoFiscalNFe.chave]));
-       end
+      end
       else
       begin
         DocumentoFiscal.documentoFiscalNFe.cancelamentoJustificativa := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.xMotivo;
@@ -685,8 +759,9 @@ begin
         Prod.xProd := item.nome;
         Prod.NCM := StringReplace(ncm.codigo, '.', '', [rfReplaceAll]);
         Prod.EXTIPI := '';
-        if DocumentoFiscal.estabelecimento.estabelecimentoEnderecos[0].uf.sigla =
-           DocumentoFiscal.parceiro.parceiroEnderecos[0].uf.sigla then
+        if (DocumentoFiscal.estabelecimento.estabelecimentoEnderecos[0].uf.sigla =
+           DocumentoFiscal.parceiro.parceiroEnderecos[0].uf.sigla) or
+           (DocumentoFiscal.parceiro.parceiroEnderecos[0].uf.sigla = 'EX') then
           Prod.CFOP := cfop.codigo
         else
           Prod.CFOP := IntToStr(1000 + StrToInt(cfop.codigo));
@@ -846,23 +921,20 @@ begin
       NotaF.NFe.Total.ICMSTot.vICMS := 0;
     end;
 
-    NotaF.NFe.Total.ICMSTot.vBCST   := 0;
-    NotaF.NFe.Total.ICMSTot.vST     := 0;
-    NotaF.NFe.Total.ICMSTot.vProd   := vTotalItens;
-    NotaF.NFe.Total.ICMSTot.vFrete  := 0;
-    NotaF.NFe.Total.ICMSTot.vSeg    := 0;
-    NotaF.NFe.Total.ICMSTot.vDesc   := vTotalDescontos + DocumentoFiscal.desconto;
-    NotaF.NFe.Total.ICMSTot.vII     := 0;
-    NotaF.NFe.Total.ICMSTot.vIPI    := 0;
-    NotaF.NFe.Total.ICMSTot.vPIS    := 0;
-    NotaF.NFe.Total.ICMSTot.vCOFINS := 0;
-    NotaF.NFe.Total.ICMSTot.vOutro  := 0;
-    NotaF.NFe.Total.ICMSTot.vNF     := vTotalItens - DocumentoFiscal.desconto - vTotalDescontos;
+    NotaF.NFe.Total.ICMSTot.vBCST     := 0;
+    NotaF.NFe.Total.ICMSTot.vST       := 0;
+    NotaF.NFe.Total.ICMSTot.vProd     := vTotalItens;
+    NotaF.NFe.Total.ICMSTot.vFrete    := 0;
+    NotaF.NFe.Total.ICMSTot.vSeg      := 0;
+    NotaF.NFe.Total.ICMSTot.vDesc     := vTotalDescontos + DocumentoFiscal.desconto;
+    NotaF.NFe.Total.ICMSTot.vII       := 0;
+    NotaF.NFe.Total.ICMSTot.vIPI      := 0;
+    NotaF.NFe.Total.ICMSTot.vPIS      := 0;
+    NotaF.NFe.Total.ICMSTot.vCOFINS   := 0;
+    NotaF.NFe.Total.ICMSTot.vOutro    := 0;
+    NotaF.NFe.Total.ICMSTot.vNF       := vTotalItens - DocumentoFiscal.desconto - vTotalDescontos;
+    NotaF.NFe.Total.ICMSTot.vTotTrib  := 0;
 
-    // lei da transparencia de impostos
-    NotaF.NFe.Total.ICMSTot.vTotTrib := 0;
-
-    // partilha do icms e fundo de probreza
     NotaF.NFe.Total.ICMSTot.vFCPUFDest   := 0.00;
     NotaF.NFe.Total.ICMSTot.vICMSUFDest  := 0.00;
     NotaF.NFe.Total.ICMSTot.vICMSUFRemet := 0.00;
@@ -892,17 +964,7 @@ begin
     NotaF.NFe.Transp.retTransp.vICMSRet := 0;
     NotaF.NFe.Transp.retTransp.CFOP     := '';
     NotaF.NFe.Transp.retTransp.cMunFG   := 0;
-{
-    with NotaF.NFe.Transp.Vol.New do
-    begin
-      qVol  := 1;
-      esp   := 'Especie';
-      marca := 'Marca';
-      nVol  := 'Numero';
-      pesoL := 100;
-      pesoB := 110;
-    end;
-}
+
     NotaF.NFe.Cobr.Fat.nFat  := IntToStr(documentoFiscal.DocumentoFiscalNFe.numero);
     NotaF.NFe.Cobr.Fat.vOrig := documentoFiscal.subtotal;
     NotaF.NFe.Cobr.Fat.vDesc := documentoFiscal.Desconto;

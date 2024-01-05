@@ -24,6 +24,7 @@ type
     fchave: string;
     fstatus: integer;
     fxml: string;
+    fdanfe: string;
     fprotocolo: string;
     fformaDeEmissao: smallint;
     findicadorIntermediador: smallint;
@@ -44,6 +45,7 @@ type
     property chave: String read fchave write fchave;
     property status: Integer read fstatus write fstatus;
     property xml: String read fxml write fxml;
+    property danfe: String read fdanfe write fdanfe;
     property protocolo: String read fprotocolo write fprotocolo;
     property formaDeEmissao: smallint read fformaDeEmissao write fformaDeEmissao;
     property indicadorIntermediador: smallint read findicadorIntermediador write findicadorIntermediador;

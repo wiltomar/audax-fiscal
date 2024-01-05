@@ -3,7 +3,7 @@ unit Api.Rotas;
 interface
 
 uses Classes, SysUtils, Horse, Horse.CORS, System.JSON, Horse.Jhonson, REST.Json,
-  Model.DocumentoFiscal, Api.Componentes, System.Net.HttpClient;
+  Model.DocumentoFiscal, Api.Componentes, System.Net.HttpClient, System.NetEncoding;
 
 const
   apiVersion = '/api/v1';
@@ -82,7 +82,7 @@ begin
 
   Components := Tcomponents.Create(nil);
   try
-    Resposta := TJSon.ObjectToJsonObject(Components.EmiteDFe(DocumentoFiscal, Error, Msg), [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
+    Resposta := TJson.ObjectToJsonObject(Components.EmiteDFe(DocumentoFiscal, Error, Msg), [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
     try
       Resposta := retorno(Resposta, Error, Msg);
 
@@ -122,6 +122,39 @@ begin
   end;
 end;
 
+procedure gerarDANFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
+var
+  DocumentoFiscal: TDocumentoFiscal;
+  Resposta: TJSONObject;
+  Components: TComponents;
+  Error, Msg: String;
+  StatusCode: THTTPStatus;
+begin
+  DocumentoFiscal := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
+
+  Components := Tcomponents.Create(nil);
+  try
+    Resposta := TJson.ObjectToJsonObject(Components.ImprimirDFe(DocumentoFiscal, Error, Msg), [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
+    try
+      Resposta := retorno(Resposta, Error, Msg);
+
+      if Error > '' then
+        StatusCode := THTTPStatus.BadRequest
+      else
+        StatusCode := THTTPStatus.OK;
+      Res
+        .Status(StatusCode)
+        .Send<TJSONObject>(Resposta);
+    except
+      Res
+        .Status(THTTPStatus.BadRequest)
+        .Send<TJSONObject>(Resposta);
+    end;
+  finally
+    Components.Free;
+  end;
+end;
+
 class procedure TRotas.Registra;
 begin
   HorseCORS
@@ -137,6 +170,7 @@ begin
     .Get(apiVersion + '/', index)
     .Get(apiVersion + '/fiscal/documentofiscal/mfe/conecta', conectaMFe)
     .Post(apiVersion + '/fiscal/documentofiscal/emite', emiteDFe)
+    .Get(apiVersion + '/fiscal/documentofiscal/imprime', gerarDANFe)
     .Post(apiVersion + '/fiscal/documentofiscal/estorna', estornaCFe)
 end;
 
