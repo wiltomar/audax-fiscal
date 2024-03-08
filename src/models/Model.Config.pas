@@ -17,7 +17,7 @@ type
   TWebServiceNFe = class;
   TArquivosNFe = class;
   TNFe = class;
-  TNFSe = class;
+  TNFCe = class;
 
   TConfig = class
   private
@@ -27,7 +27,7 @@ type
     femitente: TEmitente;
     fcfe: TCFe;
     fnfe: TNFe;
-    fnfse: TNFSe;
+    fnfce: TNFCe;
   public
     constructor Create(Owner: TObject);
     destructor Destroy;
@@ -37,7 +37,7 @@ type
     property emitente: TEmitente read femitente write femitente;
     property cfe: TCFe read fcfe write fcfe;
     property nfe: TNFe read fnfe write fnfe;
-    property nfse: TNFSe read fnfse write fnfse;
+    property nfce: TNFCe read fnfce write fnfce;
   end;
 
   TEmitente = class
@@ -267,7 +267,7 @@ type
     property arquivos: TArquivosNFe read farquivos write farquivos;
   end;
 
-  TNFSe = class
+  TNFCe = class
   private
     fidcsc: string;
     fcsc: string;

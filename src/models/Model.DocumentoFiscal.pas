@@ -94,13 +94,23 @@ type
     fformaIndicador: string;
     fvalor: currency;
     ftroco: currency;
+    fcartaoIntegracao: SmallInt;
     fcartaoCredenciadora: string;
+    fcartaoBandeira: string;
+    fcartaoAutorizacao: string;
+    fcartaoCNPJ: string;
+    fcartaoParceiro: TParceiro;
   public
     property estabelecimento: TEstabelecimento read festabelecimento write festabelecimento;
     property formaIndicador: string read fformaIndicador write fformaIndicador;
     property valor: currency read fvalor write fvalor;
     property troco: currency read ftroco write ftroco;
+    property cartaoIntegracao: SmallInt read fcartaoIntegracao write fcartaoIntegracao;
     property cartaoCredenciadora: string read fcartaoCredenciadora write fcartaoCredenciadora;
+    property cartaoBandeira: string read fcartaoBandeira write fcartaoBandeira;
+    property cartaoAutorizacao: string read fcartaoAutorizacao write fcartaoAutorizacao;
+    property cartaoCNPJ: string read fcartaoCNPJ write fcartaoCNPJ;
+    property cartaoParceiro: TParceiro read fcartaoParceiro write fcartaoParceiro;
   end;
 
   TDocumentoFiscalCobranca = class

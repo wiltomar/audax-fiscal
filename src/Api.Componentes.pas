@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.StrUtils, System.Classes, IniFiles, ACBrBase, ACBrSAT,
   ACBrDFeSSL, ACBrSATClass, pcnConversao, pcnConversaoNFe, Model.DocumentoFiscal,
-  pcnCFe, ACBrDFe, ACBrNFe, ACBrMail, ACBrUtil, ACBrDFeUtil, ACBrNFeNotasFiscais,
+  pcnCFe, ACBrDFe, ACBrNFe, ACBrMail, ACBrUtil.Strings, ACBrUtil.Math, ACBrDFeUtil, ACBrNFeNotasFiscais,
   ACBrNFeDANFeRLClass, pcnNFe, Api.Funcoes, System.Math, System.NetEncoding,
   System.IOUtils, Model.Config, ActiveX, Soap.EncdDecd;
 
@@ -21,12 +21,9 @@ type
     procedure satGetsignAC(var Chave: AnsiString);
     procedure DataModuleCreate(Sender: TObject);
   private
-    FsatCodigoDeAtivacao: AnsiString;
-    FsatAssinaturaAC: AnsiString;
+    FsatCodigoDeAtivacao: String;
+    FsatAssinaturaAC: String;
     Fconfig: TConfig;
-
-    property satCodigoDeAtivacao: AnsiString read FsatCodigoDeAtivacao write FsatCodigoDeAtivacao;
-    property satAssinaturaAC: AnsiString read FsatAssinaturaAC write FsatAssinaturaAC;
 
     function inicializaSAT: boolean;
 
@@ -44,6 +41,10 @@ type
     function EmiteDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
     function CancelarDFe(DocumentoFiscal: TDocumentoFiscal): TDocumentoFiscal;
     function ImprimirDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
+
+    property satCodigoDeAtivacao: String read FsatCodigoDeAtivacao write FsatCodigoDeAtivacao;
+    property satAssinaturaAC: String read FsatAssinaturaAC write FsatAssinaturaAC;
+
 
   end;
 
@@ -105,8 +106,8 @@ begin
       ConfigArquivos.SepararPorMes        := FConfig.cfe.arquivos.separarpormes;
       ConfigArquivos.SepararPorAno        := FConfig.cfe.arquivos.separarporano;
 
-      FsatCodigoDeAtivacao                := FConfig.cfe.codigodeativacao;
-      FsatAssinaturaAC                    := FConfig.cfe.swhouse.assinatura;
+      satCodigoDeAtivacao                 := FConfig.cfe.codigodeativacao;
+      satAssinaturaAC                     := FConfig.cfe.swhouse.assinatura;
 
       CFe.IdentarXML                      := True;
       CFe.TamanhoIdentacao                := 3;
@@ -559,8 +560,8 @@ begin
     ModeloDF        := StrToModeloDF(lOk, modelo);
     FormatoAlerta   := 'TAG:%TAGNIVEL% ID:%ID%/%TAG%(%DESCRICAO%) - %MSG%.';
 
-    IdCSC                 := FConfig.nfse.IdCSC;
-    CSC                   := FConfig.nfse.CSC;
+    IdCSC                 := FConfig.nfce.IdCSC;
+    CSC                   := FConfig.nfce.CSC;
     VersaoQRCode          := veqr200;
 
   end;
@@ -778,7 +779,7 @@ begin
         Prod.vOutro    := DocumentoFiscalItens[nCont].outrasDespesas;
         Prod.vFrete    := DocumentoFiscalItens[nCont].frete;
         Prod.vSeg      := 0;
-        infAdProd := 'Informacao Adicional do Produto';
+        infAdProd := '';
 
         Prod.vProd := RoundABNT((Prod.qCom * Prod.vUnCom) + Prod.vOutro, -2);
 
@@ -1036,7 +1037,6 @@ end;
 function Tcomponents.GerarCFe(const DocumentoFiscal: TDocumentoFiscal): string;
 var
   TotalItem, TotalImposto, TotalGeral: Double;
-  A: Integer;
   lOk: Boolean;
   Counter: Integer;
 begin
@@ -1097,6 +1097,8 @@ begin
         infAdProd := '';
       end;
     end;
+    TotalGeral := TotalGeral + DocumentoFiscal.frete;
+    sat.CFe.Total.DescAcrEntr.vAcresSubtot := DocumentoFiscal.frete;
     sat.CFe.Total.vCFe := TotalGeral - DocumentoFiscal.desconto;
     sat.CFe.Total.vCFeLei12741 := TotalImposto;
 
@@ -1106,12 +1108,13 @@ begin
       begin
         cMP := StrToCodigoMP(lOk, DocumentoFiscalPagamentos[Counter].formaIndicador);
         vMP := DocumentoFiscalPagamentos[Counter].valor;
-        if StrToCodigoMP(lOk, DocumentoFiscalPagamentos[Counter].formaIndicador) in [mpCartaodeCredito, mpCartaodeDebito] then
+        if StrToCodigoMP(lOk, DocumentoFiscalPagamentos[Counter]   .formaIndicador) in [mpCartaodeCredito, mpCartaodeDebito] then
           cAdmC := StrToIntDef(DocumentoFiscalPagamentos[Counter].cartaoCredenciadora, 999);
       end;
     end;
-
-    InfAdic.infCpl := 'Acesse constel.cloud para obter maiores;informações sobre o sistema Constel';
+    if DocumentoFiscal.frete > 0 then
+      InfAdic.infCpl := 'Acréscimo sobre o subtotal referente a taxa de entrega;';
+    InfAdic.infCpl := InfAdic.infCpl + 'Acesse constel.cloud para obter maiores;informações sobre o sistema Constel';
 
   end;
 
@@ -1122,11 +1125,11 @@ end;
 procedure Tcomponents.GerarNFCe(const DocumentoFiscal: TDocumentoFiscal);
 var
   lOk: Boolean;
+  nCounter: Integer;
   vBaseDeCalculo,
   vTotalICMS,
   vTotalItens,
   vTotalDescontos: Double;
-  nCounter: Integer;
 begin
   vBaseDeCalculo := 0;
   vTotalICMS := 0;
@@ -1173,12 +1176,12 @@ begin
     with DocumentoFiscal.estabelecimento do
     begin
       Emit.CNPJCPF            := estabelecimentoDocumentos[0].documentoNumero;
-      Emit.IE                 := RemoveStrings(estabelecimentoDocumentos[0].inscricaoEstadual, ['.', '-']);
+      Emit.IE                 := String(RemoveStrings(estabelecimentoDocumentos[0].inscricaoEstadual, ['.', '-']));
       Emit.xNome              := nome;
       Emit.xFant              := nome;
 
       Emit.EnderEmit.fone     := '';
-      Emit.EnderEmit.CEP      := StrToInt(RemoveStrings(estabelecimentoEnderecos[0].cep, ['.', '-']));
+      Emit.EnderEmit.CEP      := StrToInt(String(RemoveStrings(AnsiString(estabelecimentoEnderecos[0].cep), ['.', '-'])));
       Emit.EnderEmit.xLgr     := estabelecimentoEnderecos[0].logradouro;
       Emit.EnderEmit.nro      := IntToStr(estabelecimentoEnderecos[0].numero);
       Emit.EnderEmit.xCpl     := estabelecimentoEnderecos[0].complemento;
@@ -1194,7 +1197,11 @@ begin
     end;
 
     if Length(DocumentoFiscal.cpfInformado) > 0 then
+    begin
       Dest.CNPJCPF            := DocumentoFiscal.cpfInformado;
+      Ide.indFinal            := cfConsumidorFinal;
+      Dest.indIEDest          := inNaoContribuinte;
+    end;
 
     For nCounter := 0 to Length(DocumentoFiscal.documentoFiscalItens) - 1 do
     begin
@@ -1216,11 +1223,13 @@ begin
         Prod.qTrib := quantidade;
         Prod.vUnTrib := valor;
         Prod.vOutro := 0;
-        Prod.vFrete := 0;
+        Prod.vFrete := DocumentoFiscal.documentoFiscalItens[nCounter].frete;
         Prod.vSeg := 0;
         Prod.vDesc := DocumentoFiscal.DocumentoFiscalItens[nCounter].desconto;
 
-        vTotalItens := vTotalItens + valor;
+        Prod.vProd := RoundABNT((Prod.qCom * Prod.vUnCom) + Prod.vOutro, -2);
+
+        vTotalItens := vTotalItens + Prod.vProd;
         vTotalDescontos := vTotalDescontos + DocumentoFiscal.DocumentoFiscalItens[nCounter].desconto;
 
         with Imposto do
@@ -1348,7 +1357,7 @@ begin
     Total.ICMSTot.vBCST   := 0;
     Total.ICMSTot.vST     := 0;
     Total.ICMSTot.vProd   := vTotalItens;
-    Total.ICMSTot.vFrete  := 0;
+    Total.ICMSTot.vFrete  := DocumentoFiscal.frete;
     Total.ICMSTot.vSeg    := 0;
     Total.ICMSTot.vDesc   := vTotalDescontos;
     Total.ICMSTot.vII     := 0;
@@ -1356,7 +1365,7 @@ begin
     Total.ICMSTot.vPIS    := 0;
     Total.ICMSTot.vCOFINS := 0;
     Total.ICMSTot.vOutro  := 0;
-    Total.ICMSTot.vNF     := vTotalItens - vTotalDescontos;
+    Total.ICMSTot.vNF     := vTotalItens + DocumentoFiscal.frete - vTotalDescontos;
 
     Total.ICMSTot.vFCPUFDest   := 0.00;
     Total.ICMSTot.vICMSUFDest  := 0.00;
@@ -1384,6 +1393,13 @@ begin
       begin
         tPag := StrToFormaPagamento(lOk, DocumentoFiscal.documentoFiscalPagamentos[nCounter].formaIndicador);
         vPag := DocumentoFiscal.DocumentoFiscalPagamentos[nCounter].valor;
+        if StrToCodigoMP(lOk, DocumentoFiscal.documentoFiscalPagamentos[nCounter].formaIndicador) in [mpCartaodeCredito, mpCartaodeDebito] then
+        begin
+          tpIntegra := tiPagIntegrado;
+          CNPJ      := ACBrUtil.Strings.OnlyNumber(DocumentoFiscal.documentoFiscalPagamentos[nCounter].cartaoCNPJ);
+          tBand     := TpcnBandeiraCartao(StrToIntDef(DocumentoFiscal.documentoFiscalPagamentos[nCounter].cartaoCredenciadora, 27));
+          cAut      := DocumentoFiscal.documentoFiscalPagamentos[nCounter].cartaoAutorizacao;
+        end;
       end;
       pag.vTroco := DocumentoFiscal.documentoFiscalPagamentos[nCounter].troco;
     end;

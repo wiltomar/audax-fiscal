@@ -23,10 +23,10 @@ type
   TEstabelecimentoCDocumento = class(TBaseR)
   private
     fdocumentotipo: SmallInt;
-    fdocumentoNumero: AnsiString;
-    finscricaoEstadual: AnsiString;
-    finscricaoMunicipal: AnsiString;
-    finscricaoEstadualSubstitutoTributario: AnsiString;
+    fdocumentoNumero: String;
+    finscricaoEstadual: String;
+    finscricaoMunicipal: String;
+    finscricaoEstadualSubstitutoTributario: String;
     fregimeTributarioICMS: SmallInt;
     fregimeTributarioISSQN: SmallInt;
     findicadorDeRateioISSQN: SmallInt;
@@ -42,10 +42,10 @@ type
     fconclusao: TDateTime;
   public
     property documentoTipo: SmallInt read fdocumentoTipo write fdocumentoTipo;
-    property documentoNumero: AnsiString read fdocumentoNumero write fdocumentoNumero;
-    property inscricaoEstadual: AnsiString read finscricaoEstadual write finscricaoEstadual;
-    property inscricaoMunicipal: AnsiString read finscricaoMunicipal write finscricaoMunicipal;
-    property inscricaoEstadualSubstitutoTributario: AnsiString read finscricaoEstadualSubstitutoTributario write finscricaoEstadualSubstitutoTributario;
+    property documentoNumero: String read fdocumentoNumero write fdocumentoNumero;
+    property inscricaoEstadual: String read finscricaoEstadual write finscricaoEstadual;
+    property inscricaoMunicipal: String read finscricaoMunicipal write finscricaoMunicipal;
+    property inscricaoEstadualSubstitutoTributario: String read finscricaoEstadualSubstitutoTributario write finscricaoEstadualSubstitutoTributario;
     property regimeTributarioICMS: SmallInt read fregimeTributarioICMS write fregimeTributarioICMS;
     property regimeTributarioISSQN: SmallInt read fregimeTributarioISSQN write fregimeTributarioISSQN;
     property indicadorDeRateioISSQN: SmallInt read findicadorDeRateioISSQN write findicadorDeRateioISSQN;
@@ -129,7 +129,7 @@ type
     festabelecimentoEnderecos: TEstabelecimentoCEnderecos;
   public
     constructor Create(aid: string; anome: string);
-    destructor Destroy();
+    destructor Destroy(); override;
     property codigo: string read fcodigo write fcodigo;
     property nome: string read fnome write fnome;
     property situacao: SmallInt read fsituacao write fsituacao;
