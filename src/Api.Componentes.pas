@@ -632,7 +632,6 @@ end;
 
 procedure Tcomponents.GerarNFe(const DocumentoFiscal: TDocumentoFiscal);
 var
-  nCont: Integer;
   lOk: Boolean;
   NotaF: NotaFiscal;
   vBaseDeCalculo,
@@ -749,8 +748,7 @@ begin
     Dest.EnderDest.cPais    := 1058;
     Dest.EnderDest.xPais    := 'BRASIL';
 
-    nCont := 0;
-    for nCont := 0 to Length(DocumentoFiscalItens) - 1 do
+    for var nCont := 0 to Length(DocumentoFiscalItens) - 1 do
     begin
       with Det.New, DocumentoFiscalItens[nCont] do
       begin
@@ -972,7 +970,7 @@ begin
     NotaF.NFe.Cobr.Fat.vLiq  := documentoFiscal.subtotal - documentoFiscal.Desconto;
 
 
-    for nCont := 0 to Length(DocumentoFiscal.DocumentoFiscalCobrancas) - 1 do
+    for var nCont := 0 to Length(DocumentoFiscal.DocumentoFiscalCobrancas) - 1 do
     begin
       with NotaF.NFe.Cobr.Dup.New do
       begin
@@ -994,7 +992,7 @@ begin
 
     const indicador = ['01', '02', '03', '04', '05', '10', '11', '12', '13', '15', '16', '17', '18', '19', '90', '99'];
 
-    for nCont := 0 to Length(documentoFiscalPagamentos) - 1 do
+    for var nCont := 0 to Length(documentoFiscalPagamentos) - 1 do
     begin
       with NotaF.NFe.pag.New do
       begin
@@ -1040,8 +1038,6 @@ var
   lOk: Boolean;
   Counter: Integer;
 begin
-  TotalItem  := 0;
-  TotalGeral := 0;
   TotalImposto := 0;
 
   inicializaSAT;
@@ -1086,13 +1082,15 @@ begin
         Imposto.ICMS.pICMS := icmsAliquota;
         Imposto.ICMS.vICMS := icmsValor;
 
-        Imposto.PIS.CST := StrToCSTPIS(lOk, cstPIS.codigo);
-        Imposto.PIS.vBC := TotalItem;
-        Imposto.PIS.pPIS := pisAliquota;
+        Imposto.PIS.CST   := StrToCSTPIS(lOk, cstPIS.codigo);
+        Imposto.PIS.vBC   := TotalItem;
+        Imposto.PIS.pPIS  := (pisAliquota / 100);
+        Imposto.PIS.vPIS  := pisValor;
 
-        Imposto.COFINS.CST := StrToCSTCOFINS(lOk, CSTCOFINS.codigo);
-        Imposto.COFINS.vBC := TotalItem;
-        Imposto.COFINS.pCOFINS := cofinsAliquota;
+        Imposto.COFINS.CST      := StrToCSTCOFINS(lOk, CSTCOFINS.codigo);
+        Imposto.COFINS.vBC      := TotalItem;
+        Imposto.COFINS.pCOFINS  := (cofinsAliquota / 100);
+        Imposto.COFINS.vCOFINS  := cofinsValor;
 
         infAdProd := '';
       end;
