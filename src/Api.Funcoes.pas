@@ -3,7 +3,7 @@ unit Api.Funcoes;
 interface
 
 uses
-  Classes, SysUtils, Horse, IdSSLOpenSSL, Forms, Model.Config, System.JSON, Rest.Json,
+  Classes, SysUtils, Horse, IdSSLOpenSSL, Vcl.Forms, Model.Config, System.JSON, Rest.Json,
   WinApi.Windows;
 
 type
@@ -19,6 +19,7 @@ procedure startApi;
 procedure stopApi;
 procedure statusApi;
 procedure InfoConfig(var FConfig: TConfig);
+procedure Log(const Mensagem: String);
 
 function encrypt(const S: string): string;
 function decrypt(const S: string): string;
@@ -33,7 +34,7 @@ begin
   const FileName = ExtractFilePath(Application.ExeName) + 'config.json';
   if not FileExists(FileName) then
   begin
-    Application.MessageBox(PChar(Format('Desculpe, o arquivo de configuração "%s" não foi encontrado.', [FileName])), 'Erro', MB_ICONERROR);
+    Log(Format('Desculpe, o arquivo de configuração "%s" não foi encontrado.', [FileName]));
     Application.Terminate;
   end;
   var jo: TJSONObject;
@@ -47,17 +48,34 @@ begin
   try
     FConfig := TJSON.JsonToObject<TConfig>(jo);
   except
-    Application.MessageBox(PChar('Desculpe, arquivo de configuração danificado'), 'Erro', MB_ICONERROR);
+    Log('Desculpe, arquivo de configuração danificado');
     Application.Terminate;
+  end;
+end;
+
+procedure Log(const Mensagem: String);
+begin
+  try
+    if Mensagem = EmptyStr then
+    begin
+      WriteLn(Format('%s - Não há uma mensagem para exibição.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now)]));
+      Exit;
+    end;
+
+    WriteLn(Format('%s - %s.', [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now), Mensagem]));
+  except
+    on E: Exception do
+      WriteLn(Format('%s - Houve um erro no processamento da mensagem, conforme a seguir. %s',
+                    [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now), E.Message]));
   end;
 end;
 
 procedure onStop(Horse: THorse);
 begin
   if THorse.IsRunning then
-    Writeln(Format('Api fiscal será encerrada na porta %d', [Horse.Port]))
+    Log(Format('Api fiscal será encerrada na porta %d', [Horse.Port]))
   else
-    Writeln('A api fiscal foi encerrada corretamente.');
+    Log('A api fiscal foi encerrada corretamente.');
 end;
 
 procedure startApi;
@@ -84,9 +102,9 @@ begin
     procedure
     begin
       if THorse.IsRunning then
-        Writeln(Format('Api fiscal em execução e escutando na porta %d', [Porta]))
+        Log(Format('Api fiscal em execução e escutando na porta %d', [Porta]))
       else
-        Writeln('A api fiscal não está sendo executada no momento.');
+        Log('A api fiscal não está sendo executada no momento.');
     end
   );
 end;
@@ -96,18 +114,20 @@ begin
   try
     if THorse.IsRunning then
       THorse.StopListen;
+    Log('Encerrando a API.');
+    Application.Terminate;
   except
     on E: Exception do
-      WriteLn(Format('Erro na tentativa de encerrar a api, com a seguinte mensagem: %s.', [E.Message]));
+      Log(Format('Erro na tentativa de encerrar a api, com a seguinte mensagem: %s.', [E.Message]));
   end;
 end;
 
 procedure statusApi;
 begin
   if THorse.isRunning then
-    WriteLn('A api está em execução')
+    Log('A api está em execução')
   else
-    WriteLn('A api não está sendo executada no momento');
+    Log('A api não está sendo executada no momento');
 end;
 
 function decode(const S: AnsiString): AnsiString;

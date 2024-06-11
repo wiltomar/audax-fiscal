@@ -46,7 +46,7 @@ begin
   except
     On E: Exception do
     begin
-      Writeln(Format('O seguinte erro ocorreu na tentativa de executar a API, %s.', [E.Message]));
+      Log(Format('O seguinte erro ocorreu na tentativa de executar a API, %s.', [E.Message]));
       Result := False;
     end;
   end;
@@ -60,11 +60,11 @@ begin
         0: Api.Funcoes.startApi;
         1: Api.Funcoes.stopApi;
         2: Api.Funcoes.statusApi;
-        else WriteLn(Format('O parâmentro %s não é válido. \nFavor informar como parâmetro "start", "stop" ou "status".', [ParamStr(1)]));
+        else Log(Format('O parâmentro %s não é válido. \nFavor informar como parâmetro "start", "stop" ou "status".', [ParamStr(1)]));
       end;
     end;
   except
     on E: Exception do
-      Writeln(E.ClassName, ': ', E.Message);
+      Log(Format('Erro na classe: %s, com a mensagem: %s', [E.ClassName, E.Message]));
   end;
 end.

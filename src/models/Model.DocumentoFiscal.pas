@@ -316,6 +316,9 @@ type
     fdocumentoFiscalItens: TArray<TDocumentoFiscalItem>;
     fdocumentoFiscalPagamentos: TArray<TDocumentoFiscalPagamento>;
     fdocumentoFiscalCobrancas: TArray<TDocumentoFiscalCobranca>;
+    freferencia: string;
+    freferenciaid: string;
+    freferenciaClasse: Smallint;
   public
     constructor Create;
     destructor Destroy;
@@ -359,6 +362,9 @@ type
     property documentoFiscalItens: TArray<TDocumentoFiscalItem> read fdocumentoFiscalItens write fdocumentoFiscalItens;
     property documentoFiscalPagamentos: TArray<TDocumentoFiscalPagamento> read fdocumentoFiscalPagamentos write fdocumentoFiscalPagamentos;
     property documentoFiscalCobrancas: TArray<TDocumentoFiscalCobranca> read fdocumentoFiscalCobrancas write fdocumentoFiscalCobrancas;
+    property referencia: string read freferencia write freferencia;
+    property referenciaId: string read freferenciaId write freferenciaId;
+    property referenciaClasse: SmallInt read freferenciaClasse write freferenciaClasse;
   end;
   TDocumentosFiscais = TArray<TDocumentoFiscal>;
 
