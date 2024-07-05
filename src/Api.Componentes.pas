@@ -7,7 +7,8 @@ uses
   ACBrDFeSSL, ACBrSATClass, pcnConversao, pcnConversaoNFe, Model.DocumentoFiscal,
   pcnCFe, ACBrDFe, ACBrNFe, ACBrMail, ACBrUtil.Strings, ACBrUtil.Math, ACBrDFeUtil, ACBrNFeNotasFiscais,
   ACBrNFeDANFeRLClass, pcnNFe, Api.Funcoes, System.Math, System.NetEncoding,
-  System.IOUtils, Model.Config, ActiveX, Soap.EncdDecd, Vcl.Forms, WinApi.Windows;
+  System.IOUtils, Model.Config, WinApi.ActiveX, Soap.EncdDecd, Vcl.Forms, WinApi.Windows,
+  Model.Inutilizacao;
 
 const
   docModelos: TArray<String> = ['55', '56', '57', '58', '59', '65'];
@@ -23,24 +24,28 @@ type
   private
     FsatCodigoDeAtivacao: String;
     FsatAssinaturaAC: String;
+    FRespTec: Boolean;
     Fconfig: TConfig;
 
     function inicializaSAT: boolean;
 
     procedure carregaSAT;
     procedure carregaNFe(const modelo: string = '55');
+    procedure carregaCertificado;
 
-    function GerarCFe(const DocumentoFiscal: TDocumentoFiscal): string;
+    function  GerarCFe(const DocumentoFiscal: TDocumentoFiscal): string;
     procedure GerarNFe(const DocumentoFiscal: TDocumentoFiscal);
     procedure GerarNFCe(const DocumentoFiscal: TDocumentoFiscal);
 
     function CancelarNFe(DocumentoFiscal: TDocumentoFiscal): TDocumentoFiscal;
     function CancelarCFe(DocumentoFiscal: TDocumentoFiscal): TDocumentoFiscal;
     function CancelarNFCe(DocumentoFiscal: TDocumentoFiscal): TDocumentoFiscal;
+
   public
     function EmiteDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
     function CancelarDFe(DocumentoFiscal: TDocumentoFiscal): TDocumentoFiscal;
     function ImprimirDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
+    function InutilizaSequencia(Sequencia: TInutilizacao; var Error: string; var Msg: string): TInutilizacao;
 
     property satCodigoDeAtivacao: String read FsatCodigoDeAtivacao write FsatCodigoDeAtivacao;
     property satAssinaturaAC: String read FsatAssinaturaAC write FsatAssinaturaAC;
@@ -303,8 +308,7 @@ begin
   end;
 end;
 
-function Tcomponents.CancelarDFe(
-  DocumentoFiscal: TDocumentoFiscal): TDocumentoFiscal;
+function Tcomponents.CancelarDFe(DocumentoFiscal: TDocumentoFiscal): TDocumentoFiscal;
 begin
   case AnsiIndexStr(DocumentoFiscal.modelo, docModelos) of
     0: Result := CancelarNFe(DocumentoFiscal);
@@ -333,8 +337,8 @@ begin
 
       with nfe.EventoNFe.Evento.New do
       begin
-        infEvento.dhEvento := now;
-        infEvento.tpEvento := teCancelamento;
+        infEvento.dhEvento        := now;
+        infEvento.tpEvento        := teCancelamento;
         infEvento.detEvento.xJust := DocumentoFiscal.documentoFiscalNFe.cancelamentoJustificativa;
       end;
 
@@ -342,10 +346,10 @@ begin
 
       if nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.cStat = 135 then
       begin
-        DocumentoFiscal.documentoFiscalNFe.status := nfe.WebServices.EnvEvento.cStat;
-        DocumentoFiscal.documentoFiscalNFe.cancelamentoProtocolo := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.nProt;
-        DocumentoFiscal.documentoFiscalNFe.cancelamentoData := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.dhRegEvento;
-        DocumentoFiscal.documentoFiscalNFe.cancelamentoJustificativa := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.xMotivo;
+        DocumentoFiscal.documentoFiscalNFe.status                     := nfe.WebServices.EnvEvento.cStat;
+        DocumentoFiscal.documentoFiscalNFe.cancelamentoProtocolo      := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.nProt;
+        DocumentoFiscal.documentoFiscalNFe.cancelamentoData           := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.dhRegEvento;
+        DocumentoFiscal.documentoFiscalNFe.cancelamentoJustificativa  := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.xMotivo;
 
         Log(Format('Cupom fiscal: %d com chave: %s, cancelado com sucesso.', [DocumentoFiscal.documentoFiscalNFe.numero,
                                                                               DocumentoFiscal.documentoFiscalNFe.chave]));
@@ -380,15 +384,12 @@ begin
   end;
 end;
 
-function Tcomponents.CancelarNFe(
-  DocumentoFiscal: TDocumentoFiscal): TDocumentoFiscal;
+function Tcomponents.CancelarNFe(DocumentoFiscal: TDocumentoFiscal): TDocumentoFiscal;
 var
-  xmlOriginal: String;
   lOk: Boolean;
 begin
-  xmlOriginal := DocumentoFiscal.documentoFiscalNFe.xml;
-
   carregaNFe;
+
   try
     nfe.Consultar(DocumentoFiscal.documentoFiscalNFe.chave, True);
 
@@ -401,15 +402,15 @@ begin
     if not(nfe.WebServices.Consulta.cStat = 101) then
     begin
       nfe.NotasFiscais.Clear;
-      nfe.NotasFiscais.LoadFromString(xmlOriginal);
+      nfe.NotasFiscais.LoadFromString(DocumentoFiscal.documentoFiscalNFe.xml);
 
       nfe.EventoNFe.Evento.Clear;
       nfe.EventoNFe.idLote := DocumentoFiscal.documentoFiscalNFe.numero;
 
       with nfe.EventoNFe.Evento.New do
       begin
-        infEvento.dhEvento := now;
-        infEvento.tpEvento := teCancelamento;
+        infEvento.dhEvento        := now;
+        infEvento.tpEvento        := teCancelamento;
         infEvento.detEvento.xJust := DocumentoFiscal.documentoFiscalNFe.cancelamentoJustificativa;
       end;
 
@@ -417,10 +418,10 @@ begin
 
       if nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.cStat = 135 then
       begin
-        DocumentoFiscal.documentoFiscalNFe.status := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.cStat;
-        DocumentoFiscal.documentoFiscalNFe.cancelamentoProtocolo := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.nProt;
-        DocumentoFiscal.documentoFiscalNFe.cancelamentoData := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.dhRegEvento;
-        DocumentoFiscal.documentoFiscalNFe.cancelamentoJustificativa := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.xMotivo;
+        DocumentoFiscal.documentoFiscalNFe.status                     := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.cStat;
+        DocumentoFiscal.documentoFiscalNFe.cancelamentoProtocolo      := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.nProt;
+        DocumentoFiscal.documentoFiscalNFe.cancelamentoData           := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.dhRegEvento;
+        DocumentoFiscal.documentoFiscalNFe.cancelamentoJustificativa  := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.xMotivo;
 
         Log(Format('Nota fiscal: %d com chave: %s, cancelada com sucesso.', [DocumentoFiscal.documentoFiscalNFe.numero,
                                                                              DocumentoFiscal.documentoFiscalNFe.chave]));
@@ -435,10 +436,10 @@ begin
     begin
       if nfe.WebServices.Consulta.retCancNFe.cStat = 101 then
       begin
-        DocumentoFiscal.documentoFiscalNFe.status := nfe.WebServices.Consulta.retCancNFe.cStat;
-        DocumentoFiscal.documentoFiscalNFe.cancelamentoProtocolo := nfe.WebServices.Consulta.retCancNFe.nProt;
-        DocumentoFiscal.documentoFiscalNFe.cancelamentoData := nfe.WebServices.Consulta.retCancNFe.dhRecbto;
-        DocumentoFiscal.documentoFiscalNFe.cancelamentoJustificativa := nfe.WebServices.Consulta.retCancNFe.xMotivo;
+        DocumentoFiscal.documentoFiscalNFe.status                     := nfe.WebServices.Consulta.retCancNFe.cStat;
+        DocumentoFiscal.documentoFiscalNFe.cancelamentoProtocolo      := nfe.WebServices.Consulta.retCancNFe.nProt;
+        DocumentoFiscal.documentoFiscalNFe.cancelamentoData           := nfe.WebServices.Consulta.retCancNFe.dhRecbto;
+        DocumentoFiscal.documentoFiscalNFe.cancelamentoJustificativa  := nfe.WebServices.Consulta.retCancNFe.xMotivo;
 
         Log(Format('Nota fiscal: %d com chave: %s, já cancelada anteriormente.', [DocumentoFiscal.documentoFiscalNFe.numero,
                                                                                   DocumentoFiscal.documentoFiscalNFe.chave]));
@@ -456,19 +457,15 @@ begin
 end;
 
 function Tcomponents.CancelarCFe(DocumentoFiscal: TDocumentoFiscal): TDocumentoFiscal;
-var
-  xmlOriginal, xmlCancelamento: String;
 begin
-  xmlOriginal := DocumentoFiscal.documentoFiscalCFe.xml;
-
   inicializaSAT;
   sat.InicializaCFe;
 
   try
-    sat.CFe.SetXMLString(xmlOriginal);
+    sat.CFe.SetXMLString(DocumentoFiscal.documentoFiscalCFe.xml);
     sat.CFe2CFeCanc;
 
-    xmlCancelamento := sat.CFeCanc.GerarXML(True);
+    var xmlCancelamento := sat.CFeCanc.GerarXML(True);
 
     sat.CFeCanc.AsXMLString := xmlCancelamento;
     sat.CancelarUltimaVenda(sat.CFeCanc.infCFe.chCanc, xmlCancelamento);
@@ -518,14 +515,83 @@ begin
 
 end;
 
+function Tcomponents.InutilizaSequencia(Sequencia: TInutilizacao; var Error: string; var Msg: string): TInutilizacao;
+begin
+  Error := '';
+  Msg   := '';
+  carregaNFe(IntToStr(Sequencia.modelo));
+
+  var SequenciaRetorno := TInutilizacao.Create;
+
+  try
+    nfe.WebServices.Inutiliza(Sequencia.cnpj, Sequencia.motivo, Sequencia.ano,
+                              Sequencia.modelo, Sequencia.serie, Sequencia.numeroinicial,
+                              Sequencia.numerofinal);
+
+    SequenciaRetorno.ambiente       := TpAmbToStr(nfe.WebServices.Inutilizacao.TpAmb);
+    SequenciaRetorno.status         := nfe.WebServices.Inutilizacao.cStat;
+    SequenciaRetorno.motivo         := nfe.WebServices.Inutilizacao.xMotivo;
+    SequenciaRetorno.uf             := nfe.WebServices.Inutilizacao.cUF;
+    SequenciaRetorno.ano            := nfe.WebServices.Inutilizacao.Ano;
+    SequenciaRetorno.cnpj           := nfe.WebServices.Inutilizacao.CNPJ;
+    SequenciaRetorno.modelo         := nfe.WebServices.Inutilizacao.Modelo;
+    SequenciaRetorno.serie          := nfe.WebServices.Inutilizacao.Serie;
+    SequenciaRetorno.numeroinicial  := nfe.WebServices.Inutilizacao.NumeroInicial;
+    SequenciaRetorno.numerofinal    := nfe.WebServices.Inutilizacao.NumeroFinal;
+    SequenciaRetorno.recebimento    := nfe.WebServices.Inutilizacao.dhRecbto;
+    SequenciaRetorno.protocolo      := nfe.WebServices.Inutilizacao.Protocolo;
+
+    SequenciaRetorno.xml      := nfe.WebServices.Inutilizacao.RetornoWS;
+
+    Log(Format('A sequência de documentos: %d a %d, foi inutilizada com sucesso.', [nfe.WebServices.Inutilizacao.NumeroInicial,
+                                                       nfe.WebServices.Inutilizacao.NumeroFinal]));
+    Msg := nfe.WebServices.Inutilizacao.Justificativa;
+
+  except
+    On E:Exception do
+    begin
+      Log(Format('Não foi possível inutilizar a sequência, o seguinte erro ocorreu: %s.', [nfe.WebServices.Retorno.Msg]));
+      Error := nfe.WebServices.Retorno.Msg;
+    end;
+  end;
+
+  Result := SequenciaRetorno;
+end;
+
+procedure Tcomponents.carregaCertificado;
+begin
+  nfe.SSL.DescarregarCertificado;
+
+  with nfe.SSL do
+  begin
+    ArquivoPFX              := FConfig.emitente.certificado.caminhopfx;
+    Senha                   := FConfig.emitente.certificado.senhadocertificado;
+    NumeroSerie             := FConfig.emitente.certificado.numerodeserie;
+  end;
+
+  with nfe.Configuracoes.Certificados do
+  begin
+    ArquivoPFX              := FConfig.emitente.certificado.caminhopfx;
+    Senha                   := FConfig.emitente.certificado.senhadocertificado;
+    NumeroSerie             := FConfig.emitente.certificado.numerodeserie;
+  end;
+
+  if not(nfe.Configuracoes.Certificados.VerificarValidade) then
+  begin
+    Log(Format('Erro de certificado. Certificado vencido em %s.', [FormatDateTime('dd/mm/yyyy', nfe.ssl.CertDataVenc)]));
+    Exit;
+  end;
+end;
+
 procedure Tcomponents.carregaNFe(const modelo: string = '55');
 var
   lOk: Boolean;
 begin
   InfoConfig(FConfig);
 
+  FRespTec := FConfig.responsaveltecnico;
+
   try
-    nfe.SSL.DescarregarCertificado;
     with nfe.Configuracoes.Geral do
     begin
       SSLLib                  := TSSLLib(FConfig.nfe.ssl.lib);
@@ -565,12 +631,7 @@ begin
       PathSalvar              := FConfig.nfe.arquivos.pathsalvar;
     end;
 
-    with nfe.Configuracoes.Certificados do
-    begin
-      ArquivoPFX              := FConfig.emitente.certificado.caminhopfx;
-      Senha                   := FConfig.emitente.certificado.senhadocertificado;
-      NumeroSerie             := FConfig.emitente.certificado.numerodeserie;
-    end;
+    carregaCertificado;
 
     with nfe.Configuracoes.WebServices do
     begin
@@ -600,6 +661,7 @@ begin
       UseThread               := FConfig.emitente.email.usathread;
       FromName                := FConfig.emitente.email.remetente;
     end;
+
   except
     on E: Exception do
        Log(Format('Erro ao carregar dados do arquivo de configuração. Mensagem de erro: %s.', [E.Message]));
@@ -622,59 +684,63 @@ var
   NotaF: NotaFiscal;
   vBaseDeCalculo,
   vTotalICMS,
+  vTotalPIS,
+  vTotalCOFINS,
   vTotalItens,
   vTotalDescontos: Double;
   Count: TNFe;
 begin
   vBaseDeCalculo := 0;
   vTotalICMS := 0;
+  vTotalPIS := 0;
+  vTotalCOFINS := 0;
   vTotalItens := 0;
   vTotalDescontos := 0;
 
-  carregaNFe;
-
   nfe.NotasFiscais.Clear;
+
+  carregaNFe;
 
   nfe.Configuracoes.WebServices.Ambiente := StrToTpAmb(lOk, IntToStr(DocumentoFiscal.ambiente));
 
   NotaF := nfe.NotasFiscais.Add;
   with NotaF.NFe, DocumentoFiscal do
   begin
-    Ide.natOp   := historico.nome;
-    Ide.modelo  := 55;
-    Ide.serie   := documentoFiscalNFe.serie;
-    Ide.nNF     := documentoFiscalNFe.numero;
-    Ide.cNF     := GerarCodigoDFe(Ide.nNF);
-    Ide.dEmi    := emissao;
-    Ide.dSaiEnt := saida;
-    Ide.hSaiEnt := saida;
-    Ide.tpNF    := tnSaida;  // Ver depois de onde pegar essa informação.
-    Ide.tpEmis    := StrToTpEmis(lOk, IntToStr(DocumentoFiscal.documentoFiscalNFe.formaDeEmissao));
-    Ide.tpAmb     := StrToTpAmb(lOk, IntToStr(DocumentoFiscal.ambiente));
-    Ide.verProc := '2023.05'; // Ver depois de onde pegar essa informação.
-    Ide.cUF     := UFtoCUF(estabelecimento.estabelecimentoEnderecos[0].uf.sigla);
-    Ide.cMunFG  := StrToInt(estabelecimento.estabelecimentoEnderecos[0].municipio.codigo);
-    Ide.finNFe  := StrToFinNFe(lOk, IntToStr(documentoFiscalNFe.finalidadeEmissao));
+    Ide.natOp       := historico.nome;
+    Ide.modelo      := 55;
+    Ide.serie       := documentoFiscalNFe.serie;
+    Ide.nNF         := documentoFiscalNFe.numero;
+    Ide.cNF         := GerarCodigoDFe(Ide.nNF);
+    Ide.dEmi        := emissao;
+    Ide.dSaiEnt     := saida;
+    Ide.hSaiEnt     := saida;
+    Ide.tpNF        := tnSaida;
+    Ide.tpEmis      := StrToTpEmis(lOk, IntToStr(DocumentoFiscal.documentoFiscalNFe.formaDeEmissao));
+    Ide.tpAmb       := StrToTpAmb(lOk, IntToStr(DocumentoFiscal.ambiente));
+    Ide.verProc     := '2024.06';
+    Ide.cUF         := UFtoCUF(estabelecimento.estabelecimentoEnderecos[0].uf.sigla);
+    Ide.cMunFG      := StrToInt(estabelecimento.estabelecimentoEnderecos[0].municipio.codigo);
+    Ide.finNFe      := StrToFinNFe(lOk, IntToStr(documentoFiscalNFe.finalidadeEmissao));
     Ide.indIntermed := TindIntermed(documentoFiscalNFe.indicadorIntermediador);
     Ide.indFinal    := cfNao;
     if DocumentoFiscal.estabelecimento.estabelecimentoEnderecos[0].uf.sigla =
        DocumentoFiscal.parceiro.parceiroEnderecos[0].uf.sigla then
-      Ide.idDest  := doInterna
+      Ide.idDest    := doInterna
     else if DocumentoFiscal.parceiro.parceiroEnderecos[0].uf.sigla = 'EX' then
-      Ide.idDest  := doExterior
+      Ide.idDest    := doExterior
     else
-      Ide.idDest  := doInterestadual;
+      Ide.idDest    := doInterestadual;
 
 
     if documentoFiscalNFe.tipoImpressao = 'R' then
-      Ide.tpImp := tiRetrato
+      Ide.tpImp     := tiRetrato
     else
-      Ide.tpImp := tiPaisagem;
+      Ide.tpImp     := tiPaisagem;
 
     if not(TpcnTipoEmissao(documentoFiscalNFe.formaDeEmissao) = teNormal) then
     begin
-      Ide.dhCont:= date;
-      Ide.xJust := 'Falha no webservice normal'; // Ver depois de onde pegar essa informação.
+      Ide.dhCont    := date;
+      Ide.xJust     := 'Falha no webservice normal'; // Ver depois de onde pegar essa informação.
     end;
 
     Emit.CNPJCPF            := estabelecimento.estabelecimentoDocumentos[0].documentoNumero;
@@ -698,10 +764,13 @@ begin
     Emit.IM                 := estabelecimento.estabelecimentoDocumentos[0].inscricaoMunicipal;
     Emit.CRT                := TpcnCRT(estabelecimento.estabelecimentoDocumentos[0].regimeTributarioICMS);
 
-    infRespTec.CNPJ	        := '04528001000164';
-    infRespTec.xContato	    := 'Myron Yerich P. Sales';
-    infRespTec.email        := 'myron@solucaosistemas.net';
-    infRespTec.fone	        := '8533076262';
+    if FRespTec then
+    begin
+      infRespTec.CNPJ	        := '04528001000164';
+      infRespTec.xContato	    := 'Myron Yerich P. Sales';
+      infRespTec.email        := 'myron@solucaosistemas.net';
+      infRespTec.fone	        := '8533076262';
+    end;
 
     if length(parceiro.parceiroDocumentos) > 0 then
     begin
@@ -765,7 +834,7 @@ begin
         Prod.vSeg      := 0;
         infAdProd := '';
 
-        Prod.vProd := RoundABNT((Prod.qCom * Prod.vUnCom) + Prod.vOutro, -2);
+        Prod.vProd := RoundABNT((Prod.qCom * Prod.vUnCom), -2);
 
         vTotalItens := vTotalItens + subtotal;
         vTotalDescontos := vTotalDescontos + DocumentoFiscal.DocumentoFiscalItens[nCont].desconto;
@@ -799,8 +868,8 @@ begin
             end;
 
             vBC := icmsBC;
-            pICMS := RoundABNT(IfThen((icmsAliquota >= 1), (icmsAliquota / 100), icmsAliquota), 3);
-            vICMS := vBC * pICMS;
+            pICMS := icmsAliquota;
+            vICMS := vBC * (pICMS/100);
 
             vBCFCPST := icmsSTBC;
             pFCPST := 2;
@@ -909,15 +978,15 @@ begin
     NotaF.NFe.Total.ICMSTot.vBCST     := 0;
     NotaF.NFe.Total.ICMSTot.vST       := 0;
     NotaF.NFe.Total.ICMSTot.vProd     := vTotalItens;
-    NotaF.NFe.Total.ICMSTot.vFrete    := 0;
+    NotaF.NFe.Total.ICMSTot.vFrete    := DocumentoFiscal.frete;
     NotaF.NFe.Total.ICMSTot.vSeg      := 0;
     NotaF.NFe.Total.ICMSTot.vDesc     := vTotalDescontos + DocumentoFiscal.desconto;
     NotaF.NFe.Total.ICMSTot.vII       := 0;
     NotaF.NFe.Total.ICMSTot.vIPI      := 0;
     NotaF.NFe.Total.ICMSTot.vPIS      := 0;
     NotaF.NFe.Total.ICMSTot.vCOFINS   := 0;
-    NotaF.NFe.Total.ICMSTot.vOutro    := 0;
-    NotaF.NFe.Total.ICMSTot.vNF       := vTotalItens - DocumentoFiscal.desconto - vTotalDescontos;
+    NotaF.NFe.Total.ICMSTot.vOutro    := DocumentoFiscal.outrasDespesas;
+    NotaF.NFe.Total.ICMSTot.vNF       := vTotalItens + DocumentoFiscal.frete + DocumentoFiscal.outrasDespesas - DocumentoFiscal.desconto - vTotalDescontos;
     NotaF.NFe.Total.ICMSTot.vTotTrib  := 0;
 
     NotaF.NFe.Total.ICMSTot.vFCPUFDest   := 0.00;
@@ -1015,6 +1084,7 @@ begin
 
     with NotaF.Nfe.InfAdic.obsCont.Add do
     begin
+      xCampo := 'Info';
       xTexto := Format('%s. Total %m.', [DocumentoFiscal.referencia, DocumentoFiscal.total]);
     end;
   end;
@@ -1057,39 +1127,52 @@ begin
         Prod.qCom := quantidade;
         Prod.vUnCom := valor;
         Prod.indRegra := irTruncamento;
+        Prod.vOutro := DocumentoFiscalItens[Counter].outrasDespesas;
         Prod.vDesc := DocumentoFiscalItens[Counter].desconto;
 
-        TotalItem := RoundABNT((Prod.qCom * Prod.vUnCom) + Prod.vOutro - Prod.vDesc, -2);
+        TotalItem := RoundABNT((Prod.qCom * Prod.vUnCom), -2);
         TotalGeral := TotalGeral + TotalItem;
         Imposto.vItem12741 := TotalItem * (icmsAliquota/100);
         TotalImposto := TotalImposto + Imposto.vItem12741;
 
-        Imposto.ICMS.orig := StrToOrig(lOk, origemDamercadoria.codigo);
-        if Emit.cRegTrib = RTSimplesNacional then
-          Imposto.ICMS.CSOSN := StrToCSOSNIcms(lOk, cstICMS.codigo)
-        else
-          Imposto.ICMS.CST := StrToCSTICMS(lOk, cstICMS.codigo);
+        with Imposto.ICMS do
+        begin
+          orig := StrToOrig(lOk, origemDamercadoria.codigo);
+          if Emit.cRegTrib = RTSimplesNacional then
+            CSOSN := StrToCSOSNIcms(lOk, cstICMS.codigo)
+          else
+            CST := StrToCSTICMS(lOk, cstICMS.codigo);
 
-        Imposto.ICMS.pICMS := icmsAliquota;
-        Imposto.ICMS.vICMS := icmsValor;
+          pICMS := icmsAliquota;
+          vICMS := icmsValor;
+        end;
 
-        Imposto.PIS.CST       := StrToCSTPIS(lOk, cstPIS.codigo);
-        Imposto.PIS.vBC       := TotalItem;
-        Imposto.PIS.pPIS      := (pisAliquota / 100);
-        Imposto.PIS.vPIS      := pisValor;
+        with Imposto.PIS do
+        begin
+          CST       := StrToCSTPIS(lOk, cstPIS.codigo);
+          vBC       := TotalItem;
+          pPIS      := (pisAliquota / 100);
+          vPIS      := pisValor;
+        end;
 
-        Imposto.COFINS.CST      := StrToCSTCOFINS(lOk, CSTCOFINS.codigo);
-        Imposto.COFINS.vBC      := TotalItem;
-        Imposto.COFINS.pCOFINS  := (cofinsAliquota / 100);
-        Imposto.COFINS.vCOFINS  := cofinsValor;
+        with Imposto.COFINS do
+        begin
+          CST      := StrToCSTCOFINS(lOk, CSTCOFINS.codigo);
+          vBC      := TotalItem;
+          pCOFINS  := (cofinsAliquota / 100);
+          vCOFINS  := cofinsValor;
+        end;
 
         infAdProd := '';
       end;
     end;
-    TotalGeral := TotalGeral + DocumentoFiscal.frete;
-    sat.CFe.Total.DescAcrEntr.vAcresSubtot := DocumentoFiscal.frete;
-    sat.CFe.Total.vCFe := TotalGeral - DocumentoFiscal.desconto;
-    sat.CFe.Total.vCFeLei12741 := TotalImposto;
+    TotalGeral := TotalGeral + DocumentoFiscal.outrasDespesas + DocumentoFiscal.frete;
+    with sat.CFe.Total do
+    begin
+      DescAcrEntr.vAcresSubtot := DocumentoFiscal.frete;
+      vCFe := TotalGeral - DocumentoFiscal.desconto;
+      vCFeLei12741 := TotalImposto;
+    end;
 
     for Counter := 0 to Length(DocumentoFiscalPagamentos) - 1 do
     begin
@@ -1100,6 +1183,7 @@ begin
         if StrToCodigoMP(lOk, DocumentoFiscalPagamentos[Counter]   .formaIndicador) in [mpCartaodeCredito, mpCartaodeDebito] then
           cAdmC := StrToIntDef(DocumentoFiscalPagamentos[Counter].cartaoCredenciadora, 999);
       end;
+      Pagto.vTroco := DocumentoFiscalPagamentos[Counter].troco;
     end;
     if DocumentoFiscal.frete > 0 then
       InfAdic.infCpl := 'Acréscimo sobre o subtotal referente a taxa de entrega;';
@@ -1130,9 +1214,11 @@ begin
   vTotalItens := 0;
   vTotalDescontos := 0;
 
+  nfe.NotasFiscais.Clear;
+
   carregaNFe('65');
 
-  nfe.NotasFiscais.Clear;
+  nfe.Configuracoes.WebServices.Ambiente := StrToTpAmb(lOk, IntToStr(DocumentoFiscal.ambiente));
 
   with nfe.Configuracoes.WebServices do
   begin
@@ -1147,9 +1233,9 @@ begin
     Ide.serie     := DocumentoFiscal.documentoFiscalNFe.serie;
     Ide.nNF       := DocumentoFiscal.documentoFiscalNFe.numero;
     Ide.cNF       := GerarCodigoDFe(Ide.nNF);
-    Ide.dEmi      := Now(); //DocumentoFiscal.emissao;
+    Ide.dEmi      := Now;
     Ide.dSaiEnt   := DocumentoFiscal.saida;
-    Ide.hSaiEnt   := Now(); //DocumentoFiscal.saida;
+    Ide.hSaiEnt   := Now;
     Ide.tpNF      := tnSaida;
     Ide.tpEmis    := StrToTpEmis(lOk, IntToStr(DocumentoFiscal.documentoFiscalNFe.formaDeEmissao));
     Ide.tpAmb     := StrToTpAmb(lOk, IntToStr(DocumentoFiscal.ambiente));
@@ -1197,6 +1283,13 @@ begin
       Dest.indIEDest          := inNaoContribuinte;
     end;
 
+    if Length(DocumentoFiscal.cnpjInformado) > 0 then
+    begin
+      Dest.CNPJCPF            := DocumentoFiscal.cnpjInformado;
+      Ide.indFinal            := cfConsumidorFinal;
+      Dest.indIEDest          := inNaoContribuinte;
+    end;
+
     For nCounter := 0 to Length(DocumentoFiscal.documentoFiscalItens) - 1 do
     begin
       with Det.New, DocumentoFiscal.DocumentoFiscalItens[nCounter] do
@@ -1217,12 +1310,12 @@ begin
         Prod.uTrib := unidade.codigo;
         Prod.qTrib := quantidade;
         Prod.vUnTrib := valor;
-        Prod.vOutro := 0;
+        Prod.vOutro := DocumentoFiscal.documentoFiscalItens[nCounter].outrasDespesas;
         Prod.vFrete := DocumentoFiscal.documentoFiscalItens[nCounter].frete;
         Prod.vSeg := 0;
         Prod.vDesc := DocumentoFiscal.DocumentoFiscalItens[nCounter].desconto;
 
-        Prod.vProd := RoundABNT((Prod.qCom * Prod.vUnCom) + Prod.vOutro, -2);
+        Prod.vProd := RoundABNT((Prod.qCom * Prod.vUnCom), -2);
 
         vTotalItens := vTotalItens + Prod.vProd;
         vTotalDescontos := vTotalDescontos + DocumentoFiscal.DocumentoFiscalItens[nCounter].desconto;
@@ -1239,7 +1332,7 @@ begin
             if Emit.CRT in [crtSimplesExcessoReceita, crtRegimeNormal] then
             begin
               CST := StrToCSTICMS(lOk, cstICMS.codigo);
-              vBC := valor;
+              vBC := icmsBC;
               pICMS := IfThen((icmsAliquota >= 1), (icmsAliquota / 100), icmsAliquota);
             end
             else
@@ -1308,7 +1401,7 @@ begin
           with PIS do
           begin
             CST := StrToCSTPIS(lOk, cstPIS.codigo);
-            vBC := valor;
+            vBC := pisBC;
             pPIS := pisAliquota;
             vPIS := vBC * (pPIS/100);
 
@@ -1320,18 +1413,18 @@ begin
 
           with PISST do
           begin
-            vBc       := 0;
-            pPis      := 0;
+            vBc       := pisSTBC;
+            pPis      := pisSTAliquota;
             qBCProd   := 0;
             vAliqProd := 0;
-            vPIS      := 0;
+            vPIS      := vBC * (pPis/100);
             IndSomaPISST :=  ispNenhum;
           end;
 
           with COFINS do
           begin
             CST := StrToCSTCOFINS(lOk, CSTCOFINS.codigo);
-            vBC := valor;
+            vBC := cofinsBC;
             pCOFINS := cofinsAliquota;
             vCOFINS := vBC * (pCOFINS/100);
 
@@ -1343,11 +1436,11 @@ begin
 
           with COFINSST do
           begin
-            vBC       := 0;
-            pCOFINS   := 0;
-            qBCProd   := 0;
-            vAliqProd := 0;
-            vCOFINS   := 0;
+            vBC             := cofinsSTBC;
+            pCOFINS         := cofinsSTAliquota;
+            qBCProd         := 0;
+            vAliqProd       := 0;
+            vCOFINS         := vBC * (pCOFINS/100);
             indSomaCOFINSST :=  iscNenhum;
           end;
         end;
@@ -1356,43 +1449,53 @@ begin
       end;
     end;
 
-    Total.ICMSTot.vBC     := 0;
-    Total.ICMSTot.vICMS   := 0;
-    if Emit.CRT in [crtSimplesExcessoReceita, crtRegimeNormal] then
+    with Total.ICMSTot do
     begin
-      Total.ICMSTot.vBC     := vBaseDeCalculo;
-      Total.ICMSTot.vICMS   := vTotalICMS;
+      vBC     := 0;
+      vICMS   := 0;
+      if Emit.CRT in [crtSimplesExcessoReceita, crtRegimeNormal] then
+      begin
+        vBC   := vBaseDeCalculo;
+        vICMS := vTotalICMS;
+      end;
+
+      vBCST   := 0;
+      vST     := 0;
+      vProd   := vTotalItens;
+      vFrete  := DocumentoFiscal.frete;
+      vSeg    := 0;
+      vDesc   := vTotalDescontos;
+      vII     := 0;
+      vIPI    := 0;
+      vPIS    := vTotalPIS;
+      vCOFINS := vTotalCOFINS;
+      vOutro  := DocumentoFiscal.outrasDespesas;
+      vNF     := vTotalItens + + vOutro + vFrete - vTotalDescontos;
+
+      vFCPUFDest   := 0.00;
+      vICMSUFDest  := 0.00;
+      vICMSUFRemet := 0.00;
     end;
-    Total.ICMSTot.vBCST   := 0;
-    Total.ICMSTot.vST     := 0;
-    Total.ICMSTot.vProd   := vTotalItens;
-    Total.ICMSTot.vFrete  := DocumentoFiscal.frete;
-    Total.ICMSTot.vSeg    := 0;
-    Total.ICMSTot.vDesc   := vTotalDescontos;
-    Total.ICMSTot.vII     := 0;
-    Total.ICMSTot.vIPI    := 0;
-    Total.ICMSTot.vPIS    := vTotalPIS;
-    Total.ICMSTot.vCOFINS := vTotalCOFINS;
-    Total.ICMSTot.vOutro  := 0;
-    Total.ICMSTot.vNF     := vTotalItens + DocumentoFiscal.frete - vTotalDescontos;
 
-    Total.ICMSTot.vFCPUFDest   := 0.00;
-    Total.ICMSTot.vICMSUFDest  := 0.00;
-    Total.ICMSTot.vICMSUFRemet := 0.00;
+    with Total.ISSQNtot do
+    begin
+      vServ   := 0;
+      vBC     := 0;
+      vISS    := 0;
+      vPIS    := 0;
+      vCOFINS := 0;
+    end;
 
-    Total.ISSQNtot.vServ   := 0;
-    Total.ISSQNTot.vBC     := 0;
-    Total.ISSQNTot.vISS    := 0;
-    Total.ISSQNTot.vPIS    := 0;
-    Total.ISSQNTot.vCOFINS := 0;
-
-    Total.retTrib.vRetPIS    := 0;
-    Total.retTrib.vRetCOFINS := 0;
-    Total.retTrib.vRetCSLL   := 0;
-    Total.retTrib.vBCIRRF    := 0;
-    Total.retTrib.vIRRF      := 0;
-    Total.retTrib.vBCRetPrev := 0;
-    Total.retTrib.vRetPrev   := 0;
+    with Total.retTrib do
+    begin
+      vRetPIS    := 0;
+      vRetCOFINS := 0;
+      vRetCSLL   := 0;
+      vBCIRRF    := 0;
+      vIRRF      := 0;
+      vBCRetPrev := 0;
+      vRetPrev   := 0;
+    end;
 
     Transp.modFrete := mfSemFrete;
 
@@ -1416,7 +1519,7 @@ begin
       pag.vTroco := DocumentoFiscal.documentoFiscalPagamentos[nCounter].troco;
     end;
 
-    InfAdic.infCpl     :=  Format('$s . Total %m.', [DocumentoFiscal.referencia, DocumentoFiscal.total]);
+    InfAdic.infCpl     :=  Format('%s . Total %m.', [DocumentoFiscal.referencia, DocumentoFiscal.total]);
     InfAdic.infAdFisco :=  '';
 
   end;

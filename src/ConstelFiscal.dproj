@@ -194,6 +194,7 @@
         <DCCReference Include="models\Model.Moeda.pas"/>
         <DCCReference Include="models\Model.CNAE.pas"/>
         <DCCReference Include="models\Model.Config.pas"/>
+        <DCCReference Include="models\Model.Inutilizacao.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

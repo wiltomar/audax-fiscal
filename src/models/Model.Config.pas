@@ -24,6 +24,7 @@ type
     fporta: smallint;
     fdaemon: smallint;
     fambienteseguro: boolean;
+    fresponsaveltecnico: boolean;
     femitente: TEmitente;
     fcfe: TCFe;
     fnfe: TNFe;
@@ -34,6 +35,7 @@ type
     property porta: smallint read fporta write fporta;
     property daemon: smallint read fdaemon write fdaemon;
     property ambienteseguro: boolean read fambienteseguro write fambienteseguro;
+    property responsaveltecnico: boolean read fresponsaveltecnico write fresponsaveltecnico;
     property emitente: TEmitente read femitente write femitente;
     property cfe: TCFe read fcfe write fcfe;
     property nfe: TNFe read fnfe write fnfe;

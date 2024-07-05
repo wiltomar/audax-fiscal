@@ -36,7 +36,8 @@ uses
   Model.CSTPISCOFINS in 'models\Model.CSTPISCOFINS.pas',
   Model.Moeda in 'models\Model.Moeda.pas',
   Model.CNAE in 'models\Model.CNAE.pas',
-  Model.Config in 'models\Model.Config.pas';
+  Model.Config in 'models\Model.Config.pas',
+  Model.Inutilizacao in 'models\Model.Inutilizacao.pas';
 
 function startApi: boolean;
 begin

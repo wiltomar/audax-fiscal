@@ -3,7 +3,8 @@ unit Api.Rotas;
 interface
 
 uses Classes, SysUtils, Horse, Horse.CORS, System.JSON, Horse.Jhonson, REST.Json,
-  Model.DocumentoFiscal, Api.Componentes, System.Net.HttpClient, System.NetEncoding;
+  Model.DocumentoFiscal, Api.Componentes, System.Net.HttpClient, System.NetEncoding,
+  Model.Inutilizacao;
 
 const
   apiVersion = '/api/v1';
@@ -103,17 +104,49 @@ begin
   end;
 end;
 
-procedure estornaCFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
+procedure inutilizaDFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 var
-  DocumentoFiscalCFe: TDocumentoFiscal;
+  Inutilizacao: TInutilizacao;
+  Resposta: TJSONObject;
+  Components: Tcomponents;
+  Error, Msg: String;
+  StatusCode: THttpStatus;
+begin
+  Inutilizacao := TJson.JsonToObject<TInutilizacao>(Req.Body);
+  Components := Tcomponents.Create(nil);
+  try
+    Resposta := TJson.ObjectToJsonObject(Components.InutilizaSequencia(Inutilizacao, Error, Msg), [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
+    try
+      if Error > '' then
+        StatusCode := THTTPStatus.BadRequest
+      else
+        StatusCode := THTTPStatus.OK;
+      Res
+        .Status(StatusCode)
+        .Send<TJSONObject>(Resposta);
+    except
+      Res
+        .Status(THTTPStatus.BadRequest)
+        .Send<TJSONObject>(Resposta);
+    end;
+
+  finally
+    Components.Free;
+  end;
+
+end;
+
+procedure estornaDFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
+var
+  DocumentoFiscalDFe: TDocumentoFiscal;
   Resposta: TJSONObject;
   Components: Tcomponents;
 begin
-  DocumentoFiscalCFe := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
+  DocumentoFiscalDFe := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
 
   Components := Tcomponents.Create(nil);
   try
-    Resposta := TJson.ObjectToJsonObject(Components.CancelarDFe(DocumentoFiscalCFe));
+    Resposta := TJson.ObjectToJsonObject(Components.CancelarDFe(DocumentoFiscalDFe));
 
     Res
       .Send<TJSONObject>(Resposta);
@@ -171,7 +204,8 @@ begin
     .Get(apiVersion + '/fiscal/documentofiscal/mfe/conecta', conectaMFe)
     .Post(apiVersion + '/fiscal/documentofiscal/emite', emiteDFe)
     .Get(apiVersion + '/fiscal/documentofiscal/imprime', gerarDANFe)
-    .Post(apiVersion + '/fiscal/documentofiscal/estorna', estornaCFe)
+    .Post(apiVersion + '/fiscal/documentofiscal/estorna', estornaDFe)
+    .Post(apiVersion + '/fiscal/documentofiscal/inutiliza', inutilizaDFe)
 end;
 
 end.
