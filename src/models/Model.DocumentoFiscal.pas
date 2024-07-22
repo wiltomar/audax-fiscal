@@ -151,9 +151,11 @@ type
     fpesoBruto: Currency;
     fpesoLiquido: Currency;
     fcstICMS: TCSTICMS;
+    ficmsReducaoBase: Currency;
     ficmsBC: Currency;
     ficmsAliquota: Currency;
     ficmsValor: Currency;
+    ficmsSTReducaoBase: Currency;
     ficmsSTBC: Currency;
     ficmsSTAliquota: Currency;
     ficmsSTValor: Currency;
@@ -223,9 +225,11 @@ type
     property pesoBruto: Currency read fpesoBruto write fpesoBruto;
     property pesoLiquido: Currency read fpesoLiquido write fpesoLiquido;
     property cstICMS: TCSTICMS read fcstICMS write fcstICMS;
+    property icmsReducaoBase: Currency read ficmsReducaoBase write ficmsReducaoBase;
     property icmsBC: Currency read ficmsBC write ficmsBC;
     property icmsAliquota: Currency read ficmsAliquota write ficmsAliquota;
     property icmsValor: Currency read ficmsValor write ficmsValor;
+    property icmsSTReducaoBase: Currency read ficmsSTReducaoBase write ficmsSTReducaoBase;
     property icmsSTBC: Currency read ficmsSTBC write ficmsSTBC;
     property icmsSTAliquota: Currency read ficmsSTAliquota write ficmsSTAliquota;
     property icmsSTValor: Currency read ficmsSTValor write ficmsSTValor;

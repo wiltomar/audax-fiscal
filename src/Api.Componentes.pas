@@ -50,7 +50,6 @@ type
     property satCodigoDeAtivacao: String read FsatCodigoDeAtivacao write FsatCodigoDeAtivacao;
     property satAssinaturaAC: String read FsatAssinaturaAC write FsatAssinaturaAC;
 
-
   end;
 
 var
@@ -122,9 +121,7 @@ begin
   except
     on E:Exception do
     begin
-      Log(Format('%s - Impossível carregar o SAT. Verificar com suporte, o erro %s.',
-                                                                                      [FormatDateTime('DD/MM/YYYY hh:mm:ss', Now),
-                                                                                      E.Message]));
+      Log(Format('Impossível carregar o SAT. Verificar com suporte, o erro %s.', [E.Message]));
     end;
   end;
 end;
@@ -212,26 +209,31 @@ begin
           GerarNFe(DocumentoFiscal);
 
           if nfe.NotasFiscais.Count > 0 then
-            nfe.Enviar(DocumentoFiscal.documentoFiscalNFe.numero, False, True);
-
-          DocumentoFiscal.documentoFiscalNFe.status := nfe.WebServices.Enviar.cStat;
-          DocumentoFiscal.documentoFiscalNFe.msgRetorno := nfe.WebServices.Enviar.Msg;
-
-          if (nfe.WebServices.Enviar.cStat = 100) and not(nfe.WebServices.Enviar.Protocolo = EmptyStr) then
           begin
-            DocumentoFiscal.documentoFiscalNFe.chave := nfe.NotasFiscais.Items[0].NumID;
-            DocumentoFiscal.documentoFiscalNFe.xml := nfe.NotasFiscais.Items[0].XMLAssinado;
-            DocumentoFiscal.documentoFiscalNFe.protocolo := nfe.WebServices.Enviar.Protocolo;
 
-            Log(Format('Emitida a NFe de número: %d com chave: %s.', [nfe.NotasFiscais.Items[0].NFe.Ide.nNF,
-                                                               nfe.NotasFiscais.Items[0].NumID]));
-            Msg := nfe.NotasFiscais.Items[0].Msg;
+            nfe.Enviar(DocumentoFiscal.documentoFiscalNFe.numero, False, FConfig.sincrono);
+
+            DocumentoFiscal.documentoFiscalNFe.status := IfThen(FConfig.sincrono, nfe.WebServices.Enviar.cStat, nfe.WebServices.Retorno.cStat);
+            DocumentoFiscal.documentoFiscalNFe.msgRetorno := IfThen(FConfig.sincrono, nfe.WebServices.Enviar.Msg, nfe.WebServices.Retorno.Msg);
+            DocumentoFiscal.documentoFiscalNFe.protocolo := IfThen(FConfig.sincrono, nfe.WebServices.Enviar.Protocolo, nfe.WebServices.Retorno.Protocolo);
+
+            if (DocumentoFiscal.documentoFiscalNFe.status = 100) and not(DocumentoFiscal.documentoFiscalNFe.protocolo = EmptyStr) then
+            begin
+              DocumentoFiscal.documentoFiscalNFe.chave := nfe.NotasFiscais.Items[0].NumID;
+              DocumentoFiscal.documentoFiscalNFe.xml := nfe.NotasFiscais.Items[0].XMLAssinado;
+
+              Log(Format('Emitida a NFe de número: %d com chave: %s.', [nfe.NotasFiscais.Items[0].NFe.Ide.nNF,
+                                                                 nfe.NotasFiscais.Items[0].NumID]));
+              Msg := nfe.NotasFiscais.Items[0].Msg;
+            end
+            else
+            begin
+              Log(Format('Não foi possível emitir a NFe, o seguinte erro ocorreu: %s.', [nfe.WebServices.Retorno.Msg]));
+              Error := nfe.WebServices.Retorno.Msg;
+            end;
           end
           else
-          begin
-            Log(Format('Não foi possível emitir a NFe, o seguinte erro ocorreu: %s.', [nfe.WebServices.Retorno.Msg]));
-            Error := nfe.WebServices.Retorno.Msg;
-          end;
+            Log('Não há documento fiscal para enviar.');
 
           Result := DocumentoFiscal;
         end;
@@ -541,7 +543,7 @@ begin
     SequenciaRetorno.recebimento    := nfe.WebServices.Inutilizacao.dhRecbto;
     SequenciaRetorno.protocolo      := nfe.WebServices.Inutilizacao.Protocolo;
 
-    SequenciaRetorno.xml      := nfe.WebServices.Inutilizacao.RetornoWS;
+    SequenciaRetorno.xml            := nfe.WebServices.Inutilizacao.RetornoWS;
 
     Log(Format('A sequência de documentos: %d a %d, foi inutilizada com sucesso.', [nfe.WebServices.Inutilizacao.NumeroInicial,
                                                        nfe.WebServices.Inutilizacao.NumeroFinal]));
@@ -561,6 +563,12 @@ end;
 procedure Tcomponents.carregaCertificado;
 begin
   nfe.SSL.DescarregarCertificado;
+
+  if (FConfig.emitente.certificado.caminhopfx = '') and (FConfig.emitente.certificado.numerodeserie = '') then
+  begin
+    Log('Erro ao tentar carregar o certificado digital. Não foi informado o caminho ou o número de série.');
+    Exception.Create('Erro ao tentar carregar o certificado digital. Não foi informado o caminho ou o número de série.');
+  end;
 
   with nfe.SSL do
   begin
@@ -687,6 +695,7 @@ var
   vTotalPIS,
   vTotalCOFINS,
   vTotalItens,
+  vTotalFCPST,
   vTotalDescontos: Double;
   Count: TNFe;
 begin
@@ -695,6 +704,7 @@ begin
   vTotalPIS := 0;
   vTotalCOFINS := 0;
   vTotalItens := 0;
+  vTotalFCPST := 0;
   vTotalDescontos := 0;
 
   nfe.NotasFiscais.Clear;
@@ -772,6 +782,14 @@ begin
       infRespTec.fone	        := '8533076262';
     end;
 
+    if not(FConfig.cnpjaut = EmptyStr)  then
+    begin
+      with autXML.Add do
+      begin
+        CNPJCPF := FConfig.cnpjaut;
+      end;
+    end;
+
     if length(parceiro.parceiroDocumentos) > 0 then
     begin
       Dest.CNPJCPF            := parceiro.parceiroDocumentos[0].documentoNumero;
@@ -834,7 +852,7 @@ begin
         Prod.vSeg      := 0;
         infAdProd := '';
 
-        Prod.vProd := RoundABNT((Prod.qCom * Prod.vUnCom), -2);
+        Prod.vProd := RoundABNT(subtotal, -2);
 
         vTotalItens := vTotalItens + subtotal;
         vTotalDescontos := vTotalDescontos + DocumentoFiscal.DocumentoFiscalItens[nCont].desconto;
@@ -859,9 +877,9 @@ begin
               CST := StrToCSTICMS(lOk, cstICMS.codigo);
               modBC := dbiValorOperacao;
               modBCST := dbisMargemValorAgregado;
-              pRedBC := 0;
+              pRedBC := icmsReducaoBase;
               pMVAST := 0;
-              pRedBCST := 0;
+              pRedBCST := icmsSTReducaoBase;
               vBCST := icmsSTBC;
               pICMSST := icmsstAliquota;
               vICMSST := icmsSTValor;
@@ -872,8 +890,9 @@ begin
             vICMS := vBC * (pICMS/100);
 
             vBCFCPST := icmsSTBC;
-            pFCPST := 2;
-            vFCPST := 2;
+            pFCPST := IfThen(icmsSTBC > 0, 2, 0);
+            vFCPST := IfThen(icmsSTBC > 0, (icmsSTBC * (2/100)), 0);
+            vTotalFCPST := vTotalFCPST + vFCPST;
             vBCSTRet := 0;
             pST := 0;
             vICMSSubstituto := 0;
@@ -916,7 +935,7 @@ begin
             qUnid  := 0;
             vUnid  := 0;
             pIPI   := ipiAliquota;
-            vIPI   := subtotal * (ipiAliquota / 100);
+            vIPI   := vBC * (ipiAliquota / 100);
           end;
 
           with PIS do
@@ -993,7 +1012,7 @@ begin
     NotaF.NFe.Total.ICMSTot.vICMSUFDest  := 0.00;
     NotaF.NFe.Total.ICMSTot.vICMSUFRemet := 0.00;
 
-    NotaF.NFe.Total.ICMSTot.vFCPST     := 0;
+    NotaF.NFe.Total.ICMSTot.vFCPST     := vTotalFCPST;
     NotaF.NFe.Total.ICMSTot.vFCPSTRet  := 0;
 
     NotaF.NFe.Total.retTrib.vRetPIS    := 0;
@@ -1188,7 +1207,7 @@ begin
     if DocumentoFiscal.frete > 0 then
       InfAdic.infCpl := 'Acréscimo sobre o subtotal referente a taxa de entrega;';
     InfAdic.infCpl := InfAdic.infCpl + 'Acesse constel.cloud para obter maiores;informações sobre o sistema Constel;';
-    infAdic.infCpl := InfAdic.infCpl + Format('%s. Total %m.', [DocumentoFiscal.referencia, DocumentoFiscal.total]);
+    infAdic.infCpl := InfAdic.infCpl + Format('%s. Total %m.', [Trim(DocumentoFiscal.referencia), DocumentoFiscal.total]);
 
   end;
 

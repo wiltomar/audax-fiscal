@@ -26,6 +26,8 @@ type
     fambienteseguro: boolean;
     fresponsaveltecnico: boolean;
     femitente: TEmitente;
+    fsincrono: Boolean;
+    fcnpjaut: string;
     fcfe: TCFe;
     fnfe: TNFe;
     fnfce: TNFCe;
@@ -37,6 +39,8 @@ type
     property ambienteseguro: boolean read fambienteseguro write fambienteseguro;
     property responsaveltecnico: boolean read fresponsaveltecnico write fresponsaveltecnico;
     property emitente: TEmitente read femitente write femitente;
+    property sincrono: Boolean read fsincrono write fsincrono;
+    property cnpjaut: string read fcnpjaut write fcnpjaut;
     property cfe: TCFe read fcfe write fcfe;
     property nfe: TNFe read fnfe write fnfe;
     property nfce: TNFCe read fnfce write fnfce;
