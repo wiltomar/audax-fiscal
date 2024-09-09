@@ -327,6 +327,7 @@ begin
   try
     nfe.Consultar(DocumentoFiscal.documentoFiscalNFe.chave, True);
 
+    nfe.Configuracoes.WebServices.UF       := DocumentoFiscal.estabelecimento.estabelecimentoEnderecos[0].uf.sigla;
     nfe.Configuracoes.WebServices.Ambiente := StrToTpAmb(lOk, IntToStr(DocumentoFiscal.ambiente));
 
     if not(nfe.WebServices.Consulta.cStat = 101) then
@@ -395,11 +396,8 @@ begin
   try
     nfe.Consultar(DocumentoFiscal.documentoFiscalNFe.chave, True);
 
-    with nfe.Configuracoes.WebServices do
-    begin
-      UF            := DocumentoFiscal.estabelecimento.estabelecimentoEnderecos[0].uf.sigla;
-      Ambiente      := StrToTpAmb(lOk, IntToStr(DocumentoFiscal.ambiente));
-    end;
+    nfe.Configuracoes.WebServices.UF            := DocumentoFiscal.estabelecimento.estabelecimentoEnderecos[0].uf.sigla;
+    nfe.Configuracoes.WebServices.Ambiente      := StrToTpAmb(lOk, IntToStr(DocumentoFiscal.ambiente));
 
     if not(nfe.WebServices.Consulta.cStat = 101) then
     begin
