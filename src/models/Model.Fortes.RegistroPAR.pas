@@ -17,6 +17,8 @@ type
     FEndereco: string;
     FCEP: string;
     FMunicipio: string;
+    FDDD: smallint;
+    FTelefone: Integer;
   public
     constructor Create;
     function GerarLinha: string;
@@ -31,6 +33,8 @@ type
     property Endereco: string read FEndereco write FEndereco;
     property CEP: string read FCEP write FCEP;
     property Municipio: string read FMunicipio write FMunicipio;
+    property DDD: smallint read FDDD write FDDD;
+    property Telefone: Integer read FTelefone write FTelefone;
   end;
 
 implementation
@@ -45,7 +49,7 @@ end;
 
 function TRegistroPAR.GerarLinha: string;
 begin
-  Result := Format('%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|', [
+  Result := Format('%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|', [
     FTipoRegistro,
     FCodigo,
     FNome,
@@ -55,7 +59,9 @@ begin
     FInscricaoMunicipal,
     FEndereco,
     FCEP,
-    FMunicipio
+    FMunicipio,
+    FDDD,
+    FTelefone
   ]);
 end;
 
