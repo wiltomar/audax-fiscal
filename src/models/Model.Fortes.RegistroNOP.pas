@@ -8,16 +8,16 @@ type
   TRegistroNOP = class(TInterfacedObject, IRegistro)
   private
     FTipoRegistro: string;
-    FCodigo: string;
+    FCodigo: integer;
     FDescricao: string;
-    FEstorno: string;
+    FEstorno: boolean;
   public
     constructor Create;
     function GerarLinha: string;
     property TipoRegistro: string read FTipoRegistro write FTipoRegistro;
-    property Codigo: string read FCodigo write FCodigo;
+    property Codigo: integer read FCodigo write FCodigo;
     property Descricao: string read FDescricao write FDescricao;
-    property Estorno: string read FEstorno write FEstorno;
+    property Estorno: boolean read FEstorno write FEstorno;
   end;
 
 implementation

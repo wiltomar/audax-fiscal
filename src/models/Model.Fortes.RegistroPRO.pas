@@ -9,8 +9,9 @@ type
   TRegistroPRO = class(TInterfacedObject, IRegistro)
   private
     FTipoRegistro: string;
-    FCodigo: string;
+    FCodigo: LongInt;
     FDescricao: string;
+    FCodigoUtilizadoEstab: string;
     FCodigoNCM: string;
     FUnidadeMedida: string;
     FOutraUnidade: TList<TRegistroOUM>;
@@ -20,11 +21,12 @@ type
     function GerarLinha: string;
     procedure AdicionarOutraUnidade(OutraUnidade: TRegistroOUM);
     property TipoRegistro: string read FTipoRegistro write FTipoRegistro;
-    property Codigo: string read FCodigo write FCodigo;
+    property Codigo: LongInt read FCodigo write FCodigo;
     property Descricao: string read FDescricao write FDescricao;
+    property CodigoUtilizadoEstab: string read FCodigoUtilizadoEstab write FCodigoUtilizadoEstab;
     property CodigoNCM: string read FCodigoNCM write FCodigoNCM;
     property UnidadeMedida: string read FUnidadeMedida write FUnidadeMedida;
-    property OutraUnidade: TList<TRegistroOUM> read FOutraUnidade write FOutraUnidade;
+  //  property OutraUnidade: TList<TRegistroOUM> read FOutraUnidade write FOutraUnidade;
   end;
 
 implementation
@@ -53,10 +55,11 @@ function TRegistroPRO.GerarLinha: string;
 var
   Linha: TStringList;
 begin
-  var Produto := Format('%s|%s|%s|%s|%s|', [
+  var Produto := Format('%s|%s|%s|%s|%s|%s', [
     FTipoRegistro,
     FCodigo,
     FDescricao,
+    FCodigoUtilizadoEstab,
     FCodigoNCM,
     FUnidadeMedida
   ]);
