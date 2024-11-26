@@ -3,8 +3,13 @@
     <ProjectExtensions>
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>
-    <PropertyGroup/>
-    <ItemGroup Condition="'$(Platform)'=='Win64'"/>
+    <PropertyGroup>
+        <DeviceId Condition="'$(Platform)'=='Android'"/>
+        <DeviceId Condition="'$(Platform)'=='Android64'"/>
+        <DeviceId Condition="'$(Platform)'=='iOSDevice64'"/>
+        <DeviceId Condition="'$(Platform)'=='iOSSimARM64'"/>
+    </PropertyGroup>
+    <ItemGroup Condition="'$(Platform)'=='OSX64'"/>
     <ItemGroup Condition="'$(Platform)'=='Win32'">
         <DeployFile Include="..\bin\Win32\Debug\ConstelFiscal.exe" Condition="'$(Config)'=='Debug'">
             <RemoteDir>ConstelFiscal\</RemoteDir>
@@ -17,8 +22,15 @@
             <Required>True</Required>
         </DeployFile>
     </ItemGroup>
+    <ItemGroup Condition="'$(Platform)'=='Android64'"/>
+    <ItemGroup Condition="'$(Platform)'=='Android'"/>
+    <ItemGroup Condition="'$(Platform)'=='OSXARM64'"/>
+    <ItemGroup Condition="'$(Platform)'=='Win64'"/>
+    <ItemGroup Condition="'$(Platform)'=='iOSDevice64'"/>
+    <ItemGroup Condition="'$(Platform)'=='iOSSimARM64'"/>
+    <ItemGroup Condition="'$(Platform)'=='Win64x'"/>
     <ItemGroup Condition="'$(Platform)'=='Linux64'">
-        <DeployFile Include="..\bin\Linux64\Debug\ConstelFiscal" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="W:\solucao\constelfiscal\ConstelFiscal" Condition="'$(Config)'=='Debug'">
             <RemoteDir>ConstelFiscal\</RemoteDir>
             <RemoteName>ConstelFiscal</RemoteName>
             <DeployClass>ProjectOutput</DeployClass>

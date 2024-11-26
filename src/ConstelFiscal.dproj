@@ -6,7 +6,7 @@
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
-        <TargetedPlatforms>1</TargetedPlatforms>
+        <TargetedPlatforms>129</TargetedPlatforms>
         <AppType>Console</AppType>
         <MainSource>ConstelFiscal.dpr</MainSource>
         <ProjectName Condition="'$(ProjectName)'==''">ConstelFiscal</ProjectName>
@@ -57,6 +57,12 @@
     <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_1)'!=''">
         <Cfg_1>true</Cfg_1>
         <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Linux64' and '$(Cfg_1)'=='true') or '$(Cfg_1_Linux64)'!=''">
+        <Cfg_1_Linux64>true</Cfg_1_Linux64>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
@@ -139,6 +145,15 @@
         <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
         <DCC_RangeChecking>true</DCC_RangeChecking>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Linux64)'!=''">
+        <DCC_Define>NOGUI;$(DCC_Define)</DCC_Define>
+        <Debugger_Launcher>/usr/bin/gnome-terminal -- &quot;%debuggee%&quot;</Debugger_Launcher>
+        <Manifest_File>(None)</Manifest_File>
+        <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
+        <DCC_DcuOutput>..\dcu\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_ExeOutput>W:\solucao\constelfiscal</DCC_ExeOutput>
+        <Debugger_RunParams>start</Debugger_RunParams>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
         <VerInfo_Locale>1033</VerInfo_Locale>
@@ -165,7 +180,6 @@
         <DCCReference Include="Api.Funcoes.pas"/>
         <DCCReference Include="Api.Componentes.pas">
             <Form>components</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
         <DCCReference Include="lib\Lib.Excecoes.pas"/>
@@ -195,6 +209,56 @@
         <DCCReference Include="models\Model.CNAE.pas"/>
         <DCCReference Include="models\Model.Config.pas"/>
         <DCCReference Include="models\Model.Inutilizacao.pas"/>
+        <DCCReference Include="models\Model.DocumentoFiscalItemAgrupado.pas"/>
+        <DCCReference Include="models\Model.DocumentoFiscalItemSPED.pas"/>
+        <DCCReference Include="models\Model.DocumentoFiscalSPED.pas"/>
+        <DCCReference Include="models\Model.DocumentoFiscalSPEDItem.pas"/>
+        <DCCReference Include="models\Model.Sped.pas"/>
+        <DCCReference Include="models\Model.Contabilista.pas"/>
+        <DCCReference Include="APIService.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroCAB.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroPAR.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroGRP.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroPRO.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroUND.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroNOP.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroPNM.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroINM.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroNFM.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroCTA.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroLAN.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroCTR.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroMOV.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroIMP.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroCLI.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroFOR.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroTPF.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroCRT.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroDCT.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroPAG.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroTRN.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroCFI.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroDIP.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroAIP.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroCEI.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroCVN.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroIPR.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroICS.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroFIN.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroBSS.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroCDF.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroCBL.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroOUM.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroPAJ.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroSPR.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroSSP.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroITS.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroAES.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroDSS.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroSVN.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroCEE.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroTRA.pas"/>
+        <DCCReference Include="Fortes.IRegistro.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -216,8 +280,8 @@
                     <Source Name="MainSource">ConstelFiscal.dpr</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k280.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp280.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k290.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp290.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="4">
@@ -236,15 +300,15 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\bin\Linux64\Debug\ConstelFiscal" Configuration="Debug" Class="ProjectOutput">
-                    <Platform Name="Linux64">
-                        <RemoteName>ConstelFiscal</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="..\bin\Win32\Debug\ConstelFiscal.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>ConstelFiscal.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="W:\solucao\constelfiscal\ConstelFiscal" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Linux64">
+                        <RemoteName>ConstelFiscal</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -1210,7 +1274,7 @@
                 <Platform value="Android64">False</Platform>
                 <Platform value="iOSDevice64">False</Platform>
                 <Platform value="iOSSimARM64">False</Platform>
-                <Platform value="Linux64">False</Platform>
+                <Platform value="Linux64">True</Platform>
                 <Platform value="OSX64">False</Platform>
                 <Platform value="OSXARM64">False</Platform>
                 <Platform value="Win32">True</Platform>

@@ -15,6 +15,7 @@ type
   TSSLNFe = class;
   TGeralNFe = class;
   TWebServiceNFe = class;
+  TImpressora = class;
   TArquivosNFe = class;
   TNFe = class;
   TNFCe = class;
@@ -26,6 +27,7 @@ type
     fambienteseguro: boolean;
     fresponsaveltecnico: boolean;
     femitente: TEmitente;
+    fimpressora: TImpressora;
     fsincrono: Boolean;
     fcnpjaut: string;
     fcfe: TCFe;
@@ -39,6 +41,7 @@ type
     property ambienteseguro: boolean read fambienteseguro write fambienteseguro;
     property responsaveltecnico: boolean read fresponsaveltecnico write fresponsaveltecnico;
     property emitente: TEmitente read femitente write femitente;
+    property impressora: TImpressora read fimpressora write fimpressora;
     property sincrono: Boolean read fsincrono write fsincrono;
     property cnpjaut: string read fcnpjaut write fcnpjaut;
     property cfe: TCFe read fcfe write fcfe;
@@ -48,23 +51,28 @@ type
 
   TEmitente = class
   private
-    fcnpj: string;
-    fie: string;
-    fim: string;
-    fregimeicms: smallint;
     fregimeiss: smallint;
     findicadorderateio: smallint;
     fcertificado: TCertificadoNFe;
     femail: TEmail;
   public
-    property cnpj: string read fcnpj write fcnpj;
-    property ie: string read fie write fie;
-    property im: string read fim write fim;
-    property regimeicms: smallint read fregimeicms write fregimeicms;
     property regimeiss: smallint read fregimeiss write fregimeiss;
     property indicadorderateio: smallint read findicadorderateio write findicadorderateio;
     property certificado: TCertificadoNFe read fcertificado write fcertificado;
     property email: TEmail read femail write femail;
+  end;
+
+  TImpressora = class
+  private
+    fmodelo: smallint;
+    fporta: string;
+    fcolunas: smallint;
+    flinhas: smallint;
+  public
+    property modelo: smallint read fmodelo write fmodelo;
+    property porta: string read fporta write fporta;
+    property colunas: smallint read fcolunas write fcolunas;
+    property linhas: smallint read flinhas write flinhas;
   end;
 
   TCertificadoNFe = class
@@ -147,6 +155,8 @@ type
   private
     fpaginadecodigo: smallint;
     fversaolayout: real;
+    fversaosb: smallint;
+    fversao: real;
     futf: boolean;
     fcodigodeativacao: string;
     fmodelo: smallint;
@@ -162,6 +172,8 @@ type
     property paginadecodigo: smallint read fpaginadecodigo write fpaginadecodigo default 850;
     property utf: boolean read futf write futf default true;
     property versaolayout: real read fversaolayout write fversaolayout;
+    property versaosb: smallint read fversaosb write fversaosb;
+    property versao: real read fversao write fversao;
     property modelo: smallint read fmodelo write fmodelo;
     property codigodeativacao: string read fcodigodeativacao write fcodigodeativacao;
     property arquivolog: string read farquivolog write farquivolog;

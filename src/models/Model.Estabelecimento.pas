@@ -27,10 +27,12 @@ type
     finscricaoEstadual: String;
     finscricaoMunicipal: String;
     finscricaoEstadualSubstitutoTributario: String;
+    finscricaoSuframa: String;
     fregimeTributarioICMS: SmallInt;
     fregimeTributarioISSQN: SmallInt;
     findicadorDeRateioISSQN: SmallInt;
     fcnae: TCnae;
+    fspedperfil: String;
     fambienteEmissaoNFe: SmallInt;
     fambienteEmissaoNFCe: SmallInt;
     fambienteEmissaoCFe: SmallInt;
@@ -46,10 +48,12 @@ type
     property inscricaoEstadual: String read finscricaoEstadual write finscricaoEstadual;
     property inscricaoMunicipal: String read finscricaoMunicipal write finscricaoMunicipal;
     property inscricaoEstadualSubstitutoTributario: String read finscricaoEstadualSubstitutoTributario write finscricaoEstadualSubstitutoTributario;
+    property inscricaoSuframa: String read finscricaoSuframa write finscricaoSuframa;
     property regimeTributarioICMS: SmallInt read fregimeTributarioICMS write fregimeTributarioICMS;
     property regimeTributarioISSQN: SmallInt read fregimeTributarioISSQN write fregimeTributarioISSQN;
     property indicadorDeRateioISSQN: SmallInt read findicadorDeRateioISSQN write findicadorDeRateioISSQN;
     property cnae: TCnae read fcnae write fcnae;
+    property spedperfil: String read fspedperfil write fspedperfil;
     property ambienteEmissaoNFe: SmallInt read fambienteEmissaoNFe write fambienteEmissaoNFe;
     property ambienteEmissaoNFCe: SmallInt read fambienteEmissaoNFCe write fambienteEmissaoNFCe;
     property ambienteEmissaoCFe: SmallInt read fambienteEmissaoCFe write fambienteEmissaoCFe;

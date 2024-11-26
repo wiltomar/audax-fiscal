@@ -5,7 +5,7 @@ interface
 uses Model.Base, Model.Estabelecimento, Model.Parceiro, Model.Historico,
   Model.Operacao, Model.Item, Model.Unidade, Model.Municipio, Model.Conta,
   Model.OrigemDaMercadoria, Model.NCM, Model.CEST, Model.CFOP, Model.CSTICMS,
-  Model.CSTIPI, Model.CSTPISCOFINS, Model.Moeda;
+  Model.CSTIPI, Model.CSTPISCOFINS, Model.Moeda, Lib.Sistema.Tipos, Lib.Funcoes;
 
 const
   DOCUMENTOFISCAL_MODELO_NFe = '55';
@@ -74,6 +74,7 @@ type
     fformaDeEmissao: smallint;
     fsessao: integer;
     fmsgRetorno: string;
+    fimagem: string;
   public
     property estabelecimento: TEstabelecimento read festabelecimento write festabelecimento;
     property numero: Integer read fnumero write fnumero;
@@ -86,6 +87,7 @@ type
     property formaDeEmissao: smallint read fformaDeEmissao write fformaDeEmissao;
     property sessao: integer read fsessao write fsessao;
     property msgRetorno: string read fmsgRetorno write fmsgRetorno;
+    property imagem: string read fimagem write fimagem;
   end;
 
   TDocumentoFiscalPagamento = class
@@ -286,11 +288,11 @@ type
     fsaida: TDateTime;
     fambiente: Integer;
     fmodelo: string;
-    fmoeda: TMoeda;
     fparceiro: TParceiroC;
     fhistorico: THistorico;
-    fcpfInformado: string;
+    fmoeda: TMoeda;
     fcnpjInformado: string;
+    fcpfInformado: string;
     fsubtotal: Currency;
     fdesconto: Currency;
     ffrete: Currency;
@@ -315,8 +317,11 @@ type
     fissBC: Currency;
     fissValor: Currency;
     finssValor: Currency;
-    fdocumentoFiscalNFe: TDocumentoFiscalNFe;
+    fObjetivo: Integer;
+    femail: String;
+    fimagem: AnsiString;
     fdocumentoFiscalCFe: TDocumentoFiscalCFe;
+    fdocumentoFiscalNFe: TDocumentoFiscalNFe;
     fdocumentoFiscalItens: TArray<TDocumentoFiscalItem>;
     fdocumentoFiscalPagamentos: TArray<TDocumentoFiscalPagamento>;
     fdocumentoFiscalCobrancas: TArray<TDocumentoFiscalCobranca>;
@@ -360,6 +365,9 @@ type
     property iiValor: Currency read fiiValor write fiiValor;
     property issBC: Currency read fissBC write fissBC;
     property issValor: Currency read fissValor write fissValor;
+    property objetivo: Integer read fobjetivo write fobjetivo default 0;
+    property email: string read femail write femail;
+    property imagem: AnsiString read fimagem write fimagem;
     property inssValor: Currency read finssValor write finssValor;
     property documentoFiscalNFe: TDocumentoFiscalNFe read fdocumentoFiscalNFe write fdocumentoFiscalNFe;
     property documentoFiscalCFe: TDocumentoFiscalCFe read fdocumentoFiscalCFe write fdocumentoFiscalCFe;

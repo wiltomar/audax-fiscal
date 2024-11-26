@@ -2,7 +2,7 @@ unit Model.Item;
 
 interface
 
-uses Model.Base, Model.Categoria, Model.Preco;
+uses Model.Base, Model.Categoria, Model.Preco, Model.Unidade, Model.NCM, Model.Operacao;
 
 type
   TItemTipo =
@@ -56,7 +56,9 @@ type
     fatributos: TArray<string>;
     festrela: Boolean;
     fcategoria: TCategoria;
-    //funidade: TUnidade;
+    funidade: TUnidade;
+    fncm: TNcm;
+    fvendaOperacao: TVendaOperacao;
     fitemPrecos: TItemPrecos;
   public
     constructor Create(aid: string = ''; anome: string = '');
@@ -68,7 +70,9 @@ type
     property atributos: TArray<string> read fatributos write fatributos;
     property estrela: Boolean read festrela write festrela;
     property categoria: TCategoria read fcategoria write fcategoria;
-    //property unidade: TUnidade read funidade write funidade;
+    property unidade: TUnidade read funidade write funidade;
+    property ncm: TNcm read fncm write fncm;
+    property vendaoperacao: TVendaOperacao read fvendaoperacao write fvendaoperacao;
     property itemPrecos: TItemPrecos read fitemPrecos write fitemPrecos;
   end;
 

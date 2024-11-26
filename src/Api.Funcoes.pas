@@ -3,13 +3,9 @@ unit Api.Funcoes;
 interface
 
 uses
-  Classes, SysUtils, Horse, IdSSLOpenSSL, Vcl.Forms, Model.Config, System.JSON, Rest.Json,
-  WinApi.Windows;
+  System.Classes, System.SysUtils, Horse, IdSSLOpenSSL, System.JSON, Rest.Json,
+  Model.Config, System.Character;
 
-type
-  TGetPasswordSSL = class
-    procedure OnGetPassword(var Password: String);
-  end;
 const
   cKey = 31987;
   C1 = 77543;
@@ -18,25 +14,37 @@ const
 procedure startApi;
 procedure stopApi;
 procedure statusApi;
-procedure InfoConfig(var FConfig: TConfig);
+procedure InfoConfig(var FConfig: TConfig); overload;
+procedure InfoConfig(const estabelecimento: string; var FConfig: TConfig); overload;
 procedure Log(const Mensagem: String);
 
+function SomenteDigitos(const S: AnsiString): string;
 function encrypt(const S: string): string;
 function decrypt(const S: string): string;
 
+var
+  FConfig: TConfig;
 
 implementation
+
+function SomenteDigitos(const S: AnsiString): string;
+begin
+  Result := '';
+  for var I := 1 to Length(S) do
+  begin
+    if String(S)[I].IsDigit then
+      Result := Result + String(S)[I];
+  end;
+end;
 
 procedure InfoConfig(var FConfig: TConfig);
 begin
   if Assigned(FConfig) then
-    Exit;
-  const FileName = ExtractFilePath(Application.ExeName) + 'config.json';
+    FConfig := nil;
+  const FileName = 'config.json';
   if not FileExists(FileName) then
-  begin
     Log(Format('Desculpe, o arquivo de configuração "%s" não foi encontrado.', [FileName]));
-    Application.Terminate;
-  end;
+
   var jo: TJSONObject;
   var sl := TStringList.Create();
   try
@@ -49,8 +57,19 @@ begin
     FConfig := TJSON.JsonToObject<TConfig>(jo);
   except
     Log('Desculpe, arquivo de configuração danificado');
-    Application.Terminate;
   end;
+end;
+
+procedure InfoConfig(const estabelecimento: string; var FConfig: TConfig); overload;
+begin
+  if estabelecimento = '' then
+  begin
+    InfoConfig(FConfig);
+    Exit;
+  end;
+
+  var jo: TJSONObject;
+  jo := nil;
 end;
 
 procedure Log(const Mensagem: String);
@@ -80,23 +99,11 @@ end;
 
 procedure startApi;
 var
-  Porta: Integer;
   FConfig: TConfig;
-  LGetSSLPassword: TGetPasswordSSL;
 begin
   InfoConfig(FConfig);
-  if FConfig.ambienteseguro then
-  begin
-    THorse.IOHandleSSL
-    .CertFile(FConfig.emitente.certificado.caminhoraiz + '\constel.crt')
-    .KeyFile(FConfig.emitente.certificado.caminhoraiz + '\constel.key')
-    .OnGetPassword(LGetSSLPassword.OnGetPassword)
-    .SSLVersions([sslvTLSv1_2])
-    .Method(sslvTLSv1_2)
-    .Active(True);
-  end;
 
-  Porta := FConfig.porta;
+  var Porta := FConfig.porta;
 
   THorse.Listen(Porta,
     procedure
@@ -115,7 +122,7 @@ begin
     if THorse.IsRunning then
       THorse.StopListen;
     Log('Encerrando a API.');
-    Application.Terminate;
+
   except
     on E: Exception do
       Log(Format('Erro na tentativa de encerrar a api, com a seguinte mensagem: %s.', [E.Message]));
@@ -256,13 +263,6 @@ end;
 function encrypt(const S: string): string;
 begin
   Result := PostProcess(InternalEncrypt(S, cKey))
-end;
-
-{ TGetPasswordSSL }
-
-procedure TGetPasswordSSL.OnGetPassword(var Password: String);
-begin
-  Password := '';
 end;
 
 end.

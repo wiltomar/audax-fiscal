@@ -4,6 +4,18 @@ interface
 
 uses
   System.SysUtils;
+ 
+ type
+  EHttpResponse = class(Exception)
+  private
+    FStatusCodde: Integer;
+  public
+    constructor Create(AStatusCode: Integer; AMessage: string; AError: string = '');
+    class procedure Throw(AStatusCode: Integer; AMessage: string; AError: string = '');
+    class procedure ParamMissing(const ParamName: string);
+    class procedure BadRequest(const &Message: string);
+    property StatusCodde: Integer read FstatusCodde;
+  end;
 
 procedure Erro(S: string); overload;
 procedure Erro(S: string; const Arguments: array of const); overload;
@@ -19,6 +31,29 @@ procedure Proibido(S: string = '');
 implementation
 
 uses Lib.Funcoes;
+
+constructor EHttpResponse.Create(AStatusCode: Integer; AMessage: string; AError: string = '');
+begin
+  if AError > '' then
+    AMessage := AMessage + ': ' + AError;
+  inherited Create(AMessage);
+  FStatusCodde := AStatusCode;
+end;
+
+class procedure EHttpResponse.Throw(AStatusCode: Integer; AMessage: string; AError: string = '');
+begin
+  raise EHttpResponse.Create(AStatusCode, AMessage, AError);
+end;
+
+class procedure EHttpResponse.ParamMissing(const ParamName: string);
+begin
+  EHttpResponse.Throw(400, 'parâmetro não fornecido "' + ParamName + '"');
+end;
+
+class procedure EHttpResponse.BadRequest(const &Message: string);
+begin
+  EHttpResponse.Throw(400, 'incoerência: ' + &Message);
+end;
 
 procedure Erro(S: string); overload;
 begin

@@ -7,6 +7,8 @@ uses System.SysUtils, System.Generics.Collections;
 type
   LargeInt = Int64;
 
+  TObjetivo = (toNenhum = 0, toImpressao = 10, toEmail = 20, toBase64 = 30);
+
 type
   AString = TArray<string>;
   AInteger = TArray<Integer>;

@@ -9,12 +9,13 @@ type
   AString = Lib.Sistema.Tipos.AString;
 
 const
-  APP_NAME = 'ConstelPDV';
+  APP_NAME = 'ConstelFiscal';
 
 const
   CHAR_LF = #10;
   CHAR_CR = #13;
   CHAR_LF2 = #10#10;
+  CHAR_CRLF = #13#10;  
   CHAR_MARCA = Char($25AA);
 
 const
@@ -42,6 +43,7 @@ type
   procedure ShellOpenSite(Site: string);
   procedure ShellOpenFile(const FileName: string);
   procedure AppendLog(S: string);
+  procedure AppendLogJSON(S: string);  
   procedure AppendLogError(S: string);
   procedure AStringAdd(var Target: AString; Element: string);
   procedure AddInteger(var Total: Integer; const Valor: Integer = 1);
@@ -78,6 +80,8 @@ type
   function URLParams(Params: TArray<string>): string;
   procedure Obliterate(var Obj);
   function IfNull(const Value, Default: variant): variant;
+  function IntToTObjetivo(const t: Integer): TObjetivo;
+  function TobjetivoToInt(const t: TObjetivo): Integer;
 
 implementation
 
@@ -334,7 +338,11 @@ var
   Novo: Boolean;
   T: TextFile;
 begin
+  {$IFDEF MSWINDOWS}
   FileName := ExtractFilePath(ParamStr(0)) + '\' + APP_NAME + '.log';
+  {$ELSE}
+  FileName := ExtractFilePath(ParamStr(0)) + '/' + APP_NAME + '.log';
+  {$ENDIF}
   Novo := not FileExists(FileName);
   AssignFile(T, FileName);
   try
@@ -356,6 +364,14 @@ begin
   finally
     CloseFile(T);
   end;
+end;
+
+procedure AppendLogJSON(S: string);
+begin
+  AppendLog('|<JSON>');
+  for var Linha in S.Split([CHAR_CRLF]) do
+    AppendLog('|' + Linha);
+  AppendLog('|</JSON>');
 end;
 
 procedure AppendLogError(S: string);
@@ -716,6 +732,26 @@ begin
     result := Default
   else
     result := Value;
+end;
+
+function IntToTObjetivo(const t: Integer): TObjetivo;
+begin
+  case t of
+    0 : Result := toNenhum;
+    10: Result := toImpressao;
+    20: Result := toEmail;
+    30: Result := toBase64;
+  end;
+end;
+
+function TobjetivoToInt(const t: TObjetivo): Integer;
+begin
+  case t of
+    toNenhum: Result := 0;
+    toImpressao: Result := 10;
+    toEmail: Result := 20;
+    toBase64: Result := 30;
+  end;
 end;
 
 initialization
