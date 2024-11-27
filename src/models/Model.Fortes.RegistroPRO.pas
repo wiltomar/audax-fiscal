@@ -22,7 +22,7 @@ type
   TRegistroPRO = class(TInterfacedObject, IRegistro)
   private
     FTipoRegistro: string;
-    FCodigo: LongInt;
+    FCodigo: integer;
     FDescricao: string;
     FCodigoUtilizadoEstab: string;
     FCodigoNCM: string;
@@ -30,17 +30,17 @@ type
     FOutraUnidade: TList<TRegistroOUM>;
     FUnidadeMedidaDIEF: TtipoUnidadeMedidaDIEF;
     FUnidadeMedidaCENFOP: TUnidadeMedidaCENFOP;
-    FClassificação: double;
-    FGrupo: Integer;
-    FGenero: SmallInt;
-    FCodigoDeBarras: double;
+    FClassificacao: integer;
+    FGrupo: integer;
+    FGenero: smallInt;
+    FCodigoDeBarras: string;
     FReducao: double;
-    FCodigoGAM57: double;
+    FCodigoGAM57: integer;
     FCSTICMS: string;
     FCSTIPI: string;
     FCSTCOFINS: string;
     FCSTPIS: string;
-    FCodigoANP: double;
+    FCodigoANP: integer;
     FCSTICMSSimplesNacional: SmallInt;
     FCSOSN: Integer;
     FProdutoEspecífico: SmallInt;
@@ -52,7 +52,7 @@ type
     FIndicadorEspecial: string;
     FCodigoDaApuracao: string;
     FCodigoTIPI: string;
-    FCodigoCombustívelDIEFPA: SmallInt;
+    FCodigoCombustívelDIEFPA : SmallInt;
     FPercentualDeIncentivo: double;
     FPrazoDeFruicao: integer;
     FIndicadorEspecialDeIncentivo: SmallInt;
@@ -82,7 +82,7 @@ type
     function GerarLinha: string;
     procedure AdicionarOutraUnidade(OutraUnidade: TRegistroOUM);
     property TipoRegistro: string read FTipoRegistro write FTipoRegistro;
-    property Codigo: LongInt read FCodigo write FCodigo;
+    property Codigo: integer read FCodigo write FCodigo;
     property Descricao: string read FDescricao write FDescricao;
     property CodigoUtilizadoEstab: string read FCodigoUtilizadoEstab write FCodigoUtilizadoEstab;
     property CodigoNCM: string read FCodigoNCM write FCodigoNCM;
@@ -90,17 +90,17 @@ type
     property OutraUnidade: TList<TRegistroOUM> read FOutraUnidade write FOutraUnidade; //VER
     property UnidadeMedidaDIEF: TTipoUnidadeMedidaDIEF read FUnidadeMedidaDIEF write FUnidadeMedidaDIEF;
     property UnidadeMedidaCENFOP: TUnidadeMedidaCENFOP read FUnidadeMedidaCENFOP write FUnidadeMedidaCENFOP;
-    property Classificacao: double read FClassificação write FClassificação;
+    property Classificacao: integer read FClassificacao write FClassificacao;
     property Grupo: Integer read FGrupo write FGrupo;
     property Genero: SmallInt read FGenero write FGenero;
-    property CodigoDeBarras: double read FCodigoDeBarras write FCodigoDeBarras;
+    property CodigoDeBarras: string read FCodigoDeBarras write FCodigoDeBarras;
     property Reducao: double read FReducao write FReducao;  // TIPO V grava com .   "12450.20"
-    property CodigoGAM57: double read FCodigoGAM57 write FCodigoGAM57;
+    property CodigoGAM57: integer read FCodigoGAM57 write FCodigoGAM57;
     property CSTICMS: string read FCSTICMS write FCSTICMS;
     property CSTIPI: string read FCSTIPI write FCSTIPI;
     property CSTCOFINS: string read FCSTCOFINS write FCSTCOFINS;
     property CSTPIS: string read FCSTPIS write FCSTPIS;
-    property CodigoANP: double read FCodigoANP write FCodigoANP;
+    property CodigoANP: integer read FCodigoANP write FCodigoANP;
     property CSTICMSSimplesNacional: SmallInt read FCSTICMSSimplesNacional write FCSTICMSSimplesNacional;
     property CSOSN: Integer read FCSOSN write FCSOSN;
     property ProdutoEspecífico: smallInt read FProdutoEspecífico write FProdutoEspecífico;
@@ -165,21 +165,22 @@ var
   Linha: TStringList;
 begin
   var Produto := Format(
-    '%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%S|%S|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s', [
+    '%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%S|%S|%s|%s|%s|%s|' +
+    '%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s', [
     FTipoRegistro,
     FCodigo,
     FDescricao,
     FCodigoUtilizadoEstab,
     FCodigoNCM,
     FUnidadeMedida,
-    FOutraUnidade, // ver
+    FOutraUnidade,
     IntTostr(Integer(FUnidadeMedidaDIEF)),
     IntTostr(Integer(FUnidadeMedidaCENFOP)),
-    FClassificação,
+    FClassificacao,
     FGrupo,
     FGenero,
     FCodigoDeBarras,
-    FReducao,
+    FormatFloat('#0.00',FReducao),
     FCodigoGAM57,
     FCSTICMS,
     FCSTIPI,
@@ -190,7 +191,7 @@ begin
     FCSOSN,
     FProdutoEspecífico,
     FTipoDeMedicamento,
-    FDesativado,
+    IfThen(FDesativado, 'S', 'N'),
     FCodigoIndicadorContribuicaoPrevidenciaria,
     FTipoDeTributacaoDIA,
     FCodificacaoNVE,
@@ -198,29 +199,29 @@ begin
     FCodigoDaApuracao,
     FCodigoTIPI,
     FCodigoCombustívelDIEFPA,
-    FPercentualDeIncentivo,
+    formatFloat('#0.00',FPercentualDeIncentivo),
     FPrazoDeFruicao,
     FIndicadorEspecialDeIncentivo,
     FPercentualDaCSL,
     FPercentualDoIRPJ,
-    FAlíqICMSInterna,
-    FCodigosDaReceitaProdutoEspecifico,
+    formatFloat('#0.00', FAlíqICMSInterna),
+    ifThen(FCodigosDaReceitaProdutoEspecifico, 'S', 'N'),
     FCodReceitaPIS,
     FCodCEST,
     FCustoDeAquisicao,
-    SubstituicaoDeICMS,
-    FSubstituicaoDeIPI,
-    FSubstituicaoDeCOFINS,
-    FSubstituicaoDePISPASEP,
-    FTributacaoMonofasicaDeCOFINS,
-    FTributacaoMonofasicaDePIS,
+    IfThen(FSubstituicaoDeICMS, 'S', 'N'),
+    IfThen(FSubstituicaoDeIPI, 'S', 'N'),
+    IfThen(FSubstituicaoDeCOFINS, 'S', 'N'),
+    IfThen(FSubstituicaoDePISPASEP, 'S', 'N'),
+    IfThen(FTributacaoMonofasicaDeCOFINS, 'S', 'N'),
+    IfThen(FTributacaoMonofasicaDePIS, 'S', 'N'),
     FApuracaoDoPISCOFINS,
     FCodReceitaRetidoCOFINS,
     FCodReceitaRetidoPIS,
     FCodReceitaRetidoCSL,
     FCodReceitaRetidoIRPJ,
     FCodReceitaRetidoCOSIRF,
-    FDecretoAM
+    IfThen(FDecretoAM, 'S', 'N')
   ]);
 
   Linha := TStringList.Create;
