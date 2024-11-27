@@ -6,12 +6,13 @@ uses
   System.Classes, Fortes.IRegistro, Model.Fortes.RegistroOUM, Generics.Collections;
 
 type
+
   TTipoUnidadeMedidaDIEF = (
     tsLitro = 1, tsMetro = 2, tsMetroCubico = 3, tsMetroQuadrado = 4, tsPar = 5,
     tsQuilograma = 6, tsQuilowattHora = 7, tsUnidade = 8
   );
 
-type
+
   TUnidadeMedidaCENFOP = (
     tsArroba = 1, tsBarril = 2, tsBalde = 3, tsCento = 4, tsCartela = 5, tsCaixa = 6,
     tsCaixote = 7, tsDuzia = 8, tsEmbalagem = 9, tsEnvelope = 10, tsFardo = 11,
@@ -19,8 +20,6 @@ type
     tsQuiloWattHoraCENFOP = 16
   );
 
-
-type
   TRegistroPRO = class(TInterfacedObject, IRegistro)
   private
     FTipoRegistro: string;
