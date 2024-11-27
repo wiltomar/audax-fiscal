@@ -3,7 +3,7 @@ unit Model.Fortes.RegistroPRO;
 interface
 
 uses
-  System.Classes, Fortes.IRegistro, Model.Fortes.RegistroOUM, Generics.Collections;
+  System.Classes, Fortes.IRegistro, Model.Fortes.RegistroOUM, Generics.Collections, System.StrUtils;
 
 type
 
@@ -11,7 +11,6 @@ type
     tsLitro = 1, tsMetro = 2, tsMetroCubico = 3, tsMetroQuadrado = 4, tsPar = 5,
     tsQuilograma = 6, tsQuilowattHora = 7, tsUnidade = 8
   );
-
 
   TUnidadeMedidaCENFOP = (
     tsArroba = 1, tsBarril = 2, tsBalde = 3, tsCento = 4, tsCartela = 5, tsCaixa = 6,
