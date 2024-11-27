@@ -67,7 +67,7 @@ type
     FCodReceitaRetidoCSL: string;
     FCodReceitaRetidoIRPJ: string;
     FCodReceitaRetidoCOSIRF: string;
-      FDecretoAM: boolean;
+    FDecretoAM: boolean;
     FCodReceitaPIS: integer;
     FCodCEST: string;
     FCustoDeAquisicao: double;
