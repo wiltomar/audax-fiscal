@@ -2,7 +2,7 @@ unit Model.Fortes.RegistroPAR;
 
 interface
 
-uses Fortes.IRegistro;
+uses Fortes.IRegistro, System.StrUtils;
 
 type
   TRegistroPAR = class(TInterfacedObject, IRegistro)
@@ -119,16 +119,16 @@ begin
     FNome,
     FUF,
     FCNPJCPF,
-    FInscricaoEstadual,
-    FInscricaoMunicipal,
-    FInformaISSDigital,
-    FInformaDIEF,
-    FInformaDIC,
-    FInformaDEMMS,
-    FOrgaoPublico,
-    FInformaLivroEletronico,
-    FFornecedorDeProdPrimario,
-    FSociedadeSimples,
+    IfThen(FInscricaoEstadual, 'S', 'N'),
+    IfThen(FInscricaoMunicipal, 'S', 'N'),
+    IfThen(FInformaISSDigital, 'S', 'N'),
+    IfThen(FInformaDIEF, 'S', 'N'),
+    IfThen(FInformaDIC, 'S', 'N'),
+    IfThen(FInformaDEMMS, 'S', 'N'),
+    IfThen(FOrgaoPublico, 'S', 'N'),
+    IfThen(FInformaLivroEletronico, 'S', 'N'),
+    IfThen(FFornecedorDeProdPrimario, 'S', 'N'),
+    IfThen(FSociedadeSimples, 'S', 'N'),
     FTipoDeLogradouro,
     FLogradouro,
     FNumero,
@@ -140,22 +140,22 @@ begin
     FDDD,
     FTelefone,
     FSuframa,
-    FSubstitutoISS,
+    IfThen(FSubstitutoISS, 'S', 'N'),
     FContaRemetentePrestador,
     FContaDestinatárioTomador,
     FPais,
-    FExterior,
+    IfThen(FExterior, 'S', 'N'),
     FIndicadorDoICMS,
     FEmail,
-    FHospitais,
-    FAdministradora,
+    IfThen(FHospitais, 'S', 'N'),
+    IfThen(FAdministradora, 'S', 'N'),
     FCNAE21,
-    FCPRB,
-    FSituaçaoTributária,
-    FProdutorRural,
+    IfThen(FCPRB, 'S', 'N'),
+    IfThen(FSituaçaoTributária, 'S', 'N'),
+    IfThen(FProdutorRural, 'S', 'N'),
     FIndicativoDaAquisicao,
     FIndicativoDeNIF,
-    FNdeIdentificaçãoFiscal,
+    formatFloat('#0.00',FNdeIdentificaçãoFiscal),
     FFormaDeTributacao
   ]);
 end;
