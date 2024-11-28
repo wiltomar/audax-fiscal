@@ -2,7 +2,7 @@ unit Model.Fortes.RegistroNOP;
 
 interface
 
-uses Fortes.IRegistro;
+uses Fortes.IRegistro, System.StrUtils;
 
 type
   TRegistroNOP = class(TInterfacedObject, IRegistro)
@@ -32,7 +32,12 @@ end;
 
 function TRegistroNOP.GerarLinha: string;
 begin
-  Result := Format('%s|%s|%s|%s|', [FTipoRegistro, FCodigo, FDescricao, FEstorno]);
+  Result := Format('%s|%s|%s|%s|', [
+  FTipoRegistro,
+  FCodigo,
+  FDescricao,
+  IfThen(FEstorno, 'S', 'N')
+  ]);
 end;
 
 end.
