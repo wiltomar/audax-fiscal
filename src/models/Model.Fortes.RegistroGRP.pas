@@ -10,18 +10,18 @@ type
     FTipoRegistro: string;
     FCodigo: string;
     FDescricao: string;
-    FSituacaoDIEF: string;
-    FSituacaoProdutoSPED: string;
-    FGrupoProdutosDIC: string;
+    FSituacaoDIEF: integer;
+    FSituacaoProdutoSPED: integer;
+    FGrupoProdutosDIC: integer;
   public
     constructor Create;
     function GerarLinha: string;
     property TipoRegistro: string read FTipoRegistro write FTipoRegistro;
     property Codigo: string read FCodigo write FCodigo;
     property Descricao: string read FDescricao write FDescricao;
-    property SituacaoDIEF: string read FSituacaoDIEF write FSituacaoDIEF;
-    property SituacaoProdutoSPED: string read FSituacaoProdutoSPED write FSituacaoProdutoSPED;
-    property GrupoProdutosDIC: string read FGrupoProdutosDIC write FGrupoProdutosDIC;
+    property SituacaoDIEF: integer read FSituacaoDIEF write FSituacaoDIEF;
+    property SituacaoProdutoSPED: integer read FSituacaoProdutoSPED write FSituacaoProdutoSPED;
+    property GrupoProdutosDIC: integer read FGrupoProdutosDIC write FGrupoProdutosDIC;
   end;
 
 implementation

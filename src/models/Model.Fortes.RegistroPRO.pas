@@ -43,7 +43,7 @@ type
     FCodigoANP: integer;
     FCSTICMSSimplesNacional: SmallInt;
     FCSOSN: Integer;
-    FProdutoEspecífico: SmallInt;
+    FProdutoEspecifico: SmallInt;
     FTipoDeMedicamento: SmallInt;
     FDesativado: boolean;
     FCodigoIndicadorContribuicaoPrevidenciaria: string;
@@ -58,7 +58,7 @@ type
     FIndicadorEspecialDeIncentivo: SmallInt;
     FPercentualDaCSL: SmallInt;
     FPercentualDoIRPJ: SmallInt;
-    FAlíqICMSInterna: double;
+    FAliqICMSInterna: double;
     FCodigosDaReceitaProdutoEspecifico: boolean;
     FCodReceitaRetidoCOFINS: string;
     FCodReceitaRetidoPIS: string;
@@ -103,7 +103,7 @@ type
     property CodigoANP: integer read FCodigoANP write FCodigoANP;
     property CSTICMSSimplesNacional: SmallInt read FCSTICMSSimplesNacional write FCSTICMSSimplesNacional;
     property CSOSN: Integer read FCSOSN write FCSOSN;
-    property ProdutoEspecífico: smallInt read FProdutoEspecífico write FProdutoEspecífico;
+    property ProdutoEspecifico: smallInt read FProdutoEspecifico write FProdutoEspecifico;
     property TipoDeMedicamento: smallInt read FTipoDeMedicamento write FTipoDeMedicamento;
     property Desativado: boolean read FDesativado write FDesativado;
     property CodigoIndicadorContribuicaoPrevidenciaria: string read FCodigoIndicadorContribuicaoPrevidenciaria write FCodigoIndicadorContribuicaoPrevidenciaria;
@@ -118,7 +118,7 @@ type
     property IndicadorEspecialDeIncentivo: SmallInt read FIndicadorEspecialDeIncentivo write FIndicadorEspecialDeIncentivo;
     property PercentualDaCSL: SmallInt read FPercentualDaCSL write FPercentualDaCSL;
     property PercentualDoIRPJ: SmallInt read FPercentualDoIRPJ write FPercentualDoIRPJ;
-    property AlíqICMSInterna: Double read FAlíqICMSInterna write FAlíqICMSInterna;
+    property AliqICMSInterna: Double read FAliqICMSInterna write FAliqICMSInterna;
     property CodigosDaReceitaProdutoEspecifico: boolean read FCodigosDaReceitaProdutoEspecifico write FCodigosDaReceitaProdutoEspecifico;
     property CodReceitaPIS: integer read FCodReceitaPIS write FCodReceitaPIS;
     property CodCEST: string read FCodCEST write FCodCEST;
@@ -166,7 +166,7 @@ var
 begin
   var Produto := Format(
     '%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%S|%S|%s|%s|%s|%s|' +
-    '%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s', [
+    '%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|', [
     FTipoRegistro,
     FCodigo,
     FDescricao,
@@ -189,7 +189,7 @@ begin
     FCodigoANP,
     FCSTICMSSimplesNacional,
     FCSOSN,
-    FProdutoEspecífico,
+    FProdutoEspecifico,
     FTipoDeMedicamento,
     IfThen(FDesativado, 'S', 'N'),
     FCodigoIndicadorContribuicaoPrevidenciaria,
@@ -204,7 +204,7 @@ begin
     FIndicadorEspecialDeIncentivo,
     FPercentualDaCSL,
     FPercentualDoIRPJ,
-    formatFloat('#0.00', FAlíqICMSInterna),
+    formatFloat('#0.00', FAliqICMSInterna),
     ifThen(FCodigosDaReceitaProdutoEspecifico, 'S', 'N'),
     FCodReceitaPIS,
     FCodCEST,
