@@ -40,6 +40,7 @@ begin
   FTipoRegistro  := 'CAB';
   FVersaoLayout  := '178';
   FSistemaOrigem := 'Constel';
+  FDataGeracao   := Now();
 end;
 
 function TRegistroCAB.GerarLinha: string;
