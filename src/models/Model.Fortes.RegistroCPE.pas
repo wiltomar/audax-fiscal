@@ -9,7 +9,8 @@ unit Model.Fortes.RegistroCPE;
 interface
 
 uses
-  System.Classes, System.SysUtils, Fortes.IRegistro, Generics.Collections, System.StrUtils, Model.Fortes.RegistroPCE;
+  System.Classes, System.SysUtils, Fortes.IRegistro, Generics.Collections, System.StrUtils, Model.Fortes.RegistroPCE,
+  Model.Fortes.RegistroCFI;
 
 type
   TRegistroCPE = class(TInterfacedObject, IRegistro)
@@ -50,7 +51,9 @@ type
     FPrestadorDeServicosEmObradeConstrucaoCivil: SmallInt;
     FCNO: string;
     FRegistroPCE: TList<TRegistroPCE>;
-    property RegistroPCE: TList<TRegistroPCE> read FRegistroPCE write FRegistroPCE; //VER
+    FRegistroCFI: TList<TRegistroCFI>;
+    property RegistroPCE: TList<TRegistroPCE> read FRegistroPCE write FRegistroPCE;
+    property RegistroCFI: TList<TRegistroCFI> read FRegistroCFI write FRegistroCFI;
     property TipoRegistro: string read FTipoRegistro write FTipoRegistro;
     property Estabelecimento: integer read FEstabelecimento write FEstabelecimento;
     property Data: TdateTime read FData write FData;
@@ -91,11 +94,17 @@ type
     destructor Destroy;
     function GerarLinha: string;
     procedure AdicionarPCE(pce: TRegistroPCE);
+    procedure AdicionarCFI(cfi: TRegistroCFI);
   end;
 
 implementation
 
 { TRegistroCPE }
+procedure TRegistroCPE.AdicionarCFI(cfi: TRegistroCFI);
+begin
+  FRegistroCFI.Add(cfi);
+end;
+
 procedure TRegistroCPE.AdicionarPCE(pce: TRegistroPCE);
 begin
   FRegistroPCE.Add(pce);
@@ -107,7 +116,6 @@ begin
   FRegistroPCE.Create;
 end;
 
-
 destructor TRegistroCPE.Destroy;
 begin
   FRegistroPCE.Destroy;
@@ -116,7 +124,7 @@ end;
 
 function TRegistroCPE.GerarLinha: string;
 var
-  Linha: TStringList;
+  LinhaPCE, LinhaCFI: TStringList;
 begin
   var Cpe := Format(
     '%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%S|%S|%s|%s|%s|%s|' +
@@ -158,15 +166,22 @@ begin
     FCNO
   ]);
 
-  Linha := TStringList.Create;
+  LinhaPCE := TStringList.Create;
   try
+    // OBS: Dentro dos lações ver as condições para trazer apenas os dos registro CPE que faz relação com PCE e CFI
     for var pce in FRegistroPCE do
     begin
-      Linha.Add(pce.GerarLinha)
+      LinhaPCE.Add(pce.GerarLinha)
     end;
-    Result := Cpe + sLineBreak + Linha.Text;
+    for var cfi in FRegistroCFI do
+    begin
+      LinhaCFI.Add(cfi.GerarLinha)
+    end;
+//    Result := Cpe + sLineBreak + Linha.Text;
+    Result := Cpe + sLineBreak +  LinhaPCE.Text + sLineBreak + LinhaCFI.Text;
   finally
-    Linha.Free;
+    LinhaPCE.Free;
+    LinhaCFI.Free;
   end;
 end;
 
