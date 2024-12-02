@@ -45,6 +45,7 @@ uses
   Model.Sped in 'models\Model.Sped.pas',
   Model.Contabilista in 'models\Model.Contabilista.pas',
   APIService in 'APIService.pas',
+
   Model.Fortes.RegistroCAB in 'models\Model.Fortes.RegistroCAB.pas',
   Model.Fortes.RegistroPAR in 'models\Model.Fortes.RegistroPAR.pas',
   Model.Fortes.RegistroGRP in 'models\Model.Fortes.RegistroGRP.pas',
