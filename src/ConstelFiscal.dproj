@@ -199,6 +199,8 @@
         <DCCReference Include="models\Model.Fortes.RegistroCEE.pas"/>
         <DCCReference Include="models\Model.Fortes.RegistroTRA.pas"/>
         <DCCReference Include="Fortes.IRegistro.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroCPE.pas"/>
+        <DCCReference Include="models\Model.Fortes.RegistroPCE.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
