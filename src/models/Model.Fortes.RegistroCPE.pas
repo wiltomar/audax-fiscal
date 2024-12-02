@@ -177,7 +177,7 @@ begin
     begin
       LinhaCFI.Add(cfi.GerarLinha)
     end;
-//    Result := Cpe + sLineBreak + Linha.Text;
+    //Result := Cpe + sLineBreak + Linha.Text;
     Result := Cpe + sLineBreak +  LinhaPCE.Text + sLineBreak + LinhaCFI.Text;
   finally
     LinhaPCE.Free;
