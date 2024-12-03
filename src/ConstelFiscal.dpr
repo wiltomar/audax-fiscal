@@ -45,7 +45,6 @@ uses
   Model.Sped in 'models\Model.Sped.pas',
   Model.Contabilista in 'models\Model.Contabilista.pas',
   APIService in 'APIService.pas',
-
   Model.Fortes.RegistroCAB in 'models\Model.Fortes.RegistroCAB.pas',
   Model.Fortes.RegistroPAR in 'models\Model.Fortes.RegistroPAR.pas',
   Model.Fortes.RegistroGRP in 'models\Model.Fortes.RegistroGRP.pas',
@@ -90,7 +89,8 @@ uses
   Model.Fortes.RegistroTRA in 'models\Model.Fortes.RegistroTRA.pas',
   Fortes.IRegistro in 'Fortes.IRegistro.pas',
   Model.Fortes.RegistroCPE in 'models\Model.Fortes.RegistroCPE.pas',
-  Model.Fortes.RegistroPCE in 'models\Model.Fortes.RegistroPCE.pas';
+  Model.Fortes.RegistroPCE in 'models\Model.Fortes.RegistroPCE.pas',
+  Model.Fortes.RegistroDNM in 'models\Model.Fortes.RegistroDNM.pas';
 
 function startApi: boolean;
 begin
