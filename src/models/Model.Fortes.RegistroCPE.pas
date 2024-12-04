@@ -131,7 +131,7 @@ begin
     '%s|%s|%s|%s|%s|%s|%s|%s|%s|', [
     FTipoRegistro,
     FEstabelecimento,
-    FormatDateTime('yyymmdd', FData),
+    FormatDateTime('yyyymmdd', FData),
     FChaveEletronica,
     FNumeroDeSerieDoECF,
     FNumero,
