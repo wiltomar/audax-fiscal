@@ -41,7 +41,6 @@ type
     FAliquotaDoFCPSubstTribOuRetidoAntPorST: double;
     FValorDoFCPSubstTribOuRetidoAntPorST: double;
     FAliquotaDoICMSDiferimento: double;
-
   public
     constructor Create;
     function GerarLinha: string;
