@@ -44,7 +44,7 @@ type
     FAdministradora: boolean;
     FCNAE21: string;
     FCPRB: boolean;
-    FSituaçaoTributária: boolean;
+    FSituaçaoTributaria: boolean;
     FProdutorRural: boolean;
     FIndicativoDaAquisicao: SmallInt;
     FIndicativoDeNIF: SmallInt;
@@ -91,7 +91,7 @@ type
     property Administradora: boolean read FAdministradora write FAdministradora;
     property CNAE21: string read FCNAE21 write FCNAE21;
     property CPRB: boolean read FCPRB write FCPRB;
-    property SituaçaoTributária: boolean read FSituaçaoTributária write FSituaçaoTributária;
+    property SituaçaoTributaria: boolean read FSituaçaoTributaria write FSituaçaoTributaria;
     property ProdutorRural: boolean read FProdutorRural write FProdutorRural;
     property IndicativoDaAquisicao: SmallInt read FIndicativoDaAquisicao write FIndicativoDaAquisicao;
     property IndicativoDeNIF: SmallInt read FIndicativoDeNIF write FIndicativoDeNIF;
@@ -121,7 +121,7 @@ begin
     FCNPJCPF,
     FInscricaoEstadual,
     FInscricaoMunicipal,
-    IfThen(FInformaISSDigital, 'S', 'N'),   //parei aki
+    IfThen(FInformaISSDigital, 'S', 'N'),
     IfThen(FInformaDIEF, 'S', 'N'),
     IfThen(FInformaDIC, 'S', 'N'),
     IfThen(FInformaDEMMS, 'S', 'N'),
@@ -151,7 +151,7 @@ begin
     IfThen(FAdministradora, 'S', 'N'),
     FCNAE21,
     IfThen(FCPRB, 'S', 'N'),
-    IfThen(FSituaçaoTributária, 'S', 'N'),
+    IfThen(FSituaçaoTributaria, 'S', 'N'),
     IfThen(FProdutorRural, 'S', 'N'),
     FIndicativoDaAquisicao,
     FIndicativoDeNIF,
