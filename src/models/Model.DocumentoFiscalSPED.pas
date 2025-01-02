@@ -46,17 +46,24 @@ type
     property protocolo: string read fprotocolo write fprotocolo;
   end;
 
-  TDocumentofiscalSPED860 = class(TBaseR)
+  TDocumentoFiscal860CFe = class(TBaseR)
   private
     fserie: integer;
-    fmodelo: string;
     fnumero: integer;
-    femissao: TDateTime;
+  public
+    property serie: integer read fserie write fserie;
+    property numero: integer read fnumero write fnumero;
+  end;
+
+  TDocumentofiscalSPED860 = class(TBaseR)
+  private
+    fmodelo: string;
+    femissao: TDate;
+    fdocumentofiscalcfe: TDocumentoFiscal860CFe;
   public
     property modelo: string read fmodelo write fmodelo;
-    property serie: integer read fserie write fserie;
-    property emissao: TDateTime read femissao write femissao;
-    property numero: integer read fnumero write fnumero;
+    property emissao: TDate read femissao write femissao;
+    property documentofiscalcfe: TDocumentoFiscal860CFe read fdocumentofiscalcfe write fdocumentofiscalcfe;
   end;
 
   TDocumentoFiscalSPED = class(TBaseR)
@@ -89,12 +96,10 @@ type
     findicadorpagamento: integer;
     fdocumentofiscalitens: TDocumentoFiscalSPEDItens;
     fdocumentofiscalcfe: TDocumentofiscalSPEDcfe;
-    fid: string;
     fdocumentofiscalnfe: TDocumentofiscalSPEDnfe;
     fvaloricms: Currency;
     ficmsValor: Currency;
   public
-    property id: string read fid write fid;
     property natureza: integer read fnatureza write fnatureza;
     property parceiro: TParceiro read fparceiro write fparceiro;
     property modelo: string read fmodelo write fmodelo;

@@ -661,10 +661,10 @@ begin
           if Estabelecimento.estabelecimentoDocumentos[0].spedperfil = 'B' then
           begin
             var
-            DocumentosFiscais860 := InfoAPI().GetArray<TDocumentofiscalSPED860>
+            DocumentosFiscais860 := InfoAPI().GetPagedArray<TDocumentofiscalSPED860>
               ('fiscal/documentofiscal/sped?estabelecimentoid=' +
               Estabelecimento.id + '&periodo=intervalo&inicio=' + dataIniSped +
-              '&conclusao=' + dataFinSped + '&cupons=1');
+              '&conclusao=' + dataFinSped + '&cupons=1&modelo=59');
 
             var
               tb860: TClientDataSet;
@@ -681,13 +681,13 @@ begin
             for var documentoFiscal860 in DocumentosFiscais860 do
             begin
               if not tb860.Locate('serie;emissao',
-                VarArrayOf([documentoFiscal860.serie, documentoFiscal860.emissao]
+                VarArrayOf([documentoFiscal860.documentofiscalcfe.serie, documentoFiscal860.emissao]
                 ), []) then
               begin
                 tb860.Append;
                 tb860.fieldByname('numeroinical').AsInteger :=
-                  documentoFiscal860.numero;
-                tb860.fieldByname('serie').AsInteger := documentoFiscal860.serie;
+                  documentoFiscal860.documentofiscalcfe.numero;
+                tb860.fieldByname('serie').AsInteger := documentoFiscal860.documentofiscalcfe.serie;
                 tb860.fieldByname('emissao').AsDateTime :=
                   documentoFiscal860.emissao;
                 tb860.fieldByname('modelo').Asstring := documentoFiscal860.modelo;
@@ -697,7 +697,7 @@ begin
               begin
                 tb860.Edit;
                 tb860.fieldByname('numerofinal').AsInteger :=
-                  documentoFiscal860.numero;
+                  documentoFiscal860.documentofiscalcfe.numero;
                 tb860.Post;
               end;
             end;

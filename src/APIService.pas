@@ -27,7 +27,7 @@ type
     function BodyToObject<T: class, constructor>(JSON: string): T;
     function Get<T: class, constructor>(Resource, Id: string): T;
     function GetArray<T: class, constructor>(Resource: string): TArray<T>;
-    function GetPagedArray<T: class, constructor>(Resource: string): TArray<T>;
+    function GetPagedArray<T: class, constructor>(Resource: string; Linhas: Integer = 144): TArray<T>;
     function Post<T: class, constructor>(Resource: string; Instance: TObject): T;
   end;
 
@@ -55,7 +55,7 @@ constructor TAPIService.Create(const serverName: string = '');
 begin
   inherited Create();
   if serverName = '' then
-    FServidor := 'https://atlas.constel.cloud/api/'
+    FServidor := 'https://192.168.0.161:3000/api/' //'https://atlas.constel.cloud/api/'
   else
     FServidor := serverName;
 
@@ -247,7 +247,7 @@ begin
 
 end;
 
-function TAPIService.GetPagedArray<T>(Resource: string): TArray<T>;
+function TAPIService.GetPagedArray<T>(Resource: string; Linhas: Integer = 144): TArray<T>;
 begin
   if not Resource.Contains('?') then
     Resource := Resource + '?';
@@ -263,12 +263,12 @@ begin
   var Paginas := 1;
   while Pagina <= Paginas do
   begin
-    Request(Base + Parametros + 'pagina=' + Pagina.ToString(), rmGET, tkClass);
+    Request(Base + Parametros + 'pagina=' + Pagina.ToString() + '&linhas=' + Linhas.ToString(), rmGET, tkClass);
     var JSONArray := FRESTResponse.JSONValue.GetValue<TJSONArray>('lista');
     for var JSONElement in JSONArray do
     begin
       SetLength(Result, Length(Result) + 1);
-      Result[High(Result)] := TJSON.JsonToObject<T>(TJSONObject(JSONElement));
+      Result[High(Result)] := TJSON.JsonToObject<T>(TJSONObject(JSONElement), [joDateIsUTC, joDateFormatISO8601]);
     end;
     Paginas := FRESTResponse.JSONValue.GetValue<Integer>('paginas', 0);
     Inc(Pagina);
