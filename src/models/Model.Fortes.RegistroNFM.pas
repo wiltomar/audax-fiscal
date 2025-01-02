@@ -1,9 +1,15 @@
+{
+ Registro Tipo: NFM
+   Registro Tipo(filho)  INM
+   Registro Tipo(filho)  DNM
+}
 unit Model.Fortes.RegistroNFM;
 
 interface
 
 uses
-  Fortes.IRegistro, Model.Fortes.RegistroPNM, Generics.Collections, System.StrUtils;
+  Fortes.IRegistro, Model.Fortes.RegistroPNM, Model.Fortes.RegistroINM, Model.Fortes.RegistroDNM, Generics.Collections,
+  System.StrUtils, System.Classes;
 
 type
   TTipoSituacao = (
@@ -108,11 +114,14 @@ type
     FICMSMonoRetido: double;
     FDecreto35395: boolean;
     FListaProdutos: TList<TRegistroPNM>;
+    FListaINM: TList<TRegistroINM>;
+    FListaDNM: TList<TRegistroDNM>;
   public
     constructor Create;
     destructor Destroy;
     function GerarLinha: string;
     procedure AdicionarProduto(ProdutoPNM: TRegistroPNM);
+    procedure AdicionarListaINM(INM: TRegistroINM);
 
     property TipoRegistro: string read FTipoRegistro write FTipoRegistro;
     property Estabelecimento: smallInt read FEstabelecimento write FEstabelecimento;
@@ -208,12 +217,19 @@ type
     property ICMSMonoRetido: double read FICMSMonoRetido write FICMSMonoRetido;
     property Decreto35395: boolean read FDecreto35395 write FDecreto35395;
     property ListaProdutos: TList<TRegistroPNM> read FListaProdutos write FListaProdutos;
+    property ListaINM: TList<TRegistroINM> read FListaINM write FListaINM;
+    property ListaDNM: TList<TRegistroDNM> read FListaDNM write FListaDNM;
   end;
 
 implementation
 
 uses
   SysUtils;
+
+procedure TRegistroNFM.AdicionarListaINM(INM: TRegistroINM);
+begin
+  FListaINM.Add(INM);
+end;
 
 procedure TRegistroNFM.AdicionarProduto(ProdutoPNM: TRegistroPNM);
 begin
@@ -224,17 +240,22 @@ constructor TRegistroNFM.Create;
 begin
   FTipoRegistro := 'NFM';
   FListaProdutos := TList<TRegistroPNM>.Create;
+  ListaINM.Create;
+  ListaDNM.Create;
 end;
 
 destructor TRegistroNFM.Destroy;
 begin
   FListaProdutos.Free;
+  ListaINM.Destroy;
+  ListaDNM.Destroy;
   inherited;
 end;
 
 function TRegistroNFM.GerarLinha: string;
 var
   Builder: TStringBuilder;
+  LinhaINM, LinhaDNM: TStringList;
 begin
   Builder := TStringBuilder.Create;
   try
@@ -334,7 +355,22 @@ begin
       .Append(FormatFloat('#0.00', FICMSMonoRetido)).Append('|')
       .Append(IfThen(FDecreto35395, 'S', 'N')).Append('|');
 
-    Result := Builder.ToString;
+    LinhaINM := TStringList.Create;
+    try
+      for var inm in FListaINM do
+      begin
+        LinhaINM.Add(inm.GerarLinha)
+      end;
+      for var dnm in FListaDNM do
+      begin
+        LinhaDNM.Add(dnm.GerarLinha)
+      end;
+    finally
+      LinhaINM.Free;
+      LinhaDNM.Free;
+    end;
+    //Result := Builder.ToString;
+    Result := Builder.ToString + sLineBreak + LinhaINM.Text + sLineBreak + LinhaDNM.Text;
   finally
     Builder.Free;
   end;

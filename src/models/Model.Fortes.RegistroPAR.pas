@@ -12,8 +12,8 @@ type
     FNome: string;
     FUF: string;
     FCNPJCPF: string;
-    FInscricaoEstadual: boolean;
-    FInscricaoMunicipal: boolean;
+    FInscricaoEstadual: string;
+    FInscricaoMunicipal: string;
     FInformaISSDigital: boolean;
     FInformaDIEF: boolean;
     FInformaDIC: boolean;
@@ -35,7 +35,7 @@ type
     FSuframa: string;
     FSubstitutoISS: boolean;
     FContaRemetentePrestador: string;
-    FContaDestinatárioTomador: string;
+    FContaDestinatarioTomador: string;
     FPais: integer;
     FExterior: boolean;
     FIndicadorDoICMS: SmallInt;
@@ -44,7 +44,7 @@ type
     FAdministradora: boolean;
     FCNAE21: string;
     FCPRB: boolean;
-    FSituaçaoTributária: boolean;
+    FSituaçaoTributaria: boolean;
     FProdutorRural: boolean;
     FIndicativoDaAquisicao: SmallInt;
     FIndicativoDeNIF: SmallInt;
@@ -59,8 +59,8 @@ type
     property Nome: string read FNome write FNome;
     property UF: string read FUF write FUF;
     property CNPJCPF: string read FCNPJCPF write FCNPJCPF;
-    property InscricaoEstadual: boolean read FInscricaoEstadual write FInscricaoEstadual;
-    property InscricaoMunicipal: boolean read FInscricaoMunicipal write FInscricaoMunicipal;
+    property InscricaoEstadual: string read FInscricaoEstadual write FInscricaoEstadual;
+    property InscricaoMunicipal: string read FInscricaoMunicipal write FInscricaoMunicipal;
     property InformaISSDigital: boolean read FInformaISSDigital write FInformaISSDigital;
     property InformaDIEF : boolean read FInformaDIEF write FInformaDIEF;
     property InformaDIC: boolean read FInformaDIC write FInformaDIC;
@@ -82,7 +82,7 @@ type
     property Suframa: string read FSuframa write FSuframa;
     property SubstitutoISS: boolean read FSubstitutoISS write FSubstitutoISS;
     property ContaRemetentePrestador: string read FContaRemetentePrestador write FContaRemetentePrestador;
-    property ContaDestinatárioTomador: string read FContaDestinatárioTomador write FContaDestinatárioTomador;
+    property ContaDestinatarioTomador: string read FContaDestinatarioTomador write FContaDestinatarioTomador;
     property Pais: integer read FPais write FPais;
     property Exterior: boolean read FExterior write FExterior;
     property IndicadorDoICMS: SmallInt read FIndicadorDoICMS write FIndicadorDoICMS;
@@ -91,7 +91,7 @@ type
     property Administradora: boolean read FAdministradora write FAdministradora;
     property CNAE21: string read FCNAE21 write FCNAE21;
     property CPRB: boolean read FCPRB write FCPRB;
-    property SituaçaoTributária: boolean read FSituaçaoTributária write FSituaçaoTributária;
+    property SituaçaoTributaria: boolean read FSituaçaoTributaria write FSituaçaoTributaria;
     property ProdutorRural: boolean read FProdutorRural write FProdutorRural;
     property IndicativoDaAquisicao: SmallInt read FIndicativoDaAquisicao write FIndicativoDaAquisicao;
     property IndicativoDeNIF: SmallInt read FIndicativoDeNIF write FIndicativoDeNIF;
@@ -119,8 +119,8 @@ begin
     FNome,
     FUF,
     FCNPJCPF,
-    IfThen(FInscricaoEstadual, 'S', 'N'),
-    IfThen(FInscricaoMunicipal, 'S', 'N'),
+    FInscricaoEstadual,
+    FInscricaoMunicipal,
     IfThen(FInformaISSDigital, 'S', 'N'),
     IfThen(FInformaDIEF, 'S', 'N'),
     IfThen(FInformaDIC, 'S', 'N'),
@@ -142,7 +142,7 @@ begin
     FSuframa,
     IfThen(FSubstitutoISS, 'S', 'N'),
     FContaRemetentePrestador,
-    FContaDestinatárioTomador,
+    FContaDestinatarioTomador,
     FPais,
     IfThen(FExterior, 'S', 'N'),
     FIndicadorDoICMS,
@@ -151,7 +151,7 @@ begin
     IfThen(FAdministradora, 'S', 'N'),
     FCNAE21,
     IfThen(FCPRB, 'S', 'N'),
-    IfThen(FSituaçaoTributária, 'S', 'N'),
+    IfThen(FSituaçaoTributaria, 'S', 'N'),
     IfThen(FProdutorRural, 'S', 'N'),
     FIndicativoDaAquisicao,
     FIndicativoDeNIF,
