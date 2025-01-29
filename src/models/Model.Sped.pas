@@ -750,9 +750,18 @@ begin
                     CST_ICMS := documentoFiscal890.CST_ICMS;
                     CFOP := documentoFiscal890.CFOP;
                     VL_OPR := documentoFiscal890.VL_OPR;
-                    ALIQ_ICMS := documentoFiscal890.ALIQ_ICMS;
-                    VL_ICMS := documentoFiscal890.VL_ICMS;
-                    VL_BC_ICMS := documentoFiscal890.VL_BC_ICMS;
+                    case AnsiIndexStr(documentoFiscal890.cst_icms, ['30', '40', '41', '50', '60']) of
+                      0..4: begin
+                        ALIQ_ICMS := 0.00;
+                        VL_ICMS := 0.00;
+                        VL_BC_ICMS := 0.00;
+                      end
+                      else begin
+                        ALIQ_ICMS := documentoFiscal890.ALIQ_ICMS;
+                        VL_ICMS := documentoFiscal890.VL_ICMS;
+                        VL_BC_ICMS := documentoFiscal890.VL_BC_ICMS;
+                      end;
+                    end;
                     COD_OBS := '';
 
                     if (copy(documentoFiscal890.CFOP, 1, 1) = '5') or

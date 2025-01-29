@@ -7,45 +7,34 @@ uses
 
 type
   TEmitente = class;
-  TCertificadoNFe = class;
+  TCertificado = class;
   TEmail = class;
+  TImpressora = class;
+
+  TCFe = class;
   TSwHouseCFe = class;
   TArquivosCFe = class;
-  TCFe = class;
-  TSSLNFe = class;
-  TGeralNFe = class;
-  TWebServiceNFe = class;
-  TImpressora = class;
-  TArquivosNFe = class;
-  TNFe = class;
+
   TNFCe = class;
+  TSSLNFCe = class;
+  TGeralNFCe = class;
+  TWebServiceNFCe = class;
+  TArquivosNFCe = class;
 
   TConfig = class
   private
     fporta: smallint;
-    fdaemon: smallint;
-    fambienteseguro: boolean;
-    fresponsaveltecnico: boolean;
     femitente: TEmitente;
     fimpressora: TImpressora;
-    fsincrono: Boolean;
-    fcnpjaut: string;
     fcfe: TCFe;
-    fnfe: TNFe;
     fnfce: TNFCe;
   public
     constructor Create(Owner: TObject);
     destructor Destroy;
     property porta: smallint read fporta write fporta;
-    property daemon: smallint read fdaemon write fdaemon;
-    property ambienteseguro: boolean read fambienteseguro write fambienteseguro;
-    property responsaveltecnico: boolean read fresponsaveltecnico write fresponsaveltecnico;
     property emitente: TEmitente read femitente write femitente;
     property impressora: TImpressora read fimpressora write fimpressora;
-    property sincrono: Boolean read fsincrono write fsincrono;
-    property cnpjaut: string read fcnpjaut write fcnpjaut;
     property cfe: TCFe read fcfe write fcfe;
-    property nfe: TNFe read fnfe write fnfe;
     property nfce: TNFCe read fnfce write fnfce;
   end;
 
@@ -53,12 +42,12 @@ type
   private
     fregimeiss: smallint;
     findicadorderateio: smallint;
-    fcertificado: TCertificadoNFe;
+    fcertificado: TCertificado;
     femail: TEmail;
   public
     property regimeiss: smallint read fregimeiss write fregimeiss;
     property indicadorderateio: smallint read findicadorderateio write findicadorderateio;
-    property certificado: TCertificadoNFe read fcertificado write fcertificado;
+    property certificado: TCertificado read fcertificado write fcertificado;
     property email: TEmail read femail write femail;
   end;
 
@@ -75,19 +64,15 @@ type
     property linhas: smallint read flinhas write flinhas;
   end;
 
-  TCertificadoNFe = class
+  TCertificado = class
   private
-    fsenhadocertificado: string;
-    fcaminhoraiz: string;
-    fcaminhopfx: string;
     fnumerodeserie: string;
     furl: string;
+    fsenha: string;
   public
     property url: string read furl write furl;
-    property caminhoraiz: string read fcaminhoraiz write fcaminhoraiz;
-    property caminhopfx: string read fcaminhopfx write fcaminhopfx;
-    property senhadocertificado: string read fsenhadocertificado write fsenhadocertificado;
     property numerodeserie: string read fnumerodeserie write fnumerodeserie;
+    property senha: string read fsenha write fsenha;
   end;
 
   TEmail = class
@@ -113,6 +98,39 @@ type
     property confirmaleitura: boolean read fconfirmaleitura write fconfirmaleitura;
     property usathread: boolean read fusathread write fusathread;
     property remetente: string read fremetente write fremetente;
+  end;
+
+  TCFe = class
+  private
+    fpaginadecodigo: smallint;
+    fversaolayout: real;
+    fversaosb: smallint;
+    fversao: real;
+    futf: boolean;
+    fcodigodeativacao: string;
+    fmodelo: smallint;
+    fcaixa: smallint;
+    farquivolog: string;
+    fambiente: smallint;
+    fschemas: string;
+    fcaminhodll: string;
+    fswhouse: TSwHouseCFe;
+    farquivos: TArquivosCFe;
+  public
+    property schemas: string read fschemas write fschemas;
+    property paginadecodigo: smallint read fpaginadecodigo write fpaginadecodigo default 850;
+    property utf: boolean read futf write futf default true;
+    property versaolayout: real read fversaolayout write fversaolayout;
+    property versaosb: smallint read fversaosb write fversaosb;
+    property versao: real read fversao write fversao;
+    property modelo: smallint read fmodelo write fmodelo;
+    property codigodeativacao: string read fcodigodeativacao write fcodigodeativacao;
+    property arquivolog: string read farquivolog write farquivolog;
+    property caminhodll: string read fcaminhodll write fcaminhodll;
+    property caixa: smallint read fcaixa write fcaixa default 1;
+    property ambiente: smallint read fambiente write fambiente default 2;
+    property swhouse: TSwHouseCFe read fswhouse write fswhouse;
+    property arquivos: TArquivosCFe read farquivos write farquivos;
   end;
 
   TSwHouseCFe = class
@@ -151,40 +169,7 @@ type
     property separarporano: boolean read fsepararporano write fsepararporano default true;
   end;
 
-  TCFe = class
-  private
-    fpaginadecodigo: smallint;
-    fversaolayout: real;
-    fversaosb: smallint;
-    fversao: real;
-    futf: boolean;
-    fcodigodeativacao: string;
-    fmodelo: smallint;
-    fcaixa: smallint;
-    farquivolog: string;
-    fambiente: smallint;
-    fschemas: string;
-    fcaminhodll: string;
-    fswhouse: TSwHouseCFe;
-    farquivos: TArquivosCFe;
-  public
-    property schemas: string read fschemas write fschemas;
-    property paginadecodigo: smallint read fpaginadecodigo write fpaginadecodigo default 850;
-    property utf: boolean read futf write futf default true;
-    property versaolayout: real read fversaolayout write fversaolayout;
-    property versaosb: smallint read fversaosb write fversaosb;
-    property versao: real read fversao write fversao;
-    property modelo: smallint read fmodelo write fmodelo;
-    property codigodeativacao: string read fcodigodeativacao write fcodigodeativacao;
-    property arquivolog: string read farquivolog write farquivolog;
-    property caminhodll: string read fcaminhodll write fcaminhodll;
-    property caixa: smallint read fcaixa write fcaixa default 1;
-    property ambiente: smallint read fambiente write fambiente default 2;
-    property swhouse: TSwHouseCFe read fswhouse write fswhouse;
-    property arquivos: TArquivosCFe read farquivos write farquivos;
-  end;
-
-  TSSLNFe = class
+  TSSLNFCe = class
   private
     fhttplib: smallint;
     ftypelib: smallint;
@@ -199,7 +184,7 @@ type
     property xmlsignlib: smallint read fxmlsignlib write fxmlsignlib default 4;
   end;
 
-  TGeralNFe = class
+  TGeralNFCe = class
   private
     fexibirerrosschema: boolean;
     fatualizarxml: boolean;
@@ -216,7 +201,7 @@ type
     property versaodf: string read fversaodf write fversaodf;
   end;
 
-  TWebServiceNFe = class
+  TWebServiceNFCe = class
   private
     fsalvar: boolean;
     fajustaaguardaconsultaret: boolean;
@@ -243,7 +228,7 @@ type
     property proxypass: string read fproxypass write fproxypass;
   end;
 
-  TArquivosNFe = class
+  TArquivosNFCe = class
   private
     fsepararpormes: boolean;
     fsepararpormodelo: boolean;
@@ -272,26 +257,21 @@ type
     property pathsalvar: string read fpathsalvar write fpathsalvar;
   end;
 
-  TNFe = class
-  private
-    fssl: TSSLNFe;
-    fgeral: TGeralNFe;
-    fwebservice: TWebServiceNFe;
-    farquivos: TArquivosNFe;
-  public
-    property ssl: TSSLNFe read fssl write fssl;
-    property geral: TGeralNFe read fgeral write fgeral;
-    property webservice: TWebServiceNFe read fwebservice write fwebservice;
-    property arquivos: TArquivosNFe read farquivos write farquivos;
-  end;
-
   TNFCe = class
   private
     fidcsc: string;
     fcsc: string;
+    fssl: TSSLNFCe;
+    fgeral: TGeralNFCe;
+    fwebservice: TWebServiceNFCe;
+    farquivos: TArquivosNFCe;
   public
     property idcsc: string read fidcsc write fidcsc;
     property csc: string read fcsc write fcsc;
+    property ssl: TSSLNFCe read fssl write fssl;
+    property geral: TGeralNFCe read fgeral write fgeral;
+    property webservice: TWebServiceNFCe read fwebservice write fwebservice;
+    property arquivos: TArquivosNFCe read farquivos write farquivos;
   end;
 
 implementation

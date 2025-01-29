@@ -4,7 +4,7 @@ interface
 
 uses
   System.Classes, System.SysUtils, Horse, IdSSLOpenSSL, System.JSON, Rest.Json,
-  Model.Config, System.Character;
+  Model.Config, System.Character, Model.Estabelecimento, APIService;
 
 const
   cKey = 31987;
@@ -15,7 +15,7 @@ procedure startApi;
 procedure stopApi;
 procedure statusApi;
 procedure InfoConfig(var FConfig: TConfig); overload;
-procedure InfoConfig(const estabelecimento: string; var FConfig: TConfig); overload;
+procedure InfoConfig(const estabelecimento: TEstabelecimentoC; var FEstabelecimentoFiscal: TEstabelecimentoCFiscal); overload;
 procedure Log(const Mensagem: String);
 
 function SomenteDigitos(const S: AnsiString): string;
@@ -41,6 +41,7 @@ procedure InfoConfig(var FConfig: TConfig);
 begin
   if Assigned(FConfig) then
     FConfig := nil;
+
   const FileName = 'config.json';
   if not FileExists(FileName) then
     Log(Format('Desculpe, o arquivo de configuração "%s" não foi encontrado.', [FileName]));
@@ -60,16 +61,19 @@ begin
   end;
 end;
 
-procedure InfoConfig(const estabelecimento: string; var FConfig: TConfig); overload;
+procedure InfoConfig(const estabelecimento: TEstabelecimentoC ; var FEstabelecimentoFiscal: TEstabelecimentoCFiscal); overload;
 begin
-  if estabelecimento = '' then
-  begin
-    InfoConfig(FConfig);
-    Exit;
-  end;
+  if Assigned(FEstabelecimentoFiscal) then
+    FEstabelecimentoFiscal := nil;
 
+  var FRetorno := estabelecimento.estabelecimentoFiscal;
   var jo: TJSONObject;
-  jo := nil;
+  try
+    jo := (TJSONObject.ParseJSONValue(FRetorno.ToJsonString) as TJSONObject);
+    FEstabelecimentoFiscal := TJSON.JsonToObject<TEstabelecimentoCFiscal>(jo);
+  except
+    Log('Desculpe, houve um erro na tentativa de recuperar as informações de conexão com a API fiscal.');
+  end;
 end;
 
 procedure Log(const Mensagem: String);

@@ -55,7 +55,12 @@ constructor TAPIService.Create(const serverName: string = '');
 begin
   inherited Create();
   if serverName = '' then
-    FServidor := 'https://192.168.0.161:3000/api/' //'https://atlas.constel.cloud/api/'
+  begin
+    if DebugHook <> 0 then
+      FServidor := 'https://localhost:3000/api/'
+    else
+      FServidor := 'https://atlas.constel.cloud/api/';
+  end
   else
     FServidor := serverName;
 

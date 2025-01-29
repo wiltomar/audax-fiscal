@@ -87,10 +87,10 @@ uses
   Model.Fortes.RegistroSVN in 'models\Model.Fortes.RegistroSVN.pas',
   Model.Fortes.RegistroCEE in 'models\Model.Fortes.RegistroCEE.pas',
   Model.Fortes.RegistroTRA in 'models\Model.Fortes.RegistroTRA.pas',
-  Fortes.IRegistro in 'Fortes.IRegistro.pas',
   Model.Fortes.RegistroCPE in 'models\Model.Fortes.RegistroCPE.pas',
   Model.Fortes.RegistroPCE in 'models\Model.Fortes.RegistroPCE.pas',
-  Model.Fortes.RegistroDNM in 'models\Model.Fortes.RegistroDNM.pas';
+  Model.Fortes.RegistroDNM in 'models\Model.Fortes.RegistroDNM.pas',
+  Fortes.IRegistro in 'Fortes.IRegistro.pas';
 
 function startApi: boolean;
 begin

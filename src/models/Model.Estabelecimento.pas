@@ -121,6 +121,108 @@ type
   end;
   TEstabelecimentoCDepartamentos = TArray<TEstabelecimentoCDepartamento>;
 
+  TEstabelecimentoCEmail = class(TBaseTR)
+  private
+    fservidor: String;
+    fporta: String;
+    fusassl: Boolean;
+    fusathread: Boolean;
+    fusatls: Boolean;
+    fusuario: String;
+    fsenha: String;
+    forigem: String;
+    fremetente: String;
+  public
+    property servidor: String read fservidor write fservidor;
+    property porta: String read fporta write fporta;
+    property usassl: Boolean read fusassl write fusassl;
+    property usatls: Boolean read fusatls write fusatls;
+    property usuario: String read fusuario write fusuario;
+    property senha: String read fsenha write fsenha;
+    property origem: String read forigem write forigem;
+    property remetente: String read fremetente write fremetente;
+  end;
+
+  TEstabelecimentoCFiscalSerie = class(TBase)
+  private
+    festabelecimento: TEstabelecimento;
+    festabelecimentodocumentoid: string;
+    fmodelo: string;
+    fambiente: smallint;
+    fnumero: integer;
+    flote: smallint;
+    fserie: string;
+    fsituacao: smallint;
+    fatributos: string;
+    fpadrao: boolean;
+    finicio: TDate;
+    fconclusao: TDate;
+    fdispositivoid: string;
+    fformadeemissao: smallint;
+    fcertificadourl: string;
+    fcertificadosenha: string;
+    fatualizarxml: boolean;
+    fexibirerroschema: boolean;
+    fretiraracentos: boolean;
+    fversaodf: string;
+    fnfceidcsc: smallint;
+    fnfcecsc: string;
+  public
+    property estabelecimento: TEstabelecimento read festabelecimento write festabelecimento;
+    property estabelecimentodocumentoid: string read festabelecimentodocumentoid write festabelecimentodocumentoid;
+    property modelo: string read fmodelo write fmodelo;
+    property ambiente: smallint read fambiente write fambiente;
+    property numero: integer read fnumero write fnumero;
+    property lote: smallint read flote write flote;
+    property serie: string read fserie write fserie;
+    property situacao: smallint read fsituacao write fsituacao;
+    property atributos: string read fatributos write fatributos;
+    property padrao: boolean read fpadrao write fpadrao;
+    property inicio: TDate read finicio write finicio;
+    property conclusao: TDate read fconclusao write fconclusao;
+    property dispositivoid: string read fdispositivoid write fdispositivoid;
+    property formadeemissao: smallint read fformadeemissao write fformadeemissao;
+    property certificadourl: string read fcertificadourl write fcertificadourl;
+    property certificadosenha: string read fcertificadosenha write fcertificadosenha;
+    property atualizarxml: boolean read fatualizarxml write fatualizarxml;
+    property exibirerroschema: boolean read fexibirerroschema write fexibirerroschema;
+    property retiraracentos: boolean read fretiraracentos write fretiraracentos;
+    property versaodf: string read fversaodf write fversaodf;
+    property nfceidcsc: smallint read fnfceidcsc write fnfceidcsc;
+    property nfcecsc: string read fnfcecsc write fnfcecsc;
+  end;
+
+  TEstabelecimentoCFiscal = class(TBaseTR)
+  private
+    fporta: Smallint;
+    fresponsaveltecnico: Boolean;
+    fsincrono: Boolean;
+    fcnpjaut: String;
+    fregimeiss: SmallInt;
+    findicadorderateio: SmallInt;
+    fcryptolib: Smallint;
+    fhttplib: SmallInt;
+    fssllib: SmallInt;
+    fssltype: SmallInt;
+    fxmlsignlib: SmallInt;
+    femail: TEstabelecimentoCEmail;
+    festabelecimentofiscalserie: TEstabelecimentoCFiscalSerie;
+  public
+    property porta: smallint read fporta write fporta;
+    property responsaveltecnico: boolean read fresponsaveltecnico write fresponsaveltecnico;
+    property sincrono: boolean read fsincrono write fsincrono;
+    property cnpjaut: string read fcnpjaut write fcnpjaut;
+    property regimeiss: smallint read fregimeiss write fregimeiss;
+    property indicadorderateio: smallint read findicadorderateio write findicadorderateio;
+    property cryptolib: smallint read fcryptolib write fcryptolib;
+    property httplib: smallint read fhttplib write fhttplib;
+    property ssllib: smallint read fssllib write fssllib;
+    property ssltype: smallint read fssltype write fssltype;
+    property xmlsignlib: smallint read fxmlsignlib write fxmlsignlib;
+    property email: TEstabelecimentoCEmail read femail write femail;
+    property estabelecimentofiscalserie: TEstabelecimentoCFiscalSerie read festabelecimentofiscalserie write festabelecimentofiscalserie;
+  end;
+
 type
   TEstabelecimentoC = class(TBaseR)
   private
@@ -131,6 +233,7 @@ type
     festabelecimentoDepartamentos: TEstabelecimentoCDepartamentos;
     festabelecimentoDocumentos: TEstabelecimentoCDocumentos;
     festabelecimentoEnderecos: TEstabelecimentoCEnderecos;
+    festabelecimentoFiscal: TEstabelecimentoCFiscal;
   public
     constructor Create(aid: string; anome: string);
     destructor Destroy(); override;
@@ -141,6 +244,7 @@ type
     property estabelecimentoDepartamentos: TEstabelecimentoCDepartamentos read festabelecimentoDepartamentos write festabelecimentoDepartamentos;
     property estabelecimentoDocumentos: TEstabelecimentoCDocumentos read festabelecimentoDocumentos write festabelecimentoDocumentos;
     property estabelecimentoEnderecos: TEstabelecimentoCEnderecos read festabelecimentoEnderecos write festabelecimentoEnderecos;
+    property estabelecimentoFiscal: TEstabelecimentoCFiscal read festabelecimentoFiscal write festabelecimentoFiscal;
   end;
 
 implementation
@@ -155,6 +259,7 @@ begin
   festabelecimentoAmbientes := [];
   festabelecimentoDepartamentos := [];
   festabelecimentoDocumentos := [];
+  festabelecimentoFiscal := TEstabelecimentoCFiscal.Create(aid, anome);
 end;
 
 destructor TEstabelecimentoC.Destroy();
@@ -172,6 +277,8 @@ begin
   for estabelecimentoDocumento in festabelecimentoDocumentos do
     estabelecimentoDocumento.Free();
   estabelecimentoDocumentos := [];
+
+  festabelecimentoFiscal.Free;
 end;
 
 end.
