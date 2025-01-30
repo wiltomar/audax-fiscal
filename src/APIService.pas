@@ -44,10 +44,7 @@ function InfoAPI(const serverName: string = ''): TAPIService;
 begin
   if Assigned(FAPIService) then
     Exit(FAPIService);
-//  if (DebugHook <> 0) or (serverName <> '') then
-//      FAPIService := TAPIService.Create('https://192.168.1.8:3000/api/')
-//  else
-    FAPIService := TAPIService.Create();
+  FAPIService := TAPIService.Create();
   Result := FAPIService;
 end;
 
