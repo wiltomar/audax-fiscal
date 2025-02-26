@@ -1836,11 +1836,12 @@ begin
     var dataFinal    := Req.Query.Field('conclusao').AsISO8601DateTime;
     var finalidade   := Req.Query.Field('tipodearquivo').AsInteger;
     var semMovimento := Req.Query.Field('semmovimento').AsInteger;
+    var inventario   := Req.Query.Field('inventariofiscal').AsString;
     var nomeArq: string;
 
     for var Estabelecimento in Estabelecimentos do
     begin
-      sped.gerar(Estabelecimento, dataInicial, dataFinal, nomeArq, erros, finalidade, semMovimento);
+      sped.gerar(Estabelecimento, dataInicial, dataFinal, nomeArq, erros, finalidade, semMovimento, inventario);
       try
         fileStream := TFileStream.Create(nomeArq, fmOpenRead or fmShareDenyWrite);
       except
