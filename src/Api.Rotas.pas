@@ -249,6 +249,7 @@ begin
     .Post(apiVersion + 'fiscal/documento/estorna', estornaDFe)
 
     // Manter retrocompatibilidade.
+    .Get(apiVersion + 'fiscal/documento/sped', geraSPED)
     .Post(apiVersion + 'fiscal/documentofiscal/emite', emiteDFe)
     .Post(apiVersion  + 'fiscal/documentofiscal/imprime', imrimeDFe)
     .Post(apiVersion + 'fiscal/documentofiscal/estorna', estornaDFe)

@@ -38,8 +38,8 @@ type
     function inicializaSAT: Boolean;
 
     procedure carregaSAT;
-    procedure carregaNFe(const modelo: string = '55');
-    procedure carregaCertificado;
+    procedure carregaNFe(estabelecimento: TEstabelecimentoC; const modelo: string = '55');
+    procedure carregaCertificado(estabelecimento: TEstabelecimentoC);
     procedure carregaEmail;
 
     function  GerarCFe(const DocumentoFiscal: TDocumentoFiscal): string;
@@ -387,17 +387,17 @@ begin
           if nfe.NotasFiscais.Count > 0 then
           begin
 
-            nfe.Enviar(DocumentoFiscal.documentoFiscalNFe.numero, False, FConfig.sincrono);
+            nfe.Enviar(DocumentoFiscal.documentoFiscalNFe.numero, False, DocumentoFiscal.estabelecimento.estabelecimentoFiscal.sincrono);
 
-            DocumentoFiscal.documentoFiscalNFe.status := IfThen(FConfig.sincrono, nfe.WebServices.Enviar.cStat, nfe.WebServices.Retorno.cStat);
-            DocumentoFiscal.documentoFiscalNFe.msgRetorno := IfThen(FConfig.sincrono, nfe.WebServices.Enviar.Msg, nfe.WebServices.Retorno.Msg);
+            DocumentoFiscal.documentoFiscalNFe.status := IfThen(DocumentoFiscal.estabelecimento.estabelecimentoFiscal.sincrono, nfe.WebServices.Enviar.cStat, nfe.WebServices.Retorno.cStat);
+            DocumentoFiscal.documentoFiscalNFe.msgRetorno := IfThen(DocumentoFiscal.estabelecimento.estabelecimentoFiscal.sincrono, nfe.WebServices.Enviar.Msg, nfe.WebServices.Retorno.Msg);
 
 
-            if (DocumentoFiscal.documentoFiscalNFe.status = 100) and not(IfThen(FConfig.sincrono, nfe.WebServices.Enviar.Protocolo, nfe.WebServices.Retorno.Protocolo) = EmptyStr) then
+            if (DocumentoFiscal.documentoFiscalNFe.status = 100) and not(IfThen(DocumentoFiscal.estabelecimento.estabelecimentoFiscal.sincrono, nfe.WebServices.Enviar.Protocolo, nfe.WebServices.Retorno.Protocolo) = EmptyStr) then
             begin
               DocumentoFiscal.documentoFiscalNFe.chave := nfe.NotasFiscais.Items[0].NumID;
               DocumentoFiscal.documentoFiscalNFe.xml := nfe.NotasFiscais.Items[0].XMLAssinado;
-              DocumentoFiscal.documentoFiscalNFe.protocolo := IfThen(FConfig.sincrono, nfe.WebServices.Enviar.Protocolo, nfe.WebServices.Retorno.Protocolo);
+              DocumentoFiscal.documentoFiscalNFe.protocolo := IfThen(DocumentoFiscal.estabelecimento.estabelecimentoFiscal.sincrono, nfe.WebServices.Enviar.Protocolo, nfe.WebServices.Retorno.Protocolo);
 
               Log(Format('Emitida a NFe de número: %d com chave: %s.', [nfe.NotasFiscais.Items[0].NFe.Ide.nNF,
                                                                  nfe.NotasFiscais.Items[0].NumID]));
@@ -530,7 +530,7 @@ begin
   try
     if DocumentoFiscal.modelo = '55' then
     begin
-      carregaNFe;
+      carregaNFe(DocumentoFiscal.estabelecimento);
 
       nfe.Consultar(DocumentoFiscal.documentoFiscalNFe.chave, True);
 
@@ -586,7 +586,7 @@ begin
     end
     else if DocumentoFiscal.modelo = '65' then
     begin
-      carregaNFe('65');
+      carregaNFe(DocumentoFiscal.estabelecimento, '65');
       nfe.Consultar(DocumentoFiscal.documentoFiscalNFe.chave, True);
 
       nfe.Configuracoes.WebServices.UF       := DocumentoFiscal.estabelecimento.estabelecimentoEnderecos[0].uf.sigla;
@@ -722,34 +722,34 @@ end;
       ColunasFonteNormal := FConfig.impressora.colunas;
       LinhasEntreCupons := FConfig.impressora.linhas;
       EspacoEntreLinhas := 3;
-      //ImprimeQRCode := True;
-      //ImprimeChaveEmUmaLinha := rSim
     end;
   end;
 {$ENDIF}
 
-procedure Tcomponents.carregaCertificado;
+procedure Tcomponents.carregaCertificado(estabelecimento: TEstabelecimentoC);
 begin
   nfe.SSL.DescarregarCertificado;
 
-  if (FConfig.emitente.certificado.caminhopfx = '') and (FConfig.emitente.certificado.numerodeserie = '') then
+  if (estabelecimento.estabelecimentoFiscalSerie.certificadopfx = '') and (estabelecimento.estabelecimentoFiscalSerie.certificadonumerodeserie = '') and (estabelecimento.estabelecimentoFiscalSerie.certificadourl = '') then
   begin
-    Log('Erro ao tentar carregar o certificado digital. Não foi informado o caminho ou o número de série.');
-    Exception.Create('Erro ao tentar carregar o certificado digital. Não foi informado o caminho ou o número de série.');
+    Log('Erro ao tentar carregar o certificado digital. Não foi informado o caminho, número de série ou url válida.');
+    Exception.Create('Erro ao tentar carregar o certificado digital. Não foi informado o caminho, número de série ou url.');
   end;
 
   with nfe.SSL do
   begin
-    ArquivoPFX              := FConfig.emitente.certificado.caminhopfx;
-    Senha                   := FConfig.emitente.certificado.senhadocertificado;
-    NumeroSerie             := FConfig.emitente.certificado.numerodeserie;
+    ArquivoPFX              := estabelecimento.estabelecimentoFiscalSerie.certificadopfx;
+    URLPFX                  := estabelecimento.estabelecimentoFiscalSerie.certificadourl;
+    Senha                   := estabelecimento.estabelecimentoFiscalSerie.certificadosenha;
+    NumeroSerie             := estabelecimento.estabelecimentoFiscalSerie.certificadonumerodeserie;
   end;
 
   with nfe.Configuracoes.Certificados do
   begin
-    ArquivoPFX              := FConfig.emitente.certificado.caminhopfx;
-    Senha                   := FConfig.emitente.certificado.senhadocertificado;
-    NumeroSerie             := FConfig.emitente.certificado.numerodeserie;
+    ArquivoPFX              := estabelecimento.estabelecimentoFiscalSerie.certificadopfx;
+    URLPFX                  := estabelecimento.estabelecimentoFiscalSerie.certificadourl;
+    Senha                   := estabelecimento.estabelecimentoFiscalSerie.certificadosenha;
+    NumeroSerie             := estabelecimento.estabelecimentoFiscalSerie.certificadonumerodeserie;
   end;
 
   if not(nfe.Configuracoes.Certificados.VerificarValidade) then
@@ -771,77 +771,77 @@ begin
     Username            := FConfig.emitente.email.usuario;
     Password            := FConfig.emitente.email.senha;
     From                := FConfig.emitente.email.origem;
-    SetSSL              := FConfig.emitente.email.usassl;         // SSL - Conexao Segura
-    SetTLS              := FConfig.emitente.email.usatls;         // Auto TLS
-    ReadingConfirmation := False;                                 // Pede confirmacao de leitura do email
-    UseThread           := FConfig.emitente.email.usathread;      // Aguarda Envio do Email(nao usa thread)
+    SetSSL              := FConfig.emitente.email.usassl;
+    SetTLS              := FConfig.emitente.email.usatls;
+    ReadingConfirmation := False;
+    UseThread           := FConfig.emitente.email.usathread;
     FromName            := FConfig.emitente.email.remetente;
   end;
 end;
 
-procedure Tcomponents.carregaNFe(const modelo: string = '55');
+procedure Tcomponents.carregaNFe(estabelecimento: TEstabelecimentoC; const modelo: string = '55');
 var
   lOk: Boolean;
+  fEstabelecimentoSerie: TDocumentoFiscalSerie;
 begin
-  InfoConfig(FConfig);
 
-  FRespTec := FConfig.responsaveltecnico;
+  FRespTec := estabelecimento.estabelecimentoFiscal.responsaveltecnico;
 
   try
-    with nfe.Configuracoes.Geral do
+    with nfe.Configuracoes.Geral, estabelecimento do
     begin
-      SSLLib                  := TSSLLib(FConfig.nfe.ssl.lib);
-      SSLCryptLib             := TSSLCryptLib(FConfig.nfe.ssl.cryptlib);
-      SSLHttpLib              := TSSLHttpLib(FConfig.nfe.ssl.httplib);
-      SSLXmlSignLib           := TSSLXmlSignLib(FConfig.nfe.ssl.xmlsignlib);
+      SSLLib                  := TSSLLib(estabelecimentoFiscal.ssllib);
+      SSLCryptLib             := TSSLCryptLib(estabelecimentoFiscal.cryptlib);
+      SSLHttpLib              := TSSLHttpLib(estabelecimentoFiscal.httplib);
+      SSLXmlSignLib           := TSSLXmlSignLib(estabelecimentoFiscal.xmlsignlib);
 
-      Salvar                  := FConfig.nfe.geral.salvar;
-      RetirarAcentos          := FConfig.nfe.geral.retiraracentos;
-      AtualizarXMLCancelado   := FConfig.nfe.geral.atualizarxml;
-      ExibirErroSchema        := FConfig.nfe.geral.exibirerroschema;
-      FormaEmissao            := TpcnTipoEmissao(FConfig.nfe.geral.formaemissao);
-      VersaoDF                := StrToVersaoDF(lOk, FConfig.nfe.geral.versaodf);
+      Salvar                  := True;
+      RetirarAcentos          := estabelecimentoFiscalSerie.retiraracentos;
+      AtualizarXMLCancelado   := estabelecimentoFiscalSerie.atualizarxml;
+      ExibirErroSchema        := estabelecimentoFiscalSerie.exibirerroschema;
+      FormaEmissao            := TpcnTipoEmissao(estabelecimentoFiscalSerie.formadeemissao);
+      VersaoDF                := StrToVersaoDF(lOk, estabelecimentoFiscalSerie.versaodf);
 
       ModeloDF        := StrToModeloDF(lOk, modelo);
       FormatoAlerta   := 'TAG:%TAGNIVEL% ID:%ID%/%TAG%(%DESCRICAO%) - %MSG%.';
 
-      IdCSC                 := FConfig.nfce.IdCSC;
-      CSC                   := FConfig.nfce.CSC;
+      IdCSC                 := estabelecimentoFiscalSerie.nfceidcsc.ToString;
+      CSC                   := estabelecimentoFiscalSerie.nfcecsc;
       VersaoQRCode          := veqr200;
 
     end;
 
     with nfe.Configuracoes.Arquivos do
     begin
-      Salvar                  := FConfig.nfe.arquivos.salvar;
-      SepararPorMes           := FConfig.nfe.arquivos.separarpormes;
-      AdicionarLiteral        := FConfig.nfe.arquivos.adicionarliteral;
-      EmissaoPathNFe          := FConfig.nfe.arquivos.emissaopathnfe;
-      SalvarEvento            := FConfig.nfe.arquivos.salvarevento;
-      SepararPorCNPJ          := FConfig.nfe.arquivos.separarporcnpj;
-      SepararPorModelo        := FConfig.nfe.arquivos.separarpormodelo;
-      PathSchemas             := FConfig.nfe.arquivos.pathschemas;
-      PathNFe                 := FConfig.nfe.arquivos.pathnfe;
-      PathInu                 := FConfig.nfe.arquivos.pathinu;
-      PathEvento              := FConfig.nfe.arquivos.pathevento;
-      PathSalvar              := FConfig.nfe.arquivos.pathsalvar;
+      Salvar                  := True;
+      SepararPorMes           := True;
+      AdicionarLiteral        := True;
+      EmissaoPathNFe          := True;
+      SalvarEvento            := False;
+      SepararPorCNPJ          := True;
+      SepararPorModelo        := True;
+      PathSchemas             := '.\documentos\schemas\nfe';
+      PathNFe                 := '.\documentos\arquivos\envio';
+      PathInu                 := '.\documentos\arquivos\inu';
+      PathEvento              := '.\documentos\arquivos\eventos';
+      PathSalvar              := '.\documentos\arquivos\nfe';
     end;
 
-    carregaCertificado;
+    carregaCertificado(estabelecimento);
 
     with nfe.Configuracoes.WebServices do
     begin
-      Visualizar              := FConfig.nfe.webservice.visualizar;
-      Salvar                  := FConfig.nfe.webservice.salvar;
-      AjustaAguardaConsultaRet:= FConfig.nfe.webservice.ajustaaguardaconsultaret;
-      AguardarConsultaRet     := FConfig.nfe.webservice.aguardarconsultaret;
-      Tentativas              := FConfig.nfe.webservice.tentativas;
-      IntervaloTentativas     := FConfig.nfe.webservice.intervalotentativas;
-      TimeOut                 := FConfig.nfe.webservice.timeout;
-      ProxyHost               := FConfig.nfe.webservice.proxyhost;
-      ProxyPort               := FConfig.nfe.webservice.proxyport;
-      ProxyUser               := FConfig.nfe.webservice.proxyuser;
-      ProxyPass               := FConfig.nfe.webservice.proxypass;
+      Visualizar              := False;
+      Salvar                  := True;
+      AjustaAguardaConsultaRet:= True;
+      AguardarConsultaRet     := 10000;
+      Tentativas              := 3;
+      IntervaloTentativas     := 10000;
+      TimeOut                 := 30000;
+      ProxyHost               := '';
+      ProxyPort               := '';
+      ProxyUser               := '';
+      ProxyPass               := '';
     end;
 
   except
@@ -872,6 +872,7 @@ var
   vTotalFCPST,
   vTotalIPI,
   vTotalII,
+  vTotalIPIDevol,
   vTotalDescontos: Double;
   Count: TNFe;
 begin
@@ -880,6 +881,7 @@ begin
   vTotalPIS := 0;
   vTotalCOFINS := 0;
   vTotalIPI := 0;
+  vTotalIPIDevol := 0;
   vTotalII := 0;
   vTotalItens := 0;
   vTotalFCPST := 0;
@@ -887,10 +889,10 @@ begin
 
   nfe.NotasFiscais.Clear;
 
-  carregaNFe;
+  carregaNFe(DocumentoFiscal.estabelecimento);
 
   nfe.Configuracoes.WebServices.UF       := DocumentoFiscal.estabelecimento.estabelecimentoEnderecos[0].uf.sigla;
-  nfe.Configuracoes.WebServices.Ambiente := StrToTpAmb(lOk, IntToStr(DocumentoFiscal.ambiente));
+  nfe.Configuracoes.WebServices.Ambiente := StrToTpAmb(lOk, IntToStr(DocumentoFiscal.estabelecimento.estabelecimentoFiscalSerie.ambiente));
 
   NotaF := nfe.NotasFiscais.Add;
   with NotaF.NFe, DocumentoFiscal do
@@ -904,14 +906,15 @@ begin
     Ide.dSaiEnt     := saida;
     Ide.hSaiEnt     := saida;
     Ide.tpNF        := tnSaida;
-    Ide.tpEmis      := StrToTpEmis(lOk, IntToStr(DocumentoFiscal.documentoFiscalNFe.formaDeEmissao));
-    Ide.tpAmb       := StrToTpAmb(lOk, IntToStr(DocumentoFiscal.ambiente));
+    Ide.tpEmis      := StrToTpEmis(lOk, IntToStr(DocumentoFiscal.estabelecimento.estabelecimentoFiscalSerie.formadeemissao));
+    Ide.tpAmb       := StrToTpAmb(lOk, IntToStr(DocumentoFiscal.estabelecimento.estabelecimentoFiscalSerie.ambiente));
     Ide.verProc     := '2024.06';
     Ide.cUF         := UFtoCUF(estabelecimento.estabelecimentoEnderecos[0].uf.sigla);
     Ide.cMunFG      := StrToInt(estabelecimento.estabelecimentoEnderecos[0].municipio.codigo);
     Ide.finNFe      := StrToFinNFe(lOk, IntToStr(documentoFiscalNFe.finalidadeEmissao));
     Ide.indIntermed := TindIntermed(documentoFiscalNFe.indicadorIntermediador);
     Ide.indFinal    := cfNao;
+
     if DocumentoFiscal.estabelecimento.estabelecimentoEnderecos[0].uf.sigla =
        DocumentoFiscal.parceiro.parceiroEnderecos[0].uf.sigla then
       Ide.idDest    := doInterna
@@ -929,7 +932,7 @@ begin
     if not(TpcnTipoEmissao(documentoFiscalNFe.formaDeEmissao) = teNormal) then
     begin
       Ide.dhCont    := date;
-      Ide.xJust     := 'Falha no webservice normal'; // Ver depois de onde pegar essa informação.
+      Ide.xJust     := 'Falha no webservice normal';
     end;
 
     Emit.CNPJCPF            := estabelecimento.estabelecimentoDocumentos[0].documentoNumero;
@@ -961,11 +964,11 @@ begin
       infRespTec.fone	        := '8533076262';
     end;
 
-    if not(FConfig.cnpjaut = EmptyStr)  then
+    if not(estabelecimento.estabelecimentoFiscal.cnpjaut = EmptyStr)  then
     begin
       with autXML.Add do
       begin
-        CNPJCPF := FConfig.cnpjaut;
+        CNPJCPF := estabelecimento.estabelecimentoFiscal.cnpjaut;
       end;
     end;
 
@@ -1113,10 +1116,18 @@ begin
             vBC    := subtotal;
             qUnid  := 0;
             vUnid  := 0;
-            pIPI   := ipiAliquota;
-            vIPI   := vBC * (ipiAliquota / 100);
 
-            vTotalIPI := vTotalIPI + vIPI;
+            if not(Ide.finNFe = fnDevolucao) then
+            begin
+              pIPI   := ipiAliquota;
+              vIPI   := vBC * (ipiAliquota / 100);
+
+              vTotalIPI := vTotalIPI + vIPI;
+            end
+            else begin
+              pDevol    := ipiAliquota;
+              vIPIDevol := vBC * (ipiAliquota / 100);
+            end;
           end;
 
           with PIS do
@@ -1182,13 +1193,21 @@ begin
     NotaF.NFe.Total.ICMSTot.vProd     := vTotalItens;
     NotaF.NFe.Total.ICMSTot.vFrete    := DocumentoFiscal.frete;
     NotaF.NFe.Total.ICMSTot.vSeg      := 0;
-    NotaF.NFe.Total.ICMSTot.vDesc     := vTotalDescontos + DocumentoFiscal.desconto;
-    NotaF.NFe.Total.ICMSTot.vII       := 0;
-    NotaF.NFe.Total.ICMSTot.vIPI      := 0;
-    NotaF.NFe.Total.ICMSTot.vPIS      := 0;
-    NotaF.NFe.Total.ICMSTot.vCOFINS   := 0;
+    NotaF.NFe.Total.ICMSTot.vDesc     := vTotalDescontos +
+                                         DocumentoFiscal.desconto;
+    NotaF.NFe.Total.ICMSTot.vII       := vTotalII;
+    NotaF.NFe.Total.ICMSTot.vIPI      := vTotalIPI;
+    NotaF.NFe.Total.ICMSTot.vIPIDevol := vTotalIPIDevol;
+    NotaF.NFe.Total.ICMSTot.vPIS      := vTotalPIS;
+    NotaF.NFe.Total.ICMSTot.vCOFINS   := vTotalCOFINS;
     NotaF.NFe.Total.ICMSTot.vOutro    := DocumentoFiscal.outrasDespesas;
-    NotaF.NFe.Total.ICMSTot.vNF       := vTotalItens + DocumentoFiscal.frete + DocumentoFiscal.outrasDespesas - DocumentoFiscal.desconto - vTotalDescontos;
+    NotaF.NFe.Total.ICMSTot.vNF       := vTotalItens +
+                                         vTotalIPI +
+                                         vTotalIPIDevol +
+                                         DocumentoFiscal.frete +
+                                         DocumentoFiscal.outrasDespesas -
+                                         DocumentoFiscal.desconto -
+                                         vTotalDescontos;
     NotaF.NFe.Total.ICMSTot.vTotTrib  := 0;
 
     NotaF.NFe.Total.ICMSTot.vFCPUFDest   := 0.00;
@@ -1474,7 +1493,7 @@ begin
 
   nfe.NotasFiscais.Clear;
 
-  carregaNFe('65');
+  carregaNFe(DocumentoFiscal.estabelecimento, '65');
 
   nfe.Configuracoes.WebServices.Ambiente := StrToTpAmb(lOk, IntToStr(DocumentoFiscal.ambiente));
 
@@ -1532,6 +1551,15 @@ begin
 
       Emit.IEST               := estabelecimentoDocumentos[0].inscricaoEstadualSubstitutoTributario;
       Emit.CRT                := TpcnCRT(estabelecimentoDocumentos[0].regimeTributarioICMS);
+
+      if FRespTec then
+      begin
+        infRespTec.CNPJ	        := '04528001000164';
+        infRespTec.xContato	    := 'Myron Yerich P. Sales';
+        infRespTec.email        := 'myron@solucaosistemas.net';
+        infRespTec.fone	        := '8533076262';
+      end;
+
     end;
 
     if Length(DocumentoFiscal.cpfInformado) > 0 then
@@ -1804,13 +1832,15 @@ begin
       'agente/estabelecimento/sped?estabelecimentoid=' +
       Req.Query.Field('estabelecimentoid').AsString);
 
-    var dataInicial := Req.Query.Field('inicio').AsISO8601DateTime;
-    var dataFinal   := Req.Query.Field('conclusao').AsISO8601DateTime;
+    var dataInicial  := Req.Query.Field('inicio').AsISO8601DateTime;
+    var dataFinal    := Req.Query.Field('conclusao').AsISO8601DateTime;
+    var finalidade   := Req.Query.Field('tipodearquivo').AsInteger;
+    var semMovimento := Req.Query.Field('semmovimento').AsInteger;
     var nomeArq: string;
 
     for var Estabelecimento in Estabelecimentos do
     begin
-      sped.gerar(Estabelecimento, dataInicial, dataFinal, nomeArq, erros);
+      sped.gerar(Estabelecimento, dataInicial, dataFinal, nomeArq, erros, finalidade, semMovimento);
       try
         fileStream := TFileStream.Create(nomeArq, fmOpenRead or fmShareDenyWrite);
       except

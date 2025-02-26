@@ -122,6 +122,80 @@ type
   TEstabelecimentoCDepartamentos = TArray<TEstabelecimentoCDepartamento>;
 
 type
+  TEstabelecimentoCFiscal = class(TBaseR)
+  private
+    fporta: smallint;
+    fresponsaveltecnico: boolean;
+    fsincrono: Boolean;
+    fcnpjaut: string;
+    fregimeiss: smallint;
+    findicadorderateio: smallint;
+    fcryptlib: smallint;
+    fhttplib: smallint;
+    fssllib: smallint;
+    fssltype: smallint;
+    fxmlsignlib: smallint;
+  public
+    property porta: smallint read fporta write fporta;
+    property responsaveltecnico: boolean read fresponsaveltecnico write fresponsaveltecnico;
+    property sincrono: Boolean read fsincrono write fsincrono;
+    property cnpjaut: string read fcnpjaut write fcnpjaut;
+    property regimeiss: smallint read fregimeiss write fregimeiss;
+    property indicadorderateio: smallint read findicadorderateio write findicadorderateio;
+    property cryptlib: smallint read fcryptlib write fcryptlib;
+    property httplib: smallint read fhttplib write fhttplib;
+    property ssllib: smallint read fssllib write fssllib;
+    property ssltype: smallint read fssltype write fssltype;
+    property xmlsignlib: smallint read fxmlsignlib write fxmlsignlib;
+  end;
+
+  TDocumentoFiscalSerie = class(TBase)
+  private
+    festabelecimentodocumentoid: string;
+    fmodelo: string;
+    fambiente: smallint;
+    fnumero: integer;
+    flote: smallint;
+    fserie: string;
+    fsituacao: smallint;
+    finicio: TDate;
+    fconclusao: TDate;
+    fdispositivoid: string;
+    fformadeemissao: smallint;
+    fatualizarxml: boolean;
+    fexibirerroschema: boolean;
+    fversaodf: string;
+    fnfcecsc: string;
+    fnfceidcsc: smallint;
+    fcertificadopfx: string;
+    fcertificadonumerodeserie: string;
+    fcertificadourl: string;
+    fcertificadosenha: string;
+    fretiraracentos: boolean;
+  public
+    property estabelecimentodocumentoid: string read festabelecimentodocumentoid write festabelecimentodocumentoid;
+    property modelo: string read fmodelo write fmodelo;
+    property ambiente: smallint read fambiente write fambiente;
+    property numero: integer read fnumero write fnumero;
+    property lote: smallint read flote write flote;
+    property serie: string read fserie write fserie;
+    property situacao: smallint read fsituacao write fsituacao;
+    property inicio: TDate read finicio write finicio;
+    property conclusao: TDate read fconclusao write fconclusao;
+    property dispositivoid: string read fdispositivoid write fdispositivoid;
+    property formadeemissao: smallint read fformadeemissao write fformadeemissao;
+    property atualizarxml: boolean read fatualizarxml write fatualizarxml;
+    property exibirerroschema: boolean read fexibirerroschema write fexibirerroschema;
+    property versaodf: string read fversaodf write fversaodf;
+    property nfcecsc: string read fnfcecsc write fnfcecsc;
+    property nfceidcsc: smallint read fnfceidcsc write fnfceidcsc;
+    property certificadopfx: string read fcertificadopfx write fcertificadopfx;
+    property certificadonumerodeserie: string read fcertificadonumerodeserie write fcertificadonumerodeserie;
+    property certificadourl: string read fcertificadourl write fcertificadourl;
+    property certificadosenha: string read fcertificadosenha write fcertificadosenha;
+    property retiraracentos: boolean read fretiraracentos write fretiraracentos;
+  end;
+
   TEstabelecimentoC = class(TBaseR)
   private
     fcodigo: string;
@@ -131,6 +205,8 @@ type
     festabelecimentoDepartamentos: TEstabelecimentoCDepartamentos;
     festabelecimentoDocumentos: TEstabelecimentoCDocumentos;
     festabelecimentoEnderecos: TEstabelecimentoCEnderecos;
+    festabelecimentoFiscal: TEstabelecimentoCFiscal;
+    festabelecimentoFiscalSerie: TDocumentoFiscalSerie;
   public
     constructor Create(aid: string; anome: string);
     destructor Destroy(); override;
@@ -141,6 +217,8 @@ type
     property estabelecimentoDepartamentos: TEstabelecimentoCDepartamentos read festabelecimentoDepartamentos write festabelecimentoDepartamentos;
     property estabelecimentoDocumentos: TEstabelecimentoCDocumentos read festabelecimentoDocumentos write festabelecimentoDocumentos;
     property estabelecimentoEnderecos: TEstabelecimentoCEnderecos read festabelecimentoEnderecos write festabelecimentoEnderecos;
+    property estabelecimentoFiscal: TEstabelecimentoCFiscal read festabelecimentoFiscal write festabelecimentoFiscal;
+    property estabelecimentoFiscalSerie: TDocumentoFiscalSerie read festabelecimentoFiscalSerie write festabelecimentoFiscalSerie;
   end;
 
 implementation
@@ -173,6 +251,7 @@ begin
     estabelecimentoDocumento.Free();
   estabelecimentoDocumentos := [];
 end;
+
 
 end.
 
