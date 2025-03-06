@@ -86,7 +86,7 @@ begin
   try
     erros := '';
 
-    stringStream := Components.gerarSPED(Req, erros);
+    stringStream := Componentes.gerarSPED(Req, erros);
     stringStream.Encoding.UTF8;
 
     try
@@ -131,21 +131,16 @@ procedure emiteDFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 var
   DocumentoFiscal: TDocumentoFiscal;
   Resposta: TJSONObject;
-  Components: Tcomponents;
   Error, Msg: String;
   StatusCode: THttpStatus;
 begin
-//  cToken := Req.Headers.Field('Authorization').AsString;
-//  InfoAPI().Autentica(cToken);
+  cToken := Req.Headers.Field('Authorization').AsString;
+  InfoAPI().Autentica(cToken);
 
   DocumentoFiscal := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
 
-  if Assigned(Components) then
-    Components := nil;
-
-  Components := Tcomponents.Create(nil);
   try
-    Resposta := TJson.ObjectToJsonObject(Components.EmiteDFe(DocumentoFiscal, Error, Msg), [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
+    Resposta := TJson.ObjectToJsonObject(Componentes.EmiteDFe(DocumentoFiscal, Error, Msg), [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
     try
       Resposta := retorno(Resposta, Error, Msg);
 
@@ -162,7 +157,6 @@ begin
         .Send<TJSONObject>(Resposta);
     end;
   finally
-    Components.Free;
   end;
 end;
 
@@ -170,24 +164,18 @@ procedure estornaDFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 var
   DocumentoFiscalDFe: TDocumentoFiscal;
   Resposta: TJSONObject;
-  Components: Tcomponents;
 begin
-//  cToken := Req.Headers.Field('Authorization').AsString;
-//  InfoAPI().Autentica(cToken);
+  cToken := Req.Headers.Field('Authorization').AsString;
+  InfoAPI().Autentica(cToken);
 
   DocumentoFiscalDFe := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
 
-  if Assigned(Components) then
-    Components := nil;
-
-  Components := Tcomponents.Create(nil);
   try
-    Resposta := TJson.ObjectToJsonObject(Components.CancelarDFe(DocumentoFiscalDFe));
+    Resposta := TJson.ObjectToJsonObject(Componentes.CancelarDFe(DocumentoFiscalDFe));
 
     Res
       .Send<TJSONObject>(Resposta);
   finally
-    Components.Free;
   end;
 end;
 
@@ -195,21 +183,16 @@ procedure imrimeDFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 var
   DocumentoFiscal: TDocumentoFiscal;
   Resposta: TJSONObject;
-  Components: TComponents;
   Error, Msg: String;
   StatusCode: THTTPStatus;
 begin
-//  cToken := Req.Headers.Field('Authorization').AsString;
-//  InfoAPI().Autentica(cToken);
+  cToken := Req.Headers.Field('Authorization').AsString;
+  InfoAPI().Autentica(cToken);
 
   DocumentoFiscal := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
 
-  if Assigned(Components) then
-    Components := nil;
-
-  Components := Tcomponents.Create(nil);
   try
-    Resposta := TJson.ObjectToJsonObject(Components.ImprimirDFe(DocumentoFiscal, Error, Msg), [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
+    Resposta := TJson.ObjectToJsonObject(Componentes.ImprimirDFe(DocumentoFiscal, Error, Msg), [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
     try
       Resposta := retorno(Resposta, Error, Msg);
 
@@ -226,7 +209,6 @@ begin
         .Send<TJSONObject>(Resposta);
     end;
   finally
-    Components.Free;
   end;
 end;
 

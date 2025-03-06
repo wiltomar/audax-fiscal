@@ -74,8 +74,8 @@ type
   TParceiroCDocumento = class(TBaseR)
   private
     fdocumentotipo: SmallInt;
-    fdocumentoNumero: AnsiString;
-    finscricaoEstadual: AnsiString;
+    fdocumentoNumero: String;
+    finscricaoEstadual: String;
     finscricaoMunicipal: AnsiString;
     fregimeTributarioICMS: SmallInt;
     fregimeTributarioISSQN: SmallInt;
@@ -83,8 +83,8 @@ type
     fconclusao: TDateTime;
   public
     property documentoTipo: SmallInt read fdocumentoTipo write fdocumentoTipo;
-    property documentoNumero: AnsiString read fdocumentoNumero write fdocumentoNumero;
-    property inscricaoEstadual: AnsiString read finscricaoEstadual write finscricaoEstadual;
+    property documentoNumero: String read fdocumentoNumero write fdocumentoNumero;
+    property inscricaoEstadual: String read finscricaoEstadual write finscricaoEstadual;
     property inscricaoMunicipal: AnsiString read finscricaoMunicipal write finscricaoMunicipal;
     property regimeTributarioICMS: SmallInt read fregimeTributarioICMS write fregimeTributarioICMS;
     property regimeTributarioISSQN: SmallInt read fregimeTributarioISSQN write fregimeTributarioISSQN;
