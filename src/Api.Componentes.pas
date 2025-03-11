@@ -178,7 +178,6 @@ function Tcomponents.ImprimirDFe(DocumentoFiscal: TDocumentoFiscal; var Error, M
               , nil // Lista de anexos - TStrings
               );
           end;
-
         end;
         4:
         begin

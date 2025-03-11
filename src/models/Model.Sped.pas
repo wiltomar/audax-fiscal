@@ -6,7 +6,7 @@ uses
   Classes, DateUtils, SysUtils, ACBrTXTClass, Variants, ACBrEFDBlocos, StrUtils,
   ACBrSpedFiscal, ACBrBase, ACBrEFDBloco_K_Class, ACBrEFDBloco_K, Midas,
   ACBrEFDBloco_0, ACBrEFDBloco_0_Class, Model.Estabelecimento, APIService,
-  DBClient, DB, Model.Operacao, Api.Funcoes, model.Base;
+  DBClient, DB, Model.Operacao, Api.Funcoes, model.Base, Model.InventarioFiscal;
 
 type
   TSped = class
@@ -832,12 +832,88 @@ begin
         end;
         SpedFiscal.WriteBloco_G;
 
-        with SpedFiscal.Bloco_H do
+        if inventario <> '' then
         begin
-          with RegistroH001New do
-            IND_MOV := imSemDados;
+          var ValorInventario : Currency := 0.00;
+          var
+            InventariosFiscais := InfoAPI().GetPagedArray<TInventarioFiscal>
+              ('fiscal/inventariofiscal/sped?estabelecimentoid=' +
+              Estabelecimento.id + '&inventario=' + QuotedStr(inventario));
+
+          for var inventarioFiscal in InventariosFiscais do
+          begin
+            for var itemInventario in inventarioFiscal.InventarioFiscalItens do
+            begin
+              ValorInventario := ValorInventario + itemInventario.Total;
+            end;
+          end;
+
+          if ValorInventario > 0 then
+          begin
+            with SpedFiscal.Bloco_H do
+            begin
+              with RegistroH001New do
+               IND_MOV := imComDados;
+
+              for var inventarioFiscal in InventariosFiscais do
+              begin
+                with RegistroH005New do
+                begin
+                  DT_INV  := inventarioFiscal.Referencia;
+                  VL_INV  := ValorInventario;
+                  MOT_INV := StrToMotInv(FormatFloat('00', inventarioFiscal.Motivo));
+
+                  for var itemInventario in inventarioFiscal.InventarioFiscalItens do
+                  begin
+                    with RegistroH010New do
+                    begin
+                      COD_ITEM := StringOfChar('0', 13 - length(itemInventario.item.codigo)) + itemInventario.item.codigo;
+                      UNID     := itemInventario.Medida;
+                      QTD      := itemInventario.Quantidade;
+                      VL_UNIT  := itemInventario.Valor;
+                      VL_ITEM  := itemInventario.Total;
+                      case itemInventario.IndicadorDePropriedade of
+                        0: IND_PROP := piInformante;
+                        1: IND_PROP := piInformanteNoTerceiro;
+                        2: IND_PROP := piTerceiroNoInformante;
+                      else
+                        IND_PROP := piInformante;
+                      end;
+                      COD_PART  := '';
+                      TXT_COMPL := '';
+                      COD_CTA   := '1';
+                      if (inventarioFiscal.Motivo in [2,3,4,5]) and (itemInventario.ValorIcms > 0) then
+                      begin
+                        if Assigned(itemInventario.cstIcms) then
+                        begin
+                          with RegistroH020New do
+                          begin
+                            if Assigned(itemInventario.cstIcms) then
+                            begin
+                              CST_ICMS := itemInventario.cstIcms.codigo.PadLeft(3, '0');
+                              BC_ICMS  := itemInventario.valorbcicmsst;
+                              VL_ICMS  := itemInventario.ValorIcms;
+                            end;
+                          end;
+                        end;
+                      end;
+                    end;
+                  end;
+                end;
+              end;
+            end;
+            SpedFiscal.WriteBloco_H;
+          end;
+        end
+        else
+        begin
+          with SpedFiscal.Bloco_H do
+          begin
+            with RegistroH001New do
+              IND_MOV := imSemDados;
+          end;
+          SpedFiscal.WriteBloco_H;
         end;
-        SpedFiscal.WriteBloco_H;
 
         with SpedFiscal.Bloco_K do
         begin

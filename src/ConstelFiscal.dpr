@@ -90,7 +90,8 @@ uses
   Fortes.IRegistro in 'Fortes.IRegistro.pas',
   Model.Fortes.RegistroCPE in 'models\Model.Fortes.RegistroCPE.pas',
   Model.Fortes.RegistroPCE in 'models\Model.Fortes.RegistroPCE.pas',
-  Model.Fortes.RegistroDNM in 'models\Model.Fortes.RegistroDNM.pas';
+  Model.Fortes.RegistroDNM in 'models\Model.Fortes.RegistroDNM.pas',
+  Model.InventarioFiscal in 'models\Model.InventarioFiscal.pas';
 
 function startApi: boolean;
 begin
