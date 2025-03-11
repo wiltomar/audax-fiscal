@@ -119,7 +119,7 @@
         <DCCReference Include="Api.Rotas.pas"/>
         <DCCReference Include="Api.Funcoes.pas"/>
         <DCCReference Include="Api.Componentes.pas">
-            <Form>components</Form>
+            <Form>componentes</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
         <DCCReference Include="lib\Lib.Excecoes.pas"/>

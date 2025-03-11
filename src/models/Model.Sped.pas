@@ -124,6 +124,7 @@ begin
     SpedFiscal.Arquivo := 'sped' + Estabelecimento.estabelecimentoDocumentos[0]
       .documentoNumero + '_' + dataTexto + '.txt';
     nomeArquivo := SpedFiscal.Path + SpedFiscal.Arquivo;
+
     try
       SpedFiscal.IniciaGeracao;
 
@@ -132,6 +133,7 @@ begin
       tbOperacao := TClientDataSet.Create(nil);
       tbOperacao.FieldDefs.Add('id', ftString, 50);
       tbOperacao.FieldDefs.Add('aliqicms', ftCurrency);
+      tbOperacao.StoreDefs := False;
       tbOperacao.CreateDataSet;
       tbOperacao.Open;
 
