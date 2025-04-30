@@ -100,6 +100,7 @@ begin
     ReportMemoryLeaksOnShutdown := True;
   {$ENDIF}
   try
+    Componentes := TComponentes.Create(nil);
     TRotas.Registra;
     Result := True;
   except

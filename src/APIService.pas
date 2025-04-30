@@ -44,10 +44,8 @@ function InfoAPI(const serverName: string = ''): TAPIService;
 begin
   if Assigned(FAPIService) then
     Exit(FAPIService);
-//  if (DebugHook <> 0) or (serverName <> '') then
-//      FAPIService := TAPIService.Create('https://192.168.1.8:3000/api/')
-//  else
-    FAPIService := TAPIService.Create();
+
+  FAPIService := TAPIService.Create();
   Result := FAPIService;
 end;
 
@@ -55,7 +53,7 @@ constructor TAPIService.Create(const serverName: string = '');
 begin
   inherited Create();
   if serverName = '' then
-    FServidor := 'https://sirius.constel.builders/api/'
+    FServidor := 'https://atlas.constel.cloud/api/'
   else
     FServidor := serverName;
 

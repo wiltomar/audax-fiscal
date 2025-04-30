@@ -134,8 +134,8 @@ var
   Error, Msg: String;
   StatusCode: THttpStatus;
 begin
-  cToken := Req.Headers.Field('Authorization').AsString;
-  InfoAPI().Autentica(cToken);
+//  cToken := Req.Headers.Field('Authorization').AsString;
+//  InfoAPI().Autentica(cToken);
 
   DocumentoFiscal := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
 
@@ -165,8 +165,8 @@ var
   DocumentoFiscalDFe: TDocumentoFiscal;
   Resposta: TJSONObject;
 begin
-  cToken := Req.Headers.Field('Authorization').AsString;
-  InfoAPI().Autentica(cToken);
+//  cToken := Req.Headers.Field('Authorization').AsString;
+//  InfoAPI().Autentica(cToken);
 
   DocumentoFiscalDFe := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
 

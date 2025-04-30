@@ -80,8 +80,14 @@ begin
   else if (dataReferencia >= StrToDate('01/01/2023')) and
     (dataReferencia <= StrToDate('31/12/2023')) then
     xVer := '017'
+  else if (dataReferencia >= StrToDate('01/01/2024')) and
+    (dataReferencia <= StrToDate('31/12/2024')) then
+    xVer := '018'
+  else if (dataReferencia >= StrToDate('01/01/2025')) and
+    (dataReferencia <= StrToDate('31/12/2025')) then
+    xVer := '019'
   else
-    xVer := '018';
+    xVer := '019';
   Result := StrToCodVer(xVer);
 end;
 
@@ -301,11 +307,13 @@ begin
               end;
             end;
 
-            var
+            var Produtos: TArray<TItemC>;
+
             Produtos := InfoAPI().GetPagedArray<TItemC>
               ('recurso/item/sped?estabelecimentoid=' + Estabelecimento.id +
               '&periodo=intervalo&inicio=' + dataIniSped + '&conclusao=' +
               dataFinSped + '&natureza=0');
+
             for var produto in Produtos do
             begin
               with Registro0200New do
@@ -356,7 +364,7 @@ begin
               DocumentosFiscais := InfoAPI().GetPagedArray<TDocumentoFiscalSPED>
                 ('fiscal/documentofiscal/sped?estabelecimentoid=' + Estabelecimento.id
                 + '&periodo=intervalo&inicio=' + dataIniSped + '&conclusao=' +
-                dataFinSped + '&modelo=55');
+                dataFinSped);
 
               var
               valorTotalICMS := 0.0;
@@ -375,7 +383,7 @@ begin
                     IND_OPER := tpEntradaAquisicao;
                     IND_EMIT := edTerceiros;
                   end;
-                  if Assigned(documentoFiscal.Parceiro) then
+                  if Assigned(documentoFiscal.Parceiro) and (documentoFiscal.modelo <> '65') then
                     COD_PART := documentoFiscal.Parceiro.codigo
                   else
                     COD_PART := '';
@@ -839,8 +847,8 @@ begin
           var ValorInventario : Currency := 0.00;
           var
             InventariosFiscais := InfoAPI().GetPagedArray<TInventarioFiscal>
-              ('fiscal/inventariofiscal/sped?estabelecimentoid=' +
-              Estabelecimento.id + '&inventario=' + QuotedStr(inventario));
+              ('fiscal/inventariofiscal/sped?estabelecimentoid=' + Estabelecimento.id
+              + '&inventariofiscal=' + QuotedStr(inventario));
 
           for var inventarioFiscal in InventariosFiscais do
           begin
@@ -869,7 +877,7 @@ begin
                   begin
                     with RegistroH010New do
                     begin
-                      COD_ITEM := StringOfChar('0', 13 - length(itemInventario.item.codigo)) + itemInventario.item.codigo;
+                      COD_ITEM := itemInventario.item.codigo;
                       UNID     := itemInventario.Medida;
                       QTD      := itemInventario.Quantidade;
                       VL_UNIT  := itemInventario.Valor;

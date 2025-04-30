@@ -24,7 +24,7 @@ type
     fchave: string;
     fstatus: integer;
     fxml: string;
-    fdanfe: string;
+    fimagem: string;
     fprotocolo: string;
     fformaDeEmissao: smallint;
     findicadorIntermediador: smallint;
@@ -45,7 +45,7 @@ type
     property chave: String read fchave write fchave;
     property status: Integer read fstatus write fstatus;
     property xml: String read fxml write fxml;
-    property danfe: String read fdanfe write fdanfe;
+    property imagem: String read fimagem write fimagem;
     property protocolo: String read fprotocolo write fprotocolo;
     property formaDeEmissao: smallint read fformaDeEmissao write fformaDeEmissao;
     property indicadorIntermediador: smallint read findicadorIntermediador write findicadorIntermediador;
@@ -148,6 +148,7 @@ type
     ftotalImpostoAproximado: Currency;
     forigemDaMercadoria: TOrigemDaMercadoria;
     fncm: TNCM;
+    fcodigoBeneficioFiscal: string;
     fcest: TCEST;
     fcfop: TCFOP;
     fpesoBruto: Currency;
@@ -222,6 +223,7 @@ type
     property totalImpostoAproximado: Currency read ftotalImpostoAproximado write ftotalImpostoAproximado;
     property origemDaMercadoria: TOrigemDaMercadoria read forigemDaMercadoria write forigemDaMercadoria;
     property ncm: TNCM read fncm write fncm;
+    property codigoBeneficioFiscal: string read fcodigoBeneficioFiscal write fcodigoBeneficioFiscal;
     property cest: TCEST read fcest write fcest;
     property cfop: TCFOP read fcfop write fcfop;
     property pesoBruto: Currency read fpesoBruto write fpesoBruto;
@@ -328,6 +330,7 @@ type
     freferencia: string;
     freferenciaid: string;
     freferenciaClasse: Smallint;
+    fdocumentoFiscalSerie: TDocumentoFiscalSerie;
   public
     constructor Create;
     destructor Destroy;
@@ -377,6 +380,7 @@ type
     property referencia: string read freferencia write freferencia;
     property referenciaId: string read freferenciaId write freferenciaId;
     property referenciaClasse: SmallInt read freferenciaClasse write freferenciaClasse;
+    property documentoFiscalSerie: TDocumentoFiscalSerie read fdocumentoFiscalSerie write fdocumentoFiscalSerie;
   end;
   TDocumentosFiscais = TArray<TDocumentoFiscal>;
 
