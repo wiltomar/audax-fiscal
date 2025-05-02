@@ -7,7 +7,7 @@ uses
   ACBrDFeSSL, ACBrSATClass, pcnConversao, pcnConversaoNFe, Model.DocumentoFiscal, Model.Estabelecimento,
   pcnCFe, ACBrDFe, ACBrNFe, ACBrMail, ACBrUtil.Strings, ACBrUtil.Math, ACBrDFeUtil, ACBrNFeNotasFiscais,
   Api.Funcoes, System.Math, System.NetEncoding, ACBrNFeDANFeFPDF, ACBrSATExtratoClass, ACBrNFCeDANFeFPDF,
-  System.IOUtils, Model.Config, Soap.EncdDecd, System.Generics.Collections, Lib.Funcoes,
+  System.IOUtils, Model.Config, Soap.EncdDecd, System.Generics.Collections, Lib.Funcoes, Web.HTTPApp,
   Model.Inutilizacao, ACBrSATExtratoFPDF, Horse, Model.Sped, APIService, Fortes.IRegistro,
   {$IFDEF MSWINDOWS}
     WinApi.ActiveX, ACBrSATExtratoESCPOS, ACBrPosPrinter, ACBrSATExtratoFortesFr;
@@ -17,6 +17,15 @@ const
   docModelos: TArray<String> = ['55', '56', '57', '58', '59', '65'];
 
 type
+  TArquivo = class
+  private
+    fGuid: string;
+    fDiretorio: string;
+  public
+    property Guid: string read fGuid write fGuid;
+    property Diretorio: string read fDiretorio write fDiretorio;
+  end;
+
   Tcomponentes = class(TDataModule)
     nfe: TACBrNFe;
     sat: TACBrSAT;
@@ -59,6 +68,8 @@ type
 
     function gerarSPED(Req: THorseRequest; var erros: string): TStringStream;
     procedure gerarArquivoFortesFiscal(const FileName: String; Registros: TList<IRegistro>);
+
+    function enviaArquivo(const Arquivo: TAbstractWebRequestFile; var erros: string; var msg: string): TArquivo;
 
   end;
 
@@ -280,11 +291,7 @@ begin
                     if nfe.NotasFiscais.LoadFromString(xmlDocumento) then
                     begin
                       var pastaPDF: string;
-                      {$IFDEF MSWINDOWS}
-                        pastaPDF := '.\documentos\arquivos\pdf';
-                      {$ELSE}
-                        pastaPDF := './documentos/arquivos/pdf';
-                      {$ENDIF}
+                      pastaPDF := './arquivos/documentos/pdf';
 
                       with nfe.DANFE do
                       begin
@@ -351,11 +358,10 @@ begin
             begin
               {$IFDEF MSWINDOWS}
                 var Extrato := TACBrSATExtratoFortes.Create(Self);
-                Extrato.PathPDF := './documentos/arquivos/pdf/';
               {$ELSE}
                 var Extrato := TACBrSATExtratoFPDF.Create(Self);
-                Extrato.PathPDF := GetCurrentDir + 'DocumentosFiscais/CFe/PDF/';
               {$ENDIF}
+              Extrato.PathPDF := './arquivos/documentos/pdf/';
 
               with Extrato do
               begin
@@ -513,6 +519,39 @@ begin
       Error := E.Message;
       Result := nil;
     end;
+  end;
+end;
+
+function Tcomponentes.enviaArquivo(const Arquivo: TAbstractWebRequestFile; var erros: string; var msg: string): TArquivo;
+var
+  lStream: TMemoryStream;
+  Caminho, ArquivoGUID: string;
+begin
+  Caminho := './arquivos/estabelecimentos';
+  ForceDirectories(Caminho);
+
+  lStream := TMemoryStream.Create;
+  var fArquivo: TArquivo;
+  fArquivo := TArquivo.Create;
+  try
+    lStream.LoadFromStream(Arquivo.Stream);
+    lStream.Position := 0;
+    try
+      ArquivoGUID := NewGUID.ToLower;
+      var nomeArquivo := Caminho + '/' + ArquivoGUID + ExtractFileExt(Arquivo.FileName);
+      lStream.SaveToFile(nomeArquivo);
+
+      fArquivo.GUID := ArquivoGUID;
+      fArquivo.Diretorio := nomeArquivo;
+      msg := 'Arquivo ' + Arquivo.FileName + ' enviado com sucesso!';
+    except
+      On E:Exception do
+      begin
+        erros := 'Ocorreu o seguinte erro ao processar o arquivo: ' + E.Message;
+      end;
+    end;
+    Result := fArquivo;
+  finally
   end;
 end;
 
@@ -852,11 +891,11 @@ begin
       SalvarEvento            := False;
       SepararPorCNPJ          := True;
       SepararPorModelo        := True;
-      PathSchemas             := '.\documentos\schemas\nfe';
-      PathNFe                 := '.\documentos\arquivos\envio';
-      PathInu                 := '.\documentos\arquivos\inu';
-      PathEvento              := '.\documentos\arquivos\eventos';
-      PathSalvar              := '.\documentos\arquivos\nfe';
+      PathSchemas             := './arquivos/schemas/nfe';
+      PathNFe                 := './arquivos/documentos/nfe/envio';
+      PathInu                 := './arquivos/documentos/nfe/inutilizacoes';
+      PathEvento              := './arquivos/documentos/nfe/eventos';
+      PathSalvar              := './arquivos/documentos/nfe/notas';
     end;
 
     carregaCertificado(documentoFiscalSerie);
@@ -940,7 +979,7 @@ begin
     Ide.tpNF        := tnSaida;
     Ide.tpEmis      := StrToTpEmis(lOk, IntToStr(DocumentoFiscal.estabelecimento.estabelecimentoFiscalSerie.formadeemissao));
     Ide.tpAmb       := StrToTpAmb(lOk, IntToStr(DocumentoFiscal.estabelecimento.estabelecimentoFiscalSerie.ambiente));
-    Ide.verProc     := '2025.03';
+    Ide.verProc     := '2025.05';
     Ide.cUF         := UFtoCUF(estabelecimento.estabelecimentoEnderecos[0].uf.sigla);
     Ide.cMunFG      := StrToInt(estabelecimento.estabelecimentoEnderecos[0].municipio.codigo);
     Ide.finNFe      := StrToFinNFe(lOk, IntToStr(documentoFiscalNFe.finalidadeEmissao));
@@ -1095,9 +1134,7 @@ begin
               CST := StrToCSTICMS(lOk, cstICMS.codigo);
               modBC := dbiValorOperacao;
               modBCST := dbisMargemValorAgregado;
-              pRedBC := icmsReducaoBase;
               pMVAST := 0;
-              pRedBCST := icmsSTReducaoBase;
               vBCST := icmsSTBC;
               pICMSST := icmsstAliquota;
               vICMSST := icmsSTValor;
@@ -1107,6 +1144,8 @@ begin
             vBC := icmsBC;
             pICMS := icmsAliquota;
             vICMS := vBC * (pICMS/100);
+            pRedBC := icmsReducaoBase;
+            pRedBCST := icmsSTReducaoBase;
 
             vBCFCPST := icmsSTBC;
             pFCPST := IfThen(icmsSTBC > 0, 2, 0);
@@ -1280,11 +1319,13 @@ begin
     NotaF.NFe.Cobr.Fat.vDesc := vTotalDescontos;
     NotaF.NFe.Cobr.Fat.vLiq  := documentoFiscal.subtotal + DocumentoFiscal.frete + DocumentoFiscal.outrasDespesas - vTotalDescontos;
 
+    var numDup := 0;
     for var nCont := 0 to Length(DocumentoFiscal.DocumentoFiscalCobrancas) - 1 do
     begin
       with NotaF.NFe.Cobr.Dup.New do
       begin
-        nDup := PadLeft(IntToStr(DocumentoFiscal.documentoFiscalCobrancas[nCont].duplicata), 3, '0');
+        numDup := numDup + 1;
+        nDup := PadLeft(IntToStr(numDup), 3, '0');
         dVenc := DocumentoFiscal.documentoFiscalCobrancas[nCont].vencimento;
         vDup := DocumentoFiscal.documentoFiscalCobrancas[nCont].valor;
       end;

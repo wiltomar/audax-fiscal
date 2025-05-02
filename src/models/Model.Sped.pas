@@ -122,11 +122,7 @@ begin
       ReplaceStr(DateToStr(dataFinal), '/', '');
     dataIniSped := FormatDateTime('yyyy-mm-dd', dataInicial);
     dataFinSped := FormatDateTime('yyyy-mm-dd', dataFinal);
-    {$IFDEF MSWINDOWS}
-      SpedFiscal.Path := '.\documentos\arquivos\sped';
-    {$ELSE}
-      SpedFiscal.Path := './documentos/sped/';
-    {$ENDIF}
+    SpedFiscal.Path := './arquivos/sped/';
     SpedFiscal.Arquivo := 'sped' + Estabelecimento.estabelecimentoDocumentos[0]
       .documentoNumero + '_' + dataTexto + '.txt';
     nomeArquivo := SpedFiscal.Path + SpedFiscal.Arquivo;

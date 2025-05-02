@@ -35,7 +35,7 @@ begin
           AddPair('message', Msg);
           AddPair('error', '');
           AddPair('response', documentoFiscal);
-          Log('sucesso. API fiscal em execução.');
+          Log(Msg);
         end;
       end
       else
@@ -124,6 +124,33 @@ begin
                  [E.Message]));
 
     end;
+  end;
+end;
+
+procedure enviaArquivo(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
+var
+  Resposta: TJSONObject;
+  Error, Msg: String;
+  StatusCode: THttpStatus;
+begin
+  try
+    Resposta := TJSON.ObjectToJsonObject(Componentes.enviaArquivo(Req.RawWebRequest.Files[0], Error, Msg));
+    try
+      Resposta := retorno(Resposta, Error, Msg);
+
+      if Error > '' then
+        StatusCode := THTTPStatus.BadRequest
+      else
+        StatusCode := THTTPStatus.OK;
+      Res
+        .Status(StatusCode)
+        .Send<TJSONObject>(Resposta);
+    except
+      Res
+        .Status(THTTPStatus.BadRequest)
+        .Send<TJSONObject>(Resposta);
+    end;
+  finally
   end;
 end;
 
@@ -229,12 +256,7 @@ begin
     .Post(apiVersion + 'fiscal/documento/emite', emiteDFe)
     .Post(apiVersion  + 'fiscal/documento/imprime', imrimeDFe)
     .Post(apiVersion + 'fiscal/documento/estorna', estornaDFe)
-
-    // Manter retrocompatibilidade.
-    .Get(apiVersion + 'fiscal/documento/sped', geraSPED)
-    .Post(apiVersion + 'fiscal/documentofiscal/emite', emiteDFe)
-    .Post(apiVersion  + 'fiscal/documentofiscal/imprime', imrimeDFe)
-    .Post(apiVersion + 'fiscal/documentofiscal/estorna', estornaDFe)
+    .Post(apiVersion + 'fiscal/arquivo/envia', enviaArquivo);
 end;
 
 end.
