@@ -253,7 +253,7 @@ begin
 
                     if nfe.NotasFiscais.LoadFromString(xmlDocumento) then
                     begin
-                      nfe.DANFE.PathPDF := ExtractFilePath(GetCurrentDir) + 'DocumentosFiscais\NFe\PDF';
+                      nfe.DANFE.PathPDF := ExtractFilePath(GetCurrentDir) + '/arquivos/documentos/nfe/pdf';
                       nfe.DANFE.ImprimirDANFE;
                     end;
 
@@ -291,7 +291,7 @@ begin
                     if nfe.NotasFiscais.LoadFromString(xmlDocumento) then
                     begin
                       var pastaPDF: string;
-                      pastaPDF := './arquivos/documentos/pdf';
+                      pastaPDF := ExtractFilePath(ParamStr(0)) + '/arquivos/documentos/nfe/pdf';
 
                       with nfe.DANFE do
                       begin
@@ -409,7 +409,6 @@ begin
 
           if nfe.NotasFiscais.Count > 0 then
           begin
-
             nfe.Enviar(DocumentoFiscal.documentoFiscalNFe.numero, False, DocumentoFiscal.estabelecimento.estabelecimentoFiscal.sincrono);
 
             DocumentoFiscal.documentoFiscalNFe.status := IfThen(DocumentoFiscal.estabelecimento.estabelecimentoFiscal.sincrono, nfe.WebServices.Enviar.cStat, nfe.WebServices.Retorno.cStat);
@@ -892,10 +891,10 @@ begin
       SepararPorCNPJ          := True;
       SepararPorModelo        := True;
       PathSchemas             := './arquivos/schemas/nfe';
-      PathNFe                 := './arquivos/documentos/nfe/envio';
+      PathNFe                 := './arquivos/documentos/nfe/notas';
       PathInu                 := './arquivos/documentos/nfe/inutilizacoes';
       PathEvento              := './arquivos/documentos/nfe/eventos';
-      PathSalvar              := './arquivos/documentos/nfe/notas';
+      PathSalvar              := './arquivos/documentos/nfe/envio';
     end;
 
     carregaCertificado(documentoFiscalSerie);
@@ -1039,13 +1038,18 @@ begin
       infRespTec.fone	        := '8533076262';
     end;
 
-    if not(estabelecimento.estabelecimentoFiscal.cnpjaut = EmptyStr)  then
-    begin
-      with autXML.New do
+    if not(estabelecimento.estabelecimentoFiscal.cnpjaut = EmptyStr) then
+      autXML.New.CNPJCPF := estabelecimento.estabelecimentoFiscal.cnpjaut;
+
+
+    if Assigned(estabelecimento.estabelecimentoFiscal.cnpjauts)  then
+      for var I := 0 to High(estabelecimento.estabelecimentofiscal.cnpjauts) do
       begin
-        CNPJCPF := estabelecimento.estabelecimentoFiscal.cnpjaut;
+        with autXML.Add do
+        begin
+          CNPJCPF := estabelecimento.estabelecimentoFiscal.cnpjauts[I];
+        end;
       end;
-    end;
 
     if length(parceiro.parceiroDocumentos) > 0 then
     begin
@@ -1620,6 +1624,20 @@ begin
         infRespTec.email        := 'myron@solucaosistemas.net';
         infRespTec.fone	        := '8533076262';
       end;
+
+      if not(estabelecimentoFiscal.cnpjaut = EmptyStr) then
+        autXML.New.CNPJCPF := estabelecimentoFiscal.cnpjaut;
+
+
+      if Assigned(estabelecimentoFiscal.cnpjauts)  then
+        for var I := 0 to High(estabelecimentofiscal.cnpjauts) do
+        begin
+          with autXML.Add do
+          begin
+            CNPJCPF := estabelecimentoFiscal.cnpjauts[I];
+          end;
+        end;
+
 
     end;
 

@@ -128,6 +128,7 @@ type
     fresponsaveltecnico: boolean;
     fsincrono: Boolean;
     fcnpjaut: string;
+    fcnpjauts: TArray<string>;
     fregimeiss: smallint;
     findicadorderateio: smallint;
     fcryptlib: smallint;
@@ -140,6 +141,7 @@ type
     property responsaveltecnico: boolean read fresponsaveltecnico write fresponsaveltecnico;
     property sincrono: Boolean read fsincrono write fsincrono;
     property cnpjaut: string read fcnpjaut write fcnpjaut;
+    property cnpjauts: TArray<string> read fcnpjauts write fcnpjauts;
     property regimeiss: smallint read fregimeiss write fregimeiss;
     property indicadorderateio: smallint read findicadorderateio write findicadorderateio;
     property cryptlib: smallint read fcryptlib write fcryptlib;
@@ -251,7 +253,6 @@ begin
     estabelecimentoDocumento.Free();
   estabelecimentoDocumentos := [];
 end;
-
 
 end.
 
