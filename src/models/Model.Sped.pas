@@ -32,6 +32,7 @@ function TSped.anoVersao: TACBrVersaoLeiauteSPEDFiscal;
 var
   xVer: string;
 begin
+  FormatSettings.ShortDateFormat := 'dd/mm/yyyy';
   if (dataReferencia >= StrToDate('01/01/2009')) and
     (dataReferencia <= StrToDate('31/12/2009')) then
     xVer := '002'
@@ -122,9 +123,10 @@ begin
       ReplaceStr(DateToStr(dataFinal), '/', '');
     dataIniSped := FormatDateTime('yyyy-mm-dd', dataInicial);
     dataFinSped := FormatDateTime('yyyy-mm-dd', dataFinal);
-    SpedFiscal.Path := './arquivos/sped/';
-    SpedFiscal.Arquivo := 'sped' + Estabelecimento.estabelecimentoDocumentos[0]
-      .documentoNumero + '_' + dataTexto + '.txt';
+    SpedFiscal.Path := ExtractFilePath(ParamStr(0)) + '/arquivos/texto/sped/';
+    SpedFiscal.Arquivo :=
+      'sped' + Estabelecimento.estabelecimentoDocumentos[0].
+        documentoNumero + '_' + dataTexto + '.txt';
     nomeArquivo := SpedFiscal.Path + SpedFiscal.Arquivo;
 
     try
@@ -410,7 +412,7 @@ begin
                   dataDoc := documentoFiscal.emissao;
                   DT_DOC := documentoFiscal.emissao;
                   DT_E_S := documentoFiscal.emissao;
-                  VL_DOC := documentoFiscal.total;
+                  VL_DOC := documentoFiscal.total - documentoFiscal.desconto;
                   IND_PGTO := TACBrIndPgto(documentoFiscal.indicadorpagamento);
                   VL_DESC := documentoFiscal.desconto;
                   VL_ABAT_NT := documentoFiscal.desconto;

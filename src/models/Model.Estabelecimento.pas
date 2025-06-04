@@ -129,8 +129,6 @@ type
     fsincrono: Boolean;
     fcnpjaut: string;
     fcnpjauts: TArray<string>;
-    fregimeiss: smallint;
-    findicadorderateio: smallint;
     fcryptlib: smallint;
     fhttplib: smallint;
     fssllib: smallint;
@@ -142,8 +140,6 @@ type
     property sincrono: Boolean read fsincrono write fsincrono;
     property cnpjaut: string read fcnpjaut write fcnpjaut;
     property cnpjauts: TArray<string> read fcnpjauts write fcnpjauts;
-    property regimeiss: smallint read fregimeiss write fregimeiss;
-    property indicadorderateio: smallint read findicadorderateio write findicadorderateio;
     property cryptlib: smallint read fcryptlib write fcryptlib;
     property httplib: smallint read fhttplib write fhttplib;
     property ssllib: smallint read fssllib write fssllib;
