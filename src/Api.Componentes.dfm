@@ -1,7 +1,8 @@
 object componentes: Tcomponentes
   OnCreate = DataModuleCreate
-  Height = 378
-  Width = 640
+  Height = 473
+  Width = 800
+  PixelsPerInch = 120
   object sat: TACBrSAT
     MAIL = mail
     Config.infCFe_versaoDadosEnt = 0.070000000000000010
@@ -22,8 +23,8 @@ object componentes: Tcomponentes
     Rede.proxy_porta = 0
     OnGetcodigoDeAtivacao = satGetcodigoDeAtivacao
     OnGetsignAC = satGetsignAC
-    Left = 8
-    Top = 72
+    Left = 10
+    Top = 90
   end
   object nfe: TACBrNFe
     MAIL = mail
@@ -37,8 +38,8 @@ object componentes: Tcomponentes
     Configuracoes.WebServices.AguardarConsultaRet = 0
     Configuracoes.WebServices.QuebradeLinha = '|'
     Configuracoes.RespTec.IdCSRT = 0
-    Left = 8
-    Top = 8
+    Left = 10
+    Top = 10
   end
   object mail: TACBrMail
     Host = '127.0.0.1'
@@ -49,7 +50,7 @@ object componentes: Tcomponentes
     Attempts = 3
     DefaultCharset = UTF_8
     IDECharset = CP1252
-    Left = 56
-    Top = 8
+    Left = 70
+    Top = 10
   end
 end

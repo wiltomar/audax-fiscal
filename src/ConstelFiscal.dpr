@@ -91,7 +91,8 @@ uses
   Model.Fortes.RegistroCPE in 'models\Model.Fortes.RegistroCPE.pas',
   Model.Fortes.RegistroPCE in 'models\Model.Fortes.RegistroPCE.pas',
   Model.Fortes.RegistroDNM in 'models\Model.Fortes.RegistroDNM.pas',
-  Model.InventarioFiscal in 'models\Model.InventarioFiscal.pas';
+  Model.InventarioFiscal in 'models\Model.InventarioFiscal.pas',
+  Model.DocumentoFiscalManifesto in 'models\Model.DocumentoFiscalManifesto.pas';
 
 function startApi: boolean;
 begin
