@@ -92,7 +92,8 @@ uses
   Model.Fortes.RegistroPCE in 'models\Model.Fortes.RegistroPCE.pas',
   Model.Fortes.RegistroDNM in 'models\Model.Fortes.RegistroDNM.pas',
   Model.InventarioFiscal in 'models\Model.InventarioFiscal.pas',
-  Model.Forma in 'models\Model.Forma.pas';
+  Model.Forma in 'models\Model.Forma.pas',
+  Model.DocumentoFiscalManifesto in 'models\Model.DocumentoFiscalManifesto.pas';
 
 function startApi: boolean;
 begin
@@ -121,7 +122,7 @@ begin
         0: Api.Funcoes.startApi;
         1: Api.Funcoes.stopApi;
         2: Api.Funcoes.statusApi;
-        else Log(Format('O parâmentro %s não é válido. \nFavor informar como parâmetro "start", "stop" ou "status".', [ParamStr(1)]));
+        else Log(Format('O par mentro %s n o   v lido. \nFavor informar como par metro "start", "stop" ou "status".', [ParamStr(1)]));
       end;
     end;
   except

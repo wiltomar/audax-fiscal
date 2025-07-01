@@ -9,6 +9,7 @@ uses
   Api.Funcoes, System.Math, System.NetEncoding, ACBrNFeDANFeFPDF, ACBrSATExtratoClass, ACBrNFCeDANFeFPDF,
   System.IOUtils, Model.Config, Soap.EncdDecd, System.Generics.Collections, Lib.Funcoes, Web.HTTPApp,
   Model.Inutilizacao, ACBrSATExtratoFPDF, Horse, Model.Sped, APIService, Fortes.IRegistro, ACBr_fpdf_report,
+  Xml.XMLDoc, Xml.XMLIntf, Xml.XMLDom, Model.DocumentoFiscalManifesto,
   {$IFDEF MSWINDOWS}
     WinApi.ActiveX, ACBrSATExtratoESCPOS, ACBrPosPrinter, ACBrSATExtratoFortesFr;
   {$ENDIF}
@@ -73,6 +74,8 @@ type
     procedure gerarArquivoFortesFiscal(const FileName: String; Registros: TList<IRegistro>);
 
     function enviaArquivo(const Arquivo: TAbstractWebRequestFile; var erros: string; var msg: string): TArquivo;
+
+    function manifestarDocumento(DocumentoFiscalManifesto: TDocumentoFiscalManifesto; var Error, Msg: String): TDocumentoFiscalManifesto;
 
   end;
 
@@ -2115,6 +2118,98 @@ begin
 
   nfe.NotasFiscais.GerarNFe;
 end;
+
+function Tcomponentes.manifestarDocumento(DocumentoFiscalManifesto: TDocumentoFiscalManifesto; var Error, Msg: String): TDocumentoFiscalManifesto;
+var
+  xmlDocumento: String;
+  estabelecimentoNumero, chave, documentoNumero: String;
+  eventoParametro, ultimoNSU: String;
+begin
+  if not Assigned(DocumentoFiscalManifesto.estabelecimento) then
+    raise Exception.Create('Estabelecimento não informado');
+
+  if Length(DocumentoFiscalManifesto.estabelecimento.estabelecimentoDocumentos) <= 0 then
+    raise Exception.Create('Estabelecimento sem documentação informado');
+
+  if DocumentoFiscalManifesto.chave = '' then
+    raise Exception.Create('Chave não informada');
+
+  if DocumentoFiscalManifesto.estabelecimento.estabelecimentoDocumentos[0].documentoNumero = '' then
+    raise Exception.Create('CNPJ não informado');
+
+  carregaNFe(DocumentoFiscalManifesto.estabelecimento, DocumentoFiscalManifesto.estabelecimento.estabelecimentoFiscalSerie, '55');
+
+  Result := nil;
+
+  var eventoSelecionado := 0;
+
+  case DocumentoFiscalManifesto.codevento of
+     200: eventoSelecionado := 3;
+     210: eventoSelecionado := 4;
+     220: eventoSelecionado := 5;
+     240: eventoSelecionado := 6;
+  end;
+
+  try
+    if not (eventoSelecionado in [3, 4, 5, 6]) then
+    begin
+      log('Evento inválido. Permitidos: 3, 4, 5, 6.');
+    end
+    else
+    begin
+      if DocumentoFiscalManifesto.ambiente = 0 then
+        nfe.Configuracoes.WebServices.Ambiente := taProducao
+      else if DocumentoFiscalManifesto.ambiente = 1 then
+        nfe.Configuracoes.WebServices.Ambiente := taHomologacao
+      else
+        nfe.Configuracoes.WebServices.Ambiente := taHomologacao;
+
+      nfe.EventoNFe.Evento.Clear;
+
+      // Quando a API estiver local
+      if DocumentoFiscalManifesto.estabelecimento.estabelecimentoFiscalSerie.certificadourl = '' then
+        nfe.Configuracoes.Geral.SSLLib := libOpenSSL;
+
+      with nfe.EventoNFe.Evento.Add do
+      begin
+        InfEvento.cOrgao          := 91; // NF-e, CT-e, MDF-e
+        InfEvento.chNFe           := DocumentoFiscalManifesto.chave;
+        InfEvento.CNPJ            := DocumentoFiscalManifesto.estabelecimento.estabelecimentoDocumentos[0].documentoNumero;
+        InfEvento.dhEvento        := Now;
+        // A justificativa só vai aparecer ser for desconhecimento.
+        InfEvento.detEvento.xJust := Trim(UpperCase(DocumentoFiscalManifesto.motivo));
+
+        case eventoSelecionado of
+          3: InfEvento.tpEvento := teManifDestConfirmacao;
+          4: InfEvento.tpEvento := teManifDestCiencia;
+          5: InfEvento.tpEvento := teManifDestDesconhecimento;
+          6: InfEvento.tpEvento := teManifDestOperNaoRealizada;
+        end;
+      end;
+
+      if DocumentoFiscalManifesto.documentoNumero > 0 then
+      begin
+        nfe.EnviarEvento(DocumentoFiscalManifesto.documentoNumero);
+
+        if (nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Count > 0) and
+           (nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.cStat <> 135) then
+        begin
+          log('Falha ao manifestar Documento: ' + documentoNumero);
+        end
+        else
+          Result := DocumentoFiscalManifesto;
+      end;
+    end;
+  except
+    on E: Exception do
+    begin
+      log(E.Message);
+      FreeAndNil(Result);
+    end;
+  end;
+
+end;
+
 
 function Tcomponentes.gerarSPED(Req: THorseRequest; var erros: string): TStringStream;
 var
