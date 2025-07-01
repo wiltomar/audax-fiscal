@@ -82,6 +82,7 @@ type
   function IfNull(const Value, Default: variant): variant;
   function IntToTObjetivo(const t: Integer): TObjetivo;
   function TobjetivoToInt(const t: TObjetivo): Integer;
+  function Includes(Element: LargeInt; Elements: TArray<LargeInt>): Boolean;
 
 implementation
 
@@ -752,6 +753,14 @@ begin
     toEmail: Result := 20;
     toBase64: Result := 30;
   end;
+end;
+
+function Includes(Element: LargeInt; Elements: TArray<LargeInt>): Boolean;
+begin
+  for var E in Elements do
+    if Element = E then
+      Exit(True);
+  Result := False;
 end;
 
 initialization

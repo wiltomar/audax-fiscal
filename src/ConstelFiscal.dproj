@@ -166,9 +166,9 @@
         <Debugger_RunParams>start</Debugger_RunParams>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_MajorVer>2025</VerInfo_MajorVer>
-        <VerInfo_MinorVer>5</VerInfo_MinorVer>
-        <VerInfo_Release>30</VerInfo_Release>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=2025.5.30.1;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=2025.5.30;Comments=</VerInfo_Keys>
+        <VerInfo_MinorVer>7</VerInfo_MinorVer>
+        <VerInfo_Release>1</VerInfo_Release>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=2025.7.1.1;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=2025.7.1;Comments=</VerInfo_Keys>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
         <VerInfo_Build>1</VerInfo_Build>
     </PropertyGroup>
@@ -191,6 +191,7 @@
         <DCCReference Include="lib\Lib.Excecoes.pas"/>
         <DCCReference Include="lib\Lib.Funcoes.pas"/>
         <DCCReference Include="lib\Lib.Sistema.Tipos.pas"/>
+        <DCCReference Include="APIService.pas"/>
         <DCCReference Include="models\Model.Base.pas"/>
         <DCCReference Include="models\Model.Categoria.pas"/>
         <DCCReference Include="models\Model.Conta.pas"/>
@@ -221,7 +222,6 @@
         <DCCReference Include="models\Model.DocumentoFiscalSPEDItem.pas"/>
         <DCCReference Include="models\Model.Sped.pas"/>
         <DCCReference Include="models\Model.Contabilista.pas"/>
-        <DCCReference Include="APIService.pas"/>
         <DCCReference Include="models\Model.Fortes.RegistroCAB.pas"/>
         <DCCReference Include="models\Model.Fortes.RegistroPAR.pas"/>
         <DCCReference Include="models\Model.Fortes.RegistroGRP.pas"/>
@@ -269,6 +269,7 @@
         <DCCReference Include="models\Model.Fortes.RegistroPCE.pas"/>
         <DCCReference Include="models\Model.Fortes.RegistroDNM.pas"/>
         <DCCReference Include="models\Model.InventarioFiscal.pas"/>
+        <DCCReference Include="models\Model.Forma.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

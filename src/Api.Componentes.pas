@@ -15,16 +15,16 @@ uses
 
 const
   docModelos: TArray<String> = ['55', '56', '57', '58', '59', '65'];
-  cVersao = '2025.5';
+  cVersao = '2025.7';
 
 type
   TArquivo = class
   private
     fGuid: string;
-    fDiretorio: string;
+    fCaminho: string;
   public
     property Guid: string read fGuid write fGuid;
-    property Diretorio: string read fDiretorio write fDiretorio;
+    property Caminho: string read fCaminho write fCaminho;
   end;
 
   Tcomponentes = class(TDataModule)
@@ -508,6 +508,13 @@ var
 begin
   try
     documentoFiscalImpresso := nil;
+    if not Assigned(DocumentoFiscal.estabelecimento.estabelecimentoFiscal) then
+    begin
+      Log('Estabelecimento fiscal não configurado.');
+      Error := 'Estabelecimento fiscal não configurado.';
+      Result := DocumentoFiscal;
+      Exit;
+    end;
     case AnsiIndexStr(DocumentoFiscal.modelo, docModelos) of
       0: {$REGION 'NFe'}
         begin
@@ -670,7 +677,7 @@ begin
     lStream.SaveToFile(nomeArquivo);
 
     fArquivo.GUID := ArquivoGUID;
-    fArquivo.Diretorio := nomeArquivo;
+    fArquivo.Caminho := nomeArquivo;
     msg := 'Arquivo ' + Arquivo.FileName + ' enviado com sucesso!';
   except
     On E:Exception do
@@ -979,7 +986,6 @@ procedure Tcomponentes.carregaNFe(estabelecimento: TEstabelecimentoC; documentoF
 var
   lOk: Boolean;
 begin
-
   FRespTec := estabelecimento.estabelecimentoFiscal.responsaveltecnico;
 
   try
@@ -1069,6 +1075,7 @@ var
   vTotalIPI,
   vTotalII,
   vTotalIPIDevol,
+  vTotalOutrasDespesas,
   vTotalDescontos: Double;
   Count: TNFe;
 begin
@@ -1081,6 +1088,7 @@ begin
   vTotalII := 0;
   vTotalItens := 0;
   vTotalFCPST := 0;
+  vTotalOutrasDespesas := 0;
   vTotalDescontos := 0;
 
   nfe.NotasFiscais.Clear;
@@ -1093,13 +1101,13 @@ begin
   NotaF := nfe.NotasFiscais.Add;
   with NotaF.NFe, DocumentoFiscal do
   begin
-    infNFe.ID       := 'NFe' + documentoFiscalNFe.chave;
     Ide.natOp       := historico.nome;
     Ide.modelo      := StrToIntDef(DocumentoFiscal.modelo, 55);
     Ide.serie       := documentoFiscalNFe.serie;
     Ide.nNF         := documentoFiscalNFe.numero;
     if not(DocumentoFiscal.documentoFiscalNFe.chave = '') then
     begin
+      infNFe.ID       := 'NFe' + documentoFiscalNFe.chave;
       Ide.cNF         := StrToInt(Copy(documentoFiscalNFe.chave, 35, 8));
       Ide.cDV         := StrToInt(Copy(DocumentoFiscal.documentoFiscalNFe.chave, 43, 1));
     end;
@@ -1218,6 +1226,15 @@ begin
     Dest.EnderDest.cPais    := 1058;
     Dest.EnderDest.xPais    := 'BRASIL';
 
+    for var refCont := 0 to Length(documentoFiscalNFe.documentoFiscalNFeReferencia) - 1 do
+    begin
+      with NotaF.NFe.Ide.NFref.Add, documentoFiscalNFe.documentoFiscalNFeReferencia[refCont] do
+      begin
+        refNFe := documentoFiscalChave;
+      end;
+    end;
+
+
     for var nCont := 0 to Length(DocumentoFiscalItens) - 1 do
     begin
       with Det.New, DocumentoFiscalItens[nCont] do
@@ -1253,6 +1270,7 @@ begin
         Prod.vProd := RoundABNT(subtotal, -2);
 
         vTotalItens := vTotalItens + subtotal;
+        vTotalOutrasDespesas := vTotalOutrasDespesas + documentoFiscalItens[nCont].outrasDespesas;
         vTotalDescontos := vTotalDescontos + DocumentoFiscal.DocumentoFiscalItens[nCont].desconto;
 
         with Imposto do
@@ -1267,25 +1285,23 @@ begin
               CSOSN := StrToCSOSNIcms(lOk, cstICMS.codigo);
               pCredSN := simplesAliquotaDeCredito;
               vCredICMSSN := subtotal * (pCredSN / 100);
-              modBC := dbiPrecoTabelado;
-              modBCST := dbisListaNeutra;
             end
             else
-            begin
               CST := StrToCSTICMS(lOk, cstICMS.codigo);
-              modBC := dbiValorOperacao;
-              modBCST := dbisMargemValorAgregado;
-              pMVAST := 0;
-              vBCST := icmsSTBC;
-              pICMSST := icmsstAliquota;
-              vICMSST := icmsSTValor;
-            end;
 
             vBC := icmsBC;
             pICMS := icmsAliquota;
             vICMS := vBC * (pICMS/100);
             pRedBC := icmsReducaoBase;
             pRedBCST := icmsSTReducaoBase;
+
+            modBC := dbiValorOperacao;
+            modBCST := dbisMargemValorAgregado;
+            pMVAST := icmsSTAliquotaMVA;
+            vBCST := icmsSTBC;
+            pICMSST := icmsstAliquota;
+            vICMSST := icmsSTValor;
+
 
             vBCFCPST := icmsSTBC;
             pFCPST := IfThen(icmsSTBC > 0, 2, 0);
@@ -1415,12 +1431,12 @@ begin
     NotaF.NFe.Total.ICMSTot.vIPIDevol := vTotalIPIDevol;
     NotaF.NFe.Total.ICMSTot.vPIS      := vTotalPIS;
     NotaF.NFe.Total.ICMSTot.vCOFINS   := vTotalCOFINS;
-    NotaF.NFe.Total.ICMSTot.vOutro    := DocumentoFiscal.outrasDespesas;
+    NotaF.NFe.Total.ICMSTot.vOutro    := vTotalOutrasDespesas;
     NotaF.NFe.Total.ICMSTot.vNF       := vTotalItens +
                                          vTotalIPI +
                                          vTotalIPIDevol +
                                          DocumentoFiscal.frete +
-                                         DocumentoFiscal.outrasDespesas -
+                                         vTotalOutrasDespesas -
                                          vTotalDescontos;
     NotaF.NFe.Total.ICMSTot.vTotTrib  := 0;
 
@@ -1483,38 +1499,48 @@ begin
 
     const indicador = ['01', '02', '03', '04', '05', '10', '11', '12', '13', '15', '16', '17', '18', '19', '90', '99'];
 
-
-    for var nCont := 0 to Length(documentoFiscalPagamentos) - 1 do
+    if not(Length(documentoFiscalPagamentos) > 0) then
     begin
       with NotaF.NFe.pag.New do
       begin
-        case AnsiIndexStr(documentoFiscalPagamentos[nCont].formaIndicador, indicador) of
-          0, 3, 5, 6, 7, 8, 10, 11, 12:
-            begin
-              Ide.indPag := ipVista;
-              indPag := ipVista;
-            end;
-          1, 2, 4, 9, 13:
-            begin
-              Ide.indPag := ipPrazo;
-              indPag := ipPrazo;
-            end;
-          14:
-            begin
-              Ide.indPag := ipNenhum;
-              indPag := ipNenhum;
-            end;
-          15:
-            begin
-              Ide.indPag := ipOutras;
-              indPag := ipOutras;
-              xPag := 'Outras formas de pagamento';
-            end;
-        end;
-        tPag   := StrToFormaPagamento(lOk, documentoFiscalPagamentos[nCont].formaIndicador);
-        vPag   := documentoFiscalPagamentos[nCont].valor;
-        pag.vTroco := pag.vTroco + DocumentoFiscal.documentoFiscalPagamentos[nCont].troco;
-       end;
+        Ide.indPag := ipNenhum;
+        IndPag := ipNenhum;
+      end;
+    end
+    else
+    begin
+      for var nCont := 0 to Length(documentoFiscalPagamentos) - 1 do
+      begin
+        with NotaF.NFe.pag.New do
+        begin
+          case AnsiIndexStr(documentoFiscalPagamentos[nCont].formaIndicador, indicador) of
+            0, 3, 5, 6, 7, 8, 10, 11, 12:
+              begin
+                Ide.indPag := ipVista;
+                indPag := ipVista;
+              end;
+            1, 2, 4, 9, 13:
+              begin
+                Ide.indPag := ipPrazo;
+                indPag := ipPrazo;
+              end;
+            14:
+              begin
+                Ide.indPag := ipNenhum;
+                indPag := ipNenhum;
+              end;
+            15:
+              begin
+                Ide.indPag := ipOutras;
+                indPag := ipOutras;
+                xPag := 'Outras formas de pagamento';
+              end;
+          end;
+          tPag   := StrToFormaPagamento(lOk, documentoFiscalPagamentos[nCont].formaIndicador);
+          vPag   := documentoFiscalPagamentos[nCont].valor;
+          pag.vTroco := pag.vTroco + DocumentoFiscal.documentoFiscalPagamentos[nCont].troco;
+         end;
+      end;
     end;
 
     NotaF.NFe.infIntermed.CNPJ := '';
@@ -1566,6 +1592,7 @@ begin
     infCFe.versao     := FConfig.cfe.versao;
     infCFe.versaoSB   := FConfig.cfe.versaosb;
     ide.cNF           := Random(999999);
+    ide.dEmi          := emissao;
 
     Emit.CNPJ               := estabelecimento.estabelecimentoDocumentos[0].documentoNumero;
     Emit.IE                 := estabelecimento.estabelecimentoDocumentos[0].inscricaoEstadual;
@@ -1683,6 +1710,7 @@ var
   vTotalIPI,
   vTotalII,
   vTotalIPIDevol,
+  vTotalOutrasDespesas,
   vTotalDescontos: Double;
   Count: TNFe;
 begin
@@ -1695,6 +1723,7 @@ begin
   vTotalII := 0;
   vTotalItens := 0;
   vTotalFCPST := 0;
+  vTotalOutrasDespesas := 0;
   vTotalDescontos := 0;
 
   nfe.NotasFiscais.Clear;
@@ -1724,8 +1753,8 @@ begin
       Ide.cDV       := StrToInt(Copy(DocumentoFiscal.documentoFiscalNFe.chave, 44, 1));
     end;
     Ide.dEmi      := Now;
-    Ide.dSaiEnt   := DocumentoFiscal.saida;
-    Ide.hSaiEnt   := DocumentoFiscal.saida;
+    Ide.dSaiEnt   := Now;
+    Ide.hSaiEnt   := Now;
     Ide.tpNF      := tnSaida;
     Ide.verProc   := cVersao;
     Ide.tpEmis    := StrToTpEmis(lOk, IntToStr(DocumentoFiscal.estabelecimento.estabelecimentoFiscalSerie.formadeemissao));
@@ -1868,6 +1897,7 @@ begin
         Prod.vProd := RoundABNT((Prod.qCom * Prod.vUnCom), -2);
 
         vTotalItens := vTotalItens + Prod.vProd;
+        vTotalOutrasDespesas := vTotalOutrasDespesas + DocumentoFiscal.documentoFiscalItens[nCounter].outrasDespesas;
         vTotalDescontos := vTotalDescontos + DocumentoFiscal.DocumentoFiscalItens[nCounter].desconto;
 
         with Imposto do
@@ -1899,7 +1929,7 @@ begin
             vTotalICMS := vTotalICMS + vICMS;
 
             modBCST := dbisMargemValorAgregado;
-            pMVAST  := 0;
+            pMVAST  := icmsSTAliquotaMVA;
             pRedBC := icmsReducaoBase;
             pRedBCST := icmsSTReducaoBase;
             vBCST := icmsSTBC;
@@ -2018,7 +2048,7 @@ begin
       vIPI    := 0;
       vPIS    := vTotalPIS;
       vCOFINS := vTotalCOFINS;
-      vOutro  := DocumentoFiscal.outrasDespesas;
+      vOutro  := vTotalOutrasDespesas;
       vNF     := vTotalItens + + vOutro + vFrete - vTotalDescontos;
 
       vFCPUFDest   := 0.00;

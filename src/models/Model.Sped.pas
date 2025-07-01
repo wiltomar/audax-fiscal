@@ -412,7 +412,7 @@ begin
                   dataDoc := documentoFiscal.emissao;
                   DT_DOC := documentoFiscal.emissao;
                   DT_E_S := documentoFiscal.emissao;
-                  VL_DOC := documentoFiscal.total - documentoFiscal.desconto;
+                  VL_DOC := documentoFiscal.total + documentoFiscal.ipiValor;
                   IND_PGTO := TACBrIndPgto(documentoFiscal.indicadorpagamento);
                   VL_DESC := documentoFiscal.desconto;
                   VL_ABAT_NT := documentoFiscal.desconto;
@@ -566,7 +566,7 @@ begin
                       VL_IPI := documento190.VL_IPI;
                       CST_ICMS := documento190.CST_ICMS;
                       CFOP := documento190.CFOP;
-                      VL_OPR := documento190.VL_OPR + documento190.VL_IPI - documento190.vl_desconto;
+                      VL_OPR := documento190.VL_OPR + documento190.vl_ipi - documento190.vl_desconto;
                       COD_OBS := documento190.COD_OBS;
 
                       valorOutrosCredICMSST := valorOutrosCredICMSST + documento190.VL_ICMS_ST;
@@ -767,9 +767,22 @@ begin
                         CST_ICMS := documentoFiscal890.CST_ICMS;
                         CFOP := documentoFiscal890.CFOP;
                         VL_OPR := documentoFiscal890.VL_OPR;
-                        ALIQ_ICMS := documentoFiscal890.ALIQ_ICMS;
-                        VL_ICMS := documentoFiscal890.VL_ICMS;
-                        VL_BC_ICMS := documentoFiscal890.VL_BC_ICMS;
+                        if (copy(documentoFiscal890.cst_icms, 1, 2) = '30') or
+                          (copy(documentoFiscal890.cst_icms, 1, 2) = '40') or
+                          (copy(documentoFiscal890.cst_icms, 1, 2) = '41') or
+                          (copy(documentoFiscal890.cst_icms, 1, 2) = '50') or
+                          (copy(documentoFiscal890.cst_icms, 1, 2) = '60') then
+                        begin
+                          ALIQ_ICMS := 0.0;
+                          VL_ICMS := 0.0;
+                          VL_BC_ICMS := 0.0;
+                        end
+                        else
+                        begin
+                          ALIQ_ICMS := documentoFiscal890.ALIQ_ICMS;
+                          VL_ICMS := documentoFiscal890.VL_ICMS;
+                          VL_BC_ICMS := documentoFiscal890.VL_BC_ICMS;
+                        end;
                         COD_OBS := '';
 
                         if (copy(documentoFiscal890.CFOP, 1, 1) = '5') or
@@ -846,7 +859,7 @@ begin
           var
             InventariosFiscais := InfoAPI().GetPagedArray<TInventarioFiscal>
               ('fiscal/inventariofiscal/sped?estabelecimentoid=' + Estabelecimento.id
-              + '&inventariofiscal=' + QuotedStr(inventario));
+              + '&inventariofiscal=' + inventario);
 
           for var inventarioFiscal in InventariosFiscais do
           begin

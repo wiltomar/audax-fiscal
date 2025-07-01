@@ -5,7 +5,8 @@ interface
 uses Model.Base, Model.Estabelecimento, Model.Parceiro, Model.Historico,
   Model.Operacao, Model.Item, Model.Unidade, Model.Municipio, Model.Conta,
   Model.OrigemDaMercadoria, Model.NCM, Model.CEST, Model.CFOP, Model.CSTICMS,
-  Model.CSTIPI, Model.CSTPISCOFINS, Model.Moeda, Lib.Sistema.Tipos, Lib.Funcoes;
+  Model.CSTIPI, Model.CSTPISCOFINS, Model.Moeda, Lib.Sistema.Tipos, Lib.Funcoes,
+  Model.Forma;
 
 const
   DOCUMENTOFISCAL_MODELO_NFe = '55';
@@ -16,6 +17,17 @@ const
   DOCUMENTOFISCAL_MODELO_NFCE = '65';
 
 type
+  TDocumentoFiscalNFeReferencia = class
+  private
+    festabelecimento: TEstabelecimento;
+    fdocumentoFiscal: string;
+    fdocumentoFiscalChave: string;
+  public
+    property estabelecimento: TEstabelecimento read festabelecimento write festabelecimento;
+    property documentoFiscal: string read fdocumentoFiscal write fdocumentoFiscal;
+    property documentoFiscalChave: string read fdocumentoFiscalChave write fdocumentoFiscalChave;
+  end;
+
   TDocumentoFiscalNFe = class
   private
     festabelecimento: TEstabelecimento;
@@ -38,6 +50,7 @@ type
     fcancelamentoProtocolo: string;
     fcancelamentoData: TDateTime;
     fcancelamentoJustificativa: string;
+    fdocumentoFiscalNFeReferencia: TArray<TDocumentoFiscalNFeReferencia>;
   public
     property estabelecimento: TEstabelecimento read festabelecimento write festabelecimento;
     property numero: Integer read fnumero write fnumero;
@@ -59,6 +72,7 @@ type
     property cancelamentoProtocolo: string read fcancelamentoProtocolo write fcancelamentoProtocolo;
     property cancelamentoData: TDateTime read fcancelamentoData write fcancelamentoData;
     property cancelamentoJustificativa: string read fcancelamentoJustificativa write fcancelamentoJustificativa;
+    property documentoFiscalNFeReferencia: TArray<TDocumentoFiscalNFeReferencia> read fdocumentoFiscalNFeReferencia write fdocumentoFiscalNFeReferencia;
   end;
 
   TDocumentoFiscalCFe = class
@@ -93,6 +107,7 @@ type
   TDocumentoFiscalPagamento = class
   private
     festabelecimento: TEstabelecimento;
+    fforma: TForma;
     fformaIndicador: string;
     fvalor: currency;
     ftroco: currency;
@@ -104,6 +119,7 @@ type
     fcartaoParceiro: TParceiro;
   public
     property estabelecimento: TEstabelecimento read festabelecimento write festabelecimento;
+    property forma: TForma read fforma write fforma;
     property formaIndicador: string read fformaIndicador write fformaIndicador;
     property valor: currency read fvalor write fvalor;
     property troco: currency read ftroco write ftroco;
@@ -161,6 +177,7 @@ type
     ficmsSTReducaoBase: Currency;
     ficmsSTBC: Currency;
     ficmsSTAliquota: Currency;
+    ficmsSTAliquotaMVA: Currency;
     ficmsSTValor: Currency;
     fsimplesAliquotaDeCredito: Currency;
     fsimplesICMSAproveitado: Currency;
@@ -236,6 +253,7 @@ type
     property icmsSTReducaoBase: Currency read ficmsSTReducaoBase write ficmsSTReducaoBase;
     property icmsSTBC: Currency read ficmsSTBC write ficmsSTBC;
     property icmsSTAliquota: Currency read ficmsSTAliquota write ficmsSTAliquota;
+    property icmsSTAliquotaMVA: Currency read ficmsSTAliquotaMVA write ficmsSTAliquotaMVA;
     property icmsSTValor: Currency read ficmsSTValor write ficmsSTValor;
     property simplesAliquotaDeCredito: Currency read fsimplesAliquotaDeCredito write fsimplesAliquotaDeCredito;
     property simplesICMSAproveitado: Currency read fsimplesICMSAproveitado write fsimplesICMSAproveitado;
