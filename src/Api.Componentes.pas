@@ -16,7 +16,7 @@ uses
 
 const
   docModelos: TArray<String> = ['55', '56', '57', '58', '59', '65'];
-  cVersao = '2025.7';
+  cVersao = '2025.7.16';
 
 type
   TArquivo = class
@@ -59,12 +59,12 @@ type
 
     function ConsultarNFe(var DocumentoFiscal: TDocumentoFiscal): Boolean;
 
-    function CancelarDoc(DocumentoFiscal: TDocumentoFiscal): TDocumentoFiscal;
-    function CancelarCFe(DocumentoFiscal: TDocumentoFiscal): TDocumentoFiscal;
+    function CancelarDoc(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
+    function CancelarCFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
 
   public
     function EmiteDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
-    function CancelarDFe(DocumentoFiscal: TDocumentoFiscal): TDocumentoFiscal;
+    function CancelarDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
     function ImprimirDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
 
     property satCodigoDeAtivacao: String read FsatCodigoDeAtivacao write FsatCodigoDeAtivacao;
@@ -150,7 +150,6 @@ begin
     nfe.WebServices.Consulta.NFeChave := DocumentoFiscal.documentoFiscalNFe.chave;
     lOk := nfe.WebServices.Consulta.Executar;
 
-    nfe.NotasFiscais.GerarNFe();
     Result := lOk;
   except
     on E:Exception do
@@ -524,6 +523,7 @@ begin
           GerarNFe(DocumentoFiscal);
           if not(DocumentoFiscal.documentoFiscalNFe.chave = '') then
           begin
+            var XMLAssinado := nfe.NotasFiscais.Items[0].XMLAssinado;
             ConsultarNFe(DocumentoFiscal);
 
             if nfe.WebServices.Consulta.cStat = 100 then
@@ -535,7 +535,8 @@ begin
               begin
                 if DocumentoFiscal.documentoFiscalNFe.chave = '' then
                   DocumentoFiscal.documentoFiscalNFe.chave := nfe.WebServices.Consulta.NFeChave;
-                DocumentoFiscal.documentoFiscalNFe.xml := nfe.WebServices.Consulta.protNFe.XML_NFe;
+
+                DocumentoFiscal.documentoFiscalNFe.xml := XMLAssinado;
                 DocumentoFiscal.documentoFiscalNFe.protocolo := nfe.WebServices.Consulta.protNFe.nProt;
 
                 Log(Format('Emitida a NFe de número: %d com chave: %s.', [DocumentoFiscal.documentoFiscalNFe.numero,
@@ -707,17 +708,17 @@ begin
   end;
 end;
 
-function Tcomponentes.CancelarDFe(DocumentoFiscal: TDocumentoFiscal): TDocumentoFiscal;
+function Tcomponentes.CancelarDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
 begin
   var DocumentoFiscalCancelado: TDocumentoFiscal := nil;
   case AnsiIndexStr(DocumentoFiscal.modelo, docModelos) of
-    0, 5: DocumentoFiscalCancelado := CancelarDoc(DocumentoFiscal);
-    4: DocumentoFiscalCancelado := CancelarCFe(DocumentoFiscal);
+    0, 5: DocumentoFiscalCancelado := CancelarDoc(DocumentoFiscal, Error, Msg);
+    4: DocumentoFiscalCancelado := CancelarCFe(DocumentoFiscal, Error, Msg);
   end;
   Result := DocumentofiscalCancelado;
 end;
 
-function Tcomponentes.CancelarDoc(DocumentoFiscal: TDocumentoFiscal): TDocumentoFiscal;
+function Tcomponentes.CancelarDoc(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
 var
   lOk: Boolean;
 begin
@@ -851,7 +852,7 @@ begin
   end;
 end;
 
-function Tcomponentes.CancelarCFe(DocumentoFiscal: TDocumentoFiscal): TDocumentoFiscal;
+function Tcomponentes.CancelarCFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
 begin
   inicializaSAT;
   sat.InicializaCFe;
@@ -1071,6 +1072,8 @@ var
   NotaF: NotaFiscal;
   vBaseDeCalculo,
   vTotalICMS,
+  vBaseDeCalculoICMSST,
+  vTotalICMSST,
   vTotalPIS,
   vTotalCOFINS,
   vTotalItens,
@@ -1084,6 +1087,8 @@ var
 begin
   vBaseDeCalculo := 0;
   vTotalICMS := 0;
+  vBaseDeCalculoICMSST  := 0;
+  vTotalICMSST := 0;
   vTotalPIS := 0;
   vTotalCOFINS := 0;
   vTotalIPI := 0;
@@ -1139,7 +1144,6 @@ begin
     else
       Ide.idDest    := doInterestadual;
 
-
     if documentoFiscalNFe.tipoImpressao = 'R' then
       Ide.tpImp     := tiRetrato
     else
@@ -1192,7 +1196,6 @@ begin
     if not(estabelecimento.estabelecimentoFiscal.cnpjaut = EmptyStr) then
       autXML.New.CNPJCPF := estabelecimento.estabelecimentoFiscal.cnpjaut;
 
-
     if Assigned(estabelecimento.estabelecimentoFiscal.cnpjauts)  then
       for var I := 0 to High(estabelecimento.estabelecimentofiscal.cnpjauts) do
         with autXML.New do
@@ -1236,7 +1239,6 @@ begin
         refNFe := documentoFiscalChave;
       end;
     end;
-
 
     for var nCont := 0 to Length(DocumentoFiscalItens) - 1 do
     begin
@@ -1299,16 +1301,26 @@ begin
             pRedBCST := icmsSTReducaoBase;
 
             modBC := dbiValorOperacao;
-            modBCST := dbisMargemValorAgregado;
-            pMVAST := icmsSTAliquotaMVA;
+            if  Length(icmsModalidadeDeCalculoMVA) > 0 then
+              modBCST := dbisMargemValorAgregado
+            else
+              modBCST := dbisValorDaOperacao;
+            pMVAST := icmsAliquotaMVA;
             vBCST := icmsSTBC;
             pICMSST := icmsstAliquota;
             vICMSST := icmsSTValor;
 
+            vBCFCPST := 0;
+            pFCPST := 0;
+            vFCPST := 0;
 
-            vBCFCPST := icmsSTBC;
-            pFCPST := IfThen(icmsSTBC > 0, 2, 0);
-            vFCPST := IfThen(icmsSTBC > 0, (icmsSTBC * (2/100)), 0);
+            if (Ide.indFinal = cfConsumidorFinal) then
+            begin
+              vBCFCPST := fcpSTBC;
+              pFCPST := IfThen(fcpSTBC > 0, fcpSTAliquota, 0);
+              vFCPST := IfThen(fcpSTBC > 0, fcpSTValor, 0);
+            end;
+
             vTotalFCPST := vTotalFCPST + vFCPST;
             vBCSTRet := 0;
             pST := 0;
@@ -1325,6 +1337,9 @@ begin
 
             vBaseDeCalculo := vBaseDeCalculo + icmsBC;
             vTotalICMS := vTotalICMS + vICMS;
+
+            vBaseDeCalculoICMSST := vBaseDeCalculoICMSST + icmsSTBC;
+            vTotalICMSST := vTotalICMSST + vICMSST;
           end;
 
           with ICMSUFDest do
@@ -1356,7 +1371,6 @@ begin
             begin
               pIPI   := ipiAliquota;
               vIPI   := vBC * (ipiAliquota / 100);
-
               vTotalIPI := vTotalIPI + vIPI;
             end
             else begin
@@ -1371,11 +1385,9 @@ begin
             vBC       := 0;
             pPIS      := 0;
             vPIS      := 0;
-
             qBCProd   := 0;
             vAliqProd := 0;
             vPIS      := 0;
-
             vTotalPIS := vTotalPIS + vPIS;
           end;
 
@@ -1423,32 +1435,34 @@ begin
       NotaF.NFe.Total.ICMSTot.vICMS := 0;
     end;
 
-    NotaF.NFe.Total.ICMSTot.vBCST     := 0;
-    NotaF.NFe.Total.ICMSTot.vST       := 0;
-    NotaF.NFe.Total.ICMSTot.vProd     := vTotalItens;
-    NotaF.NFe.Total.ICMSTot.vFrete    := DocumentoFiscal.frete;
-    NotaF.NFe.Total.ICMSTot.vSeg      := 0;
-    NotaF.NFe.Total.ICMSTot.vDesc     := vTotalDescontos;
-    NotaF.NFe.Total.ICMSTot.vII       := vTotalII;
-    NotaF.NFe.Total.ICMSTot.vIPI      := vTotalIPI;
-    NotaF.NFe.Total.ICMSTot.vIPIDevol := vTotalIPIDevol;
-    NotaF.NFe.Total.ICMSTot.vPIS      := vTotalPIS;
-    NotaF.NFe.Total.ICMSTot.vCOFINS   := vTotalCOFINS;
-    NotaF.NFe.Total.ICMSTot.vOutro    := vTotalOutrasDespesas;
-    NotaF.NFe.Total.ICMSTot.vNF       := vTotalItens +
+    NotaF.NFe.Total.ICMSTot.vBCST         := vBaseDeCalculoICMSST;
+    NotaF.NFe.Total.ICMSTot.vST           := vTotalICMSST;
+    NotaF.NFe.Total.ICMSTot.vProd         := vTotalItens;
+    NotaF.NFe.Total.ICMSTot.vFrete        := DocumentoFiscal.frete;
+    NotaF.NFe.Total.ICMSTot.vSeg          := 0;
+    NotaF.NFe.Total.ICMSTot.vDesc         := vTotalDescontos;
+    NotaF.NFe.Total.ICMSTot.vII           := vTotalII;
+    NotaF.NFe.Total.ICMSTot.vIPI          := vTotalIPI;
+    NotaF.NFe.Total.ICMSTot.vIPIDevol     := vTotalIPIDevol;
+    NotaF.NFe.Total.ICMSTot.vPIS          := vTotalPIS;
+    NotaF.NFe.Total.ICMSTot.vCOFINS       := vTotalCOFINS;
+    NotaF.NFe.Total.ICMSTot.vOutro        := vTotalOutrasDespesas;
+    NotaF.NFe.Total.ICMSTot.vNF           := vTotalItens +
+                                         vTotalICMSST +
+                                         vTotalFCPST +
                                          vTotalIPI +
                                          vTotalIPIDevol +
                                          DocumentoFiscal.frete +
                                          vTotalOutrasDespesas -
                                          vTotalDescontos;
-    NotaF.NFe.Total.ICMSTot.vTotTrib  := 0;
+    NotaF.NFe.Total.ICMSTot.vTotTrib      := 0;
 
-    NotaF.NFe.Total.ICMSTot.vFCPUFDest   := 0.00;
-    NotaF.NFe.Total.ICMSTot.vICMSUFDest  := 0.00;
-    NotaF.NFe.Total.ICMSTot.vICMSUFRemet := 0.00;
+    NotaF.NFe.Total.ICMSTot.vFCPUFDest    := 0.00;
+    NotaF.NFe.Total.ICMSTot.vICMSUFDest   := 0.00;
+    NotaF.NFe.Total.ICMSTot.vICMSUFRemet  := 0.00;
 
-    NotaF.NFe.Total.ICMSTot.vFCPST     := vTotalFCPST;
-    NotaF.NFe.Total.ICMSTot.vFCPSTRet  := 0;
+    NotaF.NFe.Total.ICMSTot.vFCPST        := vTotalFCPST;
+    NotaF.NFe.Total.ICMSTot.vFCPSTRet     := 0;
 
     NotaF.NFe.Total.retTrib.vRetPIS    := 0;
     NotaF.NFe.Total.retTrib.vRetCOFINS := 0;
@@ -1474,9 +1488,9 @@ begin
     NotaF.NFe.Transp.retTransp.cMunFG   := 0;
 
     NotaF.NFe.Cobr.Fat.nFat  := IntToStr(documentoFiscal.DocumentoFiscalNFe.numero);
-    NotaF.NFe.Cobr.Fat.vOrig := documentoFiscal.subtotal + DocumentoFiscal.frete + DocumentoFiscal.outrasDespesas;
+    NotaF.NFe.Cobr.Fat.vOrig := DocumentoFiscal.total + vTotalFCPST + vTotalDescontos;
     NotaF.NFe.Cobr.Fat.vDesc := vTotalDescontos;
-    NotaF.NFe.Cobr.Fat.vLiq  := documentoFiscal.subtotal + DocumentoFiscal.frete + DocumentoFiscal.outrasDespesas - vTotalDescontos;
+    NotaF.NFe.Cobr.Fat.vLiq  := DocumentoFiscal.total + vTotalFCPST;
 
     var numDup := 0;
     for var nCont := 0 to Length(DocumentoFiscal.DocumentoFiscalCobrancas) - 1 do
@@ -1490,8 +1504,8 @@ begin
       end;
     end;
 
-    NotaF.NFe.InfAdic.infCpl     :=  '';
-    NotaF.NFe.InfAdic.infAdFisco :=  '';
+    NotaF.NFe.InfAdic.infCpl     :=  DocumentoFiscal.documentoFiscalNFe.informacoesAdicionaisContribuinte;
+    NotaF.NFe.InfAdic.infAdFisco :=  DocumentoFiscal.documentoFiscalNFe.informacoesAdicionaisFisco;
 
     NotaF.NFe.exporta.UFembarq   := '';
     NotaF.NFe.exporta.xLocEmbarq := '';
@@ -1706,6 +1720,8 @@ var
   NotaF: NotaFiscal;
   vBaseDeCalculo,
   vTotalICMS,
+  vBaseeDeCalculoICMSST,
+  vTotalICMSST,
   vTotalPIS,
   vTotalCOFINS,
   vTotalItens,
@@ -1718,7 +1734,9 @@ var
   Count: TNFe;
 begin
   vBaseDeCalculo := 0;
+  vBaseeDeCalculoICMSST := 0;
   vTotalICMS := 0;
+  vTotalICMSST := 0;
   vTotalPIS := 0;
   vTotalCOFINS := 0;
   vTotalIPI := 0;
@@ -1929,10 +1947,8 @@ begin
             pICMS := icmsAliquota;
             vICMS := RoundABNT(vBC * (pICMS/100), 2);
 
-            vTotalICMS := vTotalICMS + vICMS;
-
             modBCST := dbisMargemValorAgregado;
-            pMVAST  := icmsSTAliquotaMVA;
+            pMVAST  := icmsAliquotaMVA;
             pRedBC := icmsReducaoBase;
             pRedBCST := icmsSTReducaoBase;
             vBCST := icmsSTBC;
@@ -1961,7 +1977,9 @@ begin
             motDesICMSST := mdiOutros;
 
             vBaseDeCalculo := vBaseDeCalculo + icmsBC;
-
+            vTotalICMS := vTotalICMS + vICMS;
+            vBaseeDeCalculoICMSST := vBaseeDeCalculoICMSST + icmsSTBC;
+            vTotalICMSST := vTotalICMSST + vICMSST;
 
             pFCPDif := 0;
             vFCPDif := 0;
@@ -2041,8 +2059,8 @@ begin
         vICMS := vTotalICMS;
       end;
 
-      vBCST   := 0;
-      vST     := 0;
+      vBCST   := vBaseeDeCalculoICMSST;
+      vST     := vTotalICMSST;
       vProd   := vTotalItens;
       vFrete  := DocumentoFiscal.frete;
       vSeg    := 0;
@@ -2052,7 +2070,7 @@ begin
       vPIS    := vTotalPIS;
       vCOFINS := vTotalCOFINS;
       vOutro  := vTotalOutrasDespesas;
-      vNF     := vTotalItens + + vOutro + vFrete - vTotalDescontos;
+      vNF     := vTotalItens + vTotalICMSST + vOutro + vFrete - vTotalDescontos;
 
       vFCPUFDest   := 0.00;
       vICMSUFDest  := 0.00;

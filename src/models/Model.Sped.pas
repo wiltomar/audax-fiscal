@@ -412,7 +412,7 @@ begin
                   dataDoc := documentoFiscal.emissao;
                   DT_DOC := documentoFiscal.emissao;
                   DT_E_S := documentoFiscal.emissao;
-                  VL_DOC := documentoFiscal.total + documentoFiscal.ipiValor;
+                  VL_DOC := documentoFiscal.total + documentoFiscal.ipiValor - documentoFiscal.desconto;
                   IND_PGTO := TACBrIndPgto(documentoFiscal.indicadorpagamento);
                   VL_DESC := documentoFiscal.desconto;
                   VL_ABAT_NT := documentoFiscal.desconto;

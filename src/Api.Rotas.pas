@@ -8,9 +8,15 @@ uses Classes, SysUtils, Horse, Horse.CORS, System.JSON, Horse.Jhonson, REST.Json
 
 const
   apiVersion = '/api/v1/';
+  build = '2025.7.2-1116.4';
 
 var
-  cToken: string;
+  cToken,
+  cErrors,
+  cMsg: string;
+  cStatusCode: THTTPStatus;
+  DocumentoFiscal: TDocumentoFiscal;
+  Resposta: TJSONObject;
 
 type
   TRotas = class
@@ -20,6 +26,15 @@ type
 implementation
 
 { TRotas }
+
+function seEntao(AValue: Boolean; const ATrue: THTTPStatus;
+  AFalse: THTTPStatus = THTTPStatus.BadRequest): THTTPStatus;
+begin
+  if AValue then
+    Result := ATrue
+  else
+    Result := AFalse;
+end;
 
 function retorno(const documentoFiscal: TJSONObject = nil; Error: String = ''; Msg: String = ''): TJSONObject;
 var
@@ -32,32 +47,32 @@ begin
       begin
         with lJson do
         begin
+          AddPair('Constel Fiscal versão', build);
           AddPair('message', Msg);
-          AddPair('error', '');
           AddPair('response', documentoFiscal);
-          Log(Msg);
         end;
+        Log(Format('Constel Fiscal versão: %s. %s', [build, Msg]));
       end
       else
       begin
         with lJson do
         begin
-          var internalError: string;
-          internalError := Error;
-          AddPair('message', '');
-          AddPair('error', internalError);
+          AddPair('Constel Fiscal versão', build);
+          AddPair('error', Error);
           AddPair('response', documentoFiscal);
-          Log('erro. A API Fiscal retornou um erro.');
         end;
-
+        Log(Format('Constel Fiscal versão: %s. %s', [build, Error]));
       end;
     except
       on E: Exception do
       begin
-        lJson.AddPair('message', 'Erro interno.');
-        lJson.AddPair('error', E.message);
-        lJson.AddPair('response', '{}');
-        Log(Format('falha geral. Houve o segunite erro na tentativa de uso da API Fiscal: %s.', [E.Message]));
+        with lJson do
+        begin
+          AddPair('Constel Fiscal versão', build);
+          AddPair('error', E.message);
+          AddPair('response', documentoFiscal);
+        end;
+        Log(Format('Constel Fiscal versão: %s. Houve o segunite erro na tentativa de uso da API Fiscal: %s.', [build, E.Message]));
       end;
     end;
 
@@ -71,31 +86,30 @@ begin
   Res
     .AddHeader('Designed-by', 'Constel Cloud')
     .ContentType('application/json')
-    .Send<TJSONObject>(retorno(nil, '', 'API Fiscal em execução'))
-    .Status(200);
+    .Send<TJSONObject>(retorno(nil, '', 'Serviço em execução'))
+    .Status(THTTPStatus.OK);
 end;
 
 procedure geraSPED(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 var
   stringStream: TStringStream;
-  erros: string;
 begin
   cToken := Req.Headers.Field('Authorization').AsString;
   InfoAPI().Autentica(cToken);
 
   try
-    erros := '';
+    cErrors := '';
 
-    stringStream := Componentes.gerarSPED(Req, erros);
+    stringStream := Componentes.gerarSPED(Req, cErrors);
     stringStream.Encoding.UTF8;
 
     try
-      if Length(erros) = 0 then
+      if Length(cErrors) = 0 then
       begin
         Res
           .Send(stringStream.DataString)
           .ContentType('text/plain;charset=utf8')
-          .Status(201);
+          .Status(THTTPStatus.Created);
 
         Log('Requisição realizada com sucesso.');
       end
@@ -103,11 +117,11 @@ begin
       begin
         Res
           .Send(Format('A solicitação não foi bem sucedida, o erro %s, foi retornado.',
-            [erros]))
+            [cErrors]))
           .ContentType('text/plain')
-          .Status(406);
+          .Status(THTTPStatus.BadRequest);
 
-        Log(Format('Ocorreu o seguinte erro na solicitação: %s', [erros]));
+        Log(Format('Ocorreu o seguinte erro na solicitação: %s', [cErrors]));
       end;
     finally
       stringStream.Free;
@@ -119,7 +133,7 @@ begin
       Res
         .Send(Format('Não foi possível gerar o arquivo, com o erro %s.',
           [E.Message]))
-        .Status(501);
+        .Status(THTTPStatus.InternalServerError);
       Log(Format('Houve um erro no processamento da requisição. Mensagem: %s',
                  [E.Message]));
 
@@ -128,26 +142,19 @@ begin
 end;
 
 procedure enviaArquivo(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
-var
-  Resposta: TJSONObject;
-  Error, Msg: String;
-  StatusCode: THttpStatus;
 begin
   try
-    Resposta := TJSON.ObjectToJsonObject(Componentes.enviaArquivo(Req.RawWebRequest.Files[0], Error, Msg));
+    Resposta := TJSON.ObjectToJsonObject(Componentes.enviaArquivo(Req.RawWebRequest.Files[0], cErrors, cMsg));
     try
-      Resposta := retorno(Resposta, Error, Msg);
+      Resposta := retorno(Resposta, cErrors, cMsg);
+      cStatusCode := seEntao(Length(cErrors) = 0, THTTPStatus.Created);
 
-      if Error > '' then
-        StatusCode := THTTPStatus.BadRequest
-      else
-        StatusCode := THTTPStatus.OK;
       Res
-        .Status(StatusCode)
+        .Status(cStatusCode)
         .Send<TJSONObject>(Resposta);
     except
       Res
-        .Status(THTTPStatus.BadRequest)
+        .Status(THTTPStatus.InternalServerError)
         .Send<TJSONObject>(Resposta);
     end;
   finally
@@ -157,95 +164,77 @@ end;
 procedure manifestaDocumento(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 var
   DocumentoFiscalManifesto: TDocumentoFiscalManifesto;
-  Resposta: TJSONObject;
-  Error, Msg: String;
-  StatusCode: THttpStatus;
 begin
   cToken := Req.Headers.Field('Authorization').AsString;
   InfoAPI().Autentica(cToken);
 
   DocumentoFiscalManifesto := TJson.JsonToObject<TDocumentoFiscalManifesto>(Req.Body);
 
+  Resposta := TJson.ObjectToJsonObject(Componentes.manifestarDocumento(DocumentoFiscalManifesto, cErrors, cMsg),
+    [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
   try
-    Resposta := TJson.ObjectToJsonObject(Componentes.manifestarDocumento(DocumentoFiscalManifesto, Error, Msg), [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
-    try
-      Resposta := retorno(Resposta, Error, Msg);
+    Resposta := retorno(Resposta, cErrors, cMsg);
+    cStatusCode := seEntao(Length(cErrors) = 0, THTTPStatus.OK);
 
-      if Error > '' then
-        StatusCode := THTTPStatus.BadRequest
-      else
-        StatusCode := THTTPStatus.OK;
-      Res
-        .Status(StatusCode)
-        .Send<TJSONObject>(Resposta);
-    except
-      Res
-        .Status(THTTPStatus.BadRequest)
-        .Send<TJSONObject>(Resposta);
-    end;
-  finally
+    Res
+      .Status(cStatusCode)
+      .Send<TJSONObject>(Resposta);
+  except
+    Res
+      .Status(THTTPStatus.InternalServerError)
+      .Send<TJSONObject>(Resposta);
   end;
 end;
 
 
 procedure emiteDFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
-var
-  DocumentoFiscal: TDocumentoFiscal;
-  Resposta: TJSONObject;
-  Error, Msg: String;
-  StatusCode: THttpStatus;
 begin
-//  cToken := Req.Headers.Field('Authorization').AsString;
-//  InfoAPI().Autentica(cToken);
+  cToken := Req.Headers.Field('Authorization').AsString;
+  InfoAPI().Autentica(cToken);
 
   DocumentoFiscal := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
 
+  Resposta := TJson.ObjectToJsonObject(Componentes.EmiteDFe(DocumentoFiscal, cErrors, cMsg),
+    [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
   try
-    Resposta := TJson.ObjectToJsonObject(Componentes.EmiteDFe(DocumentoFiscal, Error, Msg), [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
-    try
-      Resposta := retorno(Resposta, Error, Msg);
+    Resposta := retorno(Resposta, cErrors, cMsg);
+    cStatusCode := seEntao(Length(cErrors) = 0, THTTPStatus.Created);
 
-      if Error > '' then
-        StatusCode := THTTPStatus.BadRequest
-      else
-        StatusCode := THTTPStatus.OK;
-      Res
-        .Status(StatusCode)
-        .Send<TJSONObject>(Resposta);
-    except
-      Res
-        .Status(THTTPStatus.BadRequest)
-        .Send<TJSONObject>(Resposta);
-    end;
-  finally
+    Res
+      .Status(cStatusCode)
+      .Send<TJSONObject>(Resposta);
+  except
+    Res
+      .Status(THTTPStatus.InternalServerError)
+      .Send<TJSONObject>(Resposta);
   end;
 end;
 
 procedure estornaDFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 var
   DocumentoFiscalDFe: TDocumentoFiscal;
-  Resposta: TJSONObject;
 begin
-//  cToken := Req.Headers.Field('Authorization').AsString;
-//  InfoAPI().Autentica(cToken);
+  cToken := Req.Headers.Field('Authorization').AsString;
+  InfoAPI().Autentica(cToken);
 
   DocumentoFiscalDFe := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
 
   try
-    Resposta := TJson.ObjectToJsonObject(Componentes.CancelarDFe(DocumentoFiscalDFe));
+    Resposta := TJson.ObjectToJsonObject(Componentes.CancelarDFe(DocumentoFiscalDFe, cErrors, cMsg));
+    Resposta := retorno(Resposta, cErrors, cMsg);
+    cStatusCode := seEntao(Length(cErrors) = 0, THTTPStatus.OK);
 
     Res
+      .Status(cStatusCode)
       .Send<TJSONObject>(Resposta);
-  finally
+  except
+    Res
+      .Status(cStatusCode)
+      .Send<TJSONObject>(Resposta);
   end;
 end;
 
 procedure imrimeDFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
-var
-  DocumentoFiscal: TDocumentoFiscal;
-  Resposta: TJSONObject;
-  Error, Msg: String;
-  StatusCode: THTTPStatus;
 begin
   cToken := Req.Headers.Field('Authorization').AsString;
   InfoAPI().Autentica(cToken);
@@ -253,20 +242,17 @@ begin
   DocumentoFiscal := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
 
   try
-    Resposta := TJson.ObjectToJsonObject(Componentes.ImprimirDFe(DocumentoFiscal, Error, Msg), [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
+    Resposta := TJson.ObjectToJsonObject(Componentes.ImprimirDFe(DocumentoFiscal, cErrors, cMsg), [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
     try
-      Resposta := retorno(Resposta, Error, Msg);
+      Resposta := retorno(Resposta, cErrors, cMsg);
+      cStatusCode := seEntao(Length(cErrors) = 0, THTTPStatus.OK);
 
-      if Error > '' then
-        StatusCode := THTTPStatus.BadRequest
-      else
-        StatusCode := THTTPStatus.OK;
       Res
-        .Status(StatusCode)
+        .Status(cStatusCode)
         .Send<TJSONObject>(Resposta);
     except
       Res
-        .Status(THTTPStatus.BadRequest)
+        .Status(THTTPStatus.InternalServerError)
         .Send<TJSONObject>(Resposta);
     end;
   finally
