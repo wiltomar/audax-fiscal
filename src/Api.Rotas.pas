@@ -8,7 +8,7 @@ uses Classes, SysUtils, Horse, Horse.CORS, System.JSON, Horse.Jhonson, REST.Json
 
 const
   apiVersion = '/api/v1/';
-  build = '2025.7.2-1116.4';
+  build = '2025.8.1-1535.6';
 
 var
   cToken,
@@ -143,6 +143,8 @@ end;
 
 procedure enviaArquivo(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 begin
+  cErrors := '';
+  cMsg    := '';
   try
     Resposta := TJSON.ObjectToJsonObject(Componentes.enviaArquivo(Req.RawWebRequest.Files[0], cErrors, cMsg));
     try
@@ -191,6 +193,8 @@ begin
   cToken := Req.Headers.Field('Authorization').AsString;
   InfoAPI().Autentica(cToken);
 
+  cErrors := '';
+  cMsg    := '';
   DocumentoFiscalManifesto := TJson.JsonToObject<TDocumentoFiscalManifesto>(Req.Body);
 
   Resposta := TJson.ObjectToJsonObject(Componentes.manifestarDocumento(DocumentoFiscalManifesto, cErrors, cMsg),
@@ -216,6 +220,8 @@ begin
 //  InfoAPI().Autentica(cToken);
 
   DocumentoFiscal := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
+  cErrors := '';
+  cMsg    := '';
 
   Resposta := TJson.ObjectToJsonObject(Componentes.EmiteDFe(DocumentoFiscal, cErrors, cMsg),
     [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
@@ -237,10 +243,9 @@ procedure estornaDFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 var
   DocumentoFiscalDFe: TDocumentoFiscal;
 begin
-  cToken := Req.Headers.Field('Authorization').AsString;
-  InfoAPI().Autentica(cToken);
-
   DocumentoFiscalDFe := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
+  cErrors := '';
+  cMsg    := '';
 
   try
     Resposta := TJson.ObjectToJsonObject(Componentes.CancelarDFe(DocumentoFiscalDFe, cErrors, cMsg));
@@ -259,10 +264,12 @@ end;
 
 procedure imrimeDFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 begin
-  cToken := Req.Headers.Field('Authorization').AsString;
-  InfoAPI().Autentica(cToken);
+  //cToken := Req.Headers.Field('Authorization').AsString;
+  //InfoAPI().Autentica(cToken);
 
   DocumentoFiscal := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
+  cErrors := '';
+  cMsg    := '';
 
   try
     Resposta := TJson.ObjectToJsonObject(Componentes.ImprimirDFe(DocumentoFiscal, cErrors, cMsg), [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
