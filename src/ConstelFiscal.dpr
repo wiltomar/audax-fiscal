@@ -93,7 +93,9 @@ uses
   Model.Fortes.RegistroDNM in 'models\Model.Fortes.RegistroDNM.pas',
   Model.InventarioFiscal in 'models\Model.InventarioFiscal.pas',
   Model.Forma in 'models\Model.Forma.pas',
-  Model.DocumentoFiscalManifesto in 'models\Model.DocumentoFiscalManifesto.pas';
+  Model.DocumentoFiscalManifesto in 'models\Model.DocumentoFiscalManifesto.pas',
+  Model.Empresa in 'models\Model.Empresa.pas',
+  Lib.Sistema.DAO in 'lib\Lib.Sistema.DAO.pas';
 
 function startApi: boolean;
 begin

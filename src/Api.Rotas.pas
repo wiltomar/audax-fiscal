@@ -161,6 +161,29 @@ begin
   end;
 end;
 
+procedure recebeArquivo(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
+var
+  urlArquivo: string;
+begin
+  try
+//    Resposta := TJSON.ObjectToJsonObject(Componentes.recebeArquivo('logo', Req.RawWebRequest.Files[0].FileName, urlArquivo, cErrors, cMsg));
+//    try
+//      Resposta := retorno(Resposta, cErrors, cMsg);
+//      cStatusCode := seEntao(Length(cErrors) = 0, THTTPStatus.Found);
+//
+//      Res
+//        .Status(cStatusCode)
+//        .Send<TJSONObject>(Resposta);
+//    except
+//      Res
+//        .Status(THTTPStatus.InternalServerError)
+//        .Send<TJSONObject>(Resposta);
+//    end;
+  finally
+
+  end;
+end;
+
 procedure manifestaDocumento(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 var
   DocumentoFiscalManifesto: TDocumentoFiscalManifesto;
@@ -189,8 +212,8 @@ end;
 
 procedure emiteDFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 begin
-  cToken := Req.Headers.Field('Authorization').AsString;
-  InfoAPI().Autentica(cToken);
+//  cToken := Req.Headers.Field('Authorization').AsString;
+//  InfoAPI().Autentica(cToken);
 
   DocumentoFiscal := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
 
@@ -259,6 +282,34 @@ begin
   end;
 end;
 
+procedure HandleOptions(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+begin
+  if SameText(Req.RawWebRequest.Method, 'OPTIONS') then
+  begin
+    Res
+      .RawWebResponse
+      .SetCustomHeader('Access-Control-Allow-Origin', '*');
+    Res
+      .RawWebResponse
+      .SetCustomHeader('Access-Control-Allow-Credentials', 'true');
+    Res
+      .RawWebResponse
+      .SetCustomHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+    Res
+      .RawWebResponse
+      .SetCustomHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+    Res
+      .RawWebResponse
+      .SetCustomHeader('Access-Control-Expose-Headers', 'Content-Length,Content-Type');
+
+    Res.Status(204).Send('');
+    // NÃO chame Next para interromper a cadeia sem exceção!
+    Exit;
+  end
+  else
+    Next;
+end;
+
 class procedure TRotas.Registra;
 begin
   HorseCORS
@@ -269,15 +320,18 @@ begin
     .ExposedHeaders('*');
 
   THorse
+    .Use(HandleOptions)
     .Use(Jhonson)
     .Use(CORS)
     .Get(apiVersion, index)
     .Get(apiVersion + 'fiscal/arquivo/sped', geraSPED)
+    .Get(apiVersion + 'fiscal/arquivo/recebe', recebeArquivo)
     .Post(apiVersion + 'fiscal/documento/emite', emiteDFe)
     .Post(apiVersion  + 'fiscal/arquivo/manifesto', manifestaDocumento)
     .Post(apiVersion  + 'fiscal/documento/imprime', imrimeDFe)
     .Post(apiVersion + 'fiscal/documento/estorna', estornaDFe)
     .Post(apiVersion + 'fiscal/arquivo/envia', enviaArquivo);
+
 end;
 
 end.

@@ -6,7 +6,7 @@ uses Model.Base, Model.Estabelecimento, Model.Parceiro, Model.Historico,
   Model.Operacao, Model.Item, Model.Unidade, Model.Municipio, Model.Conta,
   Model.OrigemDaMercadoria, Model.NCM, Model.CEST, Model.CFOP, Model.CSTICMS,
   Model.CSTIPI, Model.CSTPISCOFINS, Model.Moeda, Lib.Sistema.Tipos, Lib.Funcoes,
-  Model.Forma;
+  Model.Forma, Model.Empresa;
 
 const
   DOCUMENTOFISCAL_MODELO_NFe = '55';
@@ -310,6 +310,7 @@ type
 type
   TDocumentoFiscal = class
   private
+    fempresa: TEmpresa;
     festabelecimento: TEstabelecimentoC;
     fsituacao: SmallInt;
     femissao: TDateTime;
@@ -362,6 +363,7 @@ type
   public
     constructor Create;
     destructor Destroy;
+    property empresa: TEmpresa read fempresa write fempresa;
     property estabelecimento: TEstabelecimentoC read festabelecimento write festabelecimento;
     property situacao: SmallInt read fsituacao write fsituacao;
     property emissao: TDateTime read femissao write femissao;

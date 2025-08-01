@@ -11,12 +11,13 @@ uses
   Model.Inutilizacao, ACBrSATExtratoFPDF, Horse, Model.Sped, APIService, Fortes.IRegistro, ACBr_fpdf_report,
   Xml.XMLDoc, Xml.XMLIntf, Xml.XMLDom, Model.DocumentoFiscalManifesto,
   {$IFDEF MSWINDOWS}
-    WinApi.ActiveX, ACBrSATExtratoESCPOS, ACBrPosPrinter, ACBrSATExtratoFortesFr;
+    WinApi.ActiveX, ACBrSATExtratoESCPOS, ACBrPosPrinter, ACBrSATExtratoFortesFr,
+  Lib.Sistema.DAO;
   {$ENDIF}
 
 const
   docModelos: TArray<String> = ['55', '56', '57', '58', '59', '65'];
-  cVersao = '2025.7.16';
+  cVersao = '2025.8.01';
 
 type
   TArquivo = class
@@ -48,7 +49,6 @@ type
 
     function inicializaSAT: Boolean;
 
-    procedure carregaSAT;
     procedure carregaNFe(estabelecimento: TEstabelecimentoC; documentoFiscalSerie: TDocumentoFiscalSerie; const modelo: string = '55');
     procedure carregaCertificado(documentoFiscalSerie: TDocumentoFiscalSerie);
     procedure carregaEmail;
@@ -74,6 +74,7 @@ type
     procedure gerarArquivoFortesFiscal(const FileName: String; Registros: TList<IRegistro>);
 
     function enviaArquivo(const Arquivo: TAbstractWebRequestFile; var erros: string; var msg: string): TArquivo;
+    function recebeArquivo(Caminho: String; var FileName: string; var erros: string; var msg: string): TArquivo;
 
     function manifestarDocumento(DocumentoFiscalManifesto: TDocumentoFiscalManifesto; var Error, Msg: String): TDocumentoFiscalManifesto;
 
@@ -89,57 +90,6 @@ implementation
 {$R *.dfm}
 
 { Tcomponents }
-
-procedure Tcomponentes.carregaSAT;
-begin
-  try
-    InfoConfig(FConfig);
-
-    with sat do
-    begin
-      SSL.SSLCryptLib                     := cryOpenSSL;
-      SSL.SSLXmlSignLib                   := xsLibXml2;
-
-      Config.XmlSignLib                   := SSL.SSLXmlSignLib;
-      Config.ArqSchema                    := FConfig.cfe.schemas;
-      Config.PaginaDeCodigo               := FConfig.cfe.paginadecodigo;
-      Config.EhUTF8                       := FConfig.cfe.utf;
-      Config.infCFe_versaoDadosEnt        := FConfig.cfe.versaolayout;
-
-      Modelo                              := TACBrSATModelo(FConfig.cfe.modelo) ;
-      ArqLOG                              := FConfig.cfe.arquivolog;
-      NomeDLL                             := FConfig.cfe.caminhodll;
-
-      Config.ide_numeroCaixa              := FConfig.cfe.caixa;
-      Config.ide_tpAmb                    := TpcnTipoAmbiente(FConfig.cfe.ambiente);
-      Config.ide_CNPJ                     := FConfig.cfe.swhouse.cnpj;
-
-      Config.emit_cRegTribISSQN           := TpcnRegTribISSQN(FConfig.emitente.regimeiss);
-      Config.emit_indRatISSQN             := TpcnindRatISSQN(FConfig.emitente.indicadorderateio);
-
-      ConfigArquivos.PastaCFeVenda        := FConfig.cfe.arquivos.pathvenda;
-      ConfigArquivos.PastaEnvio           := FConfig.cfe.arquivos.pathenvio;
-      ConfigArquivos.PastaCFeCancelamento := FConfig.cfe.arquivos.pathcancelamento;
-      ConfigArquivos.SalvarCFe            := FConfig.cfe.arquivos.salvarcfe;
-      ConfigArquivos.SalvarCFeCanc        := FConfig.cfe.arquivos.salvarcancelamento;
-      ConfigArquivos.SalvarEnvio          := FConfig.cfe.arquivos.salvarenvio;
-      ConfigArquivos.SepararPorCNPJ       := FConfig.cfe.arquivos.separarporcnpj;
-      ConfigArquivos.SepararPorModelo     := FConfig.cfe.arquivos.separarpormodelo;
-      ConfigArquivos.SepararPorDia        := FConfig.cfe.arquivos.separarpordia;
-      ConfigArquivos.SepararPorMes        := FConfig.cfe.arquivos.separarpormes;
-      ConfigArquivos.SepararPorAno        := FConfig.cfe.arquivos.separarporano;
-
-      satCodigoDeAtivacao                 := FConfig.cfe.codigodeativacao;
-      satAssinaturaAC                     := FConfig.cfe.swhouse.assinatura;
-    end;
-
-  except
-    on E:Exception do
-    begin
-      Log(Format('Impossível carregar o SAT. Verificar com suporte, o erro %s.', [E.Message]));
-    end;
-  end;
-end;
 
 function Tcomponentes.ConsultarNFe(var DocumentoFiscal: TDocumentoFiscal): Boolean;
 begin
@@ -166,7 +116,7 @@ procedure Tcomponentes.DataModuleCreate(Sender: TObject);
     Lista: TStringList;
     PathComum: String;
   begin
-    PathComum := ExtractFilePath(ParamStr(0));
+    PathComum := 'C:/Constel/Constel Fiscal';
     Lista := TStringList.Create;
     try
       Lista.Add(PathComum + '/arquivos/documentos/nfe/eventos');
@@ -303,6 +253,11 @@ begin
                   var nfe: TACBrNFe;
                   var danfe: TACBrNFeDANFeFPDF;
                   var danfce: TACBrNFCeDANFeFPDF;
+                  var empresaLogo: string := '';
+
+                  if Assigned(documentoFiscal.empresa) and (documentoFiscal.empresa.imagem <> '') then
+                    if not(TDAO.GetArquivo(documentoFiscal.Empresa.nome, documentoFiscal.Empresa.imagem, empresaLogo)) then
+                      empresaLogo := '';
 
                   nfe := TACBrNFe.Create(nil);
                   nfe.NotasFiscais.Clear;
@@ -326,6 +281,7 @@ begin
                     begin
                       Sistema := 'Audax Constel';
                       Site    := 'https://constel.cloud';
+                      Logo    := empresaLogo;
                     end;
 
                     if nfe.NotasFiscais.LoadFromString(xmlDocumento) then
@@ -346,7 +302,11 @@ begin
                 begin
                   var nfe: TACBrNFe;
                   nfe := TACBrNFe.Create(nil);
+                  var empresaLogo: string := '';
 
+                  if Assigned(documentoFiscal.empresa) and (documentoFiscal.empresa.imagem <> '') then
+                    if not(TDAO.GetArquivo(documentoFiscal.Empresa.nome, documentoFiscal.Empresa.imagem, empresaLogo)) then
+                      empresaLogo := '';
                   try
                     nfe.NotasFiscais.Clear;
 
@@ -376,6 +336,8 @@ begin
                         Sistema := 'Audax Constel';
                         Site    := 'https://constel.cloud';
                         NomeDocumento := nfe.NotasFiscais.Items[0].NumID + '.pdf';
+                        ExpandeLogoMarca := False;
+                        Logo    := empresaLogo;
 
                         MostraPreview  := False;
                         MostraSetup    := False;
@@ -494,7 +456,7 @@ var
 
       Log(Format('Emitida a NFCe de número: %d com chave: %s.', [nfe.NotasFiscais.Items[0].NFe.Ide.nNF,
                                                                  nfe.NotasFiscais.Items[0].NumID]));
-      Msg := nfe.WebServices.Retorno.Msg;
+      Msg := nfe.WebServices.Enviar.Msg;
 
       documentoFiscalImpresso := ImprimirDFe(DocumentoFiscal, Error, Msg);
       Log(Format('Nota fiscal %d com chave: %s, impressa com sucesso..', [nfe.NotasFiscais.Items[0].NFe.Ide.nNF,
@@ -688,6 +650,23 @@ begin
     begin
       erros := 'Ocorreu o seguinte erro ao processar o arquivo: ' + E.Message;
     end;
+  end;
+  Result := fArquivo;
+end;
+
+function Tcomponentes.recebeArquivo(Caminho: String; var FileName: string; var erros: string; var msg: string): TArquivo;
+var
+  lStream: TMemoryStream;
+  ArquivoNome, ArquivoURL: string;
+begin
+  var fArquivo: TArquivo;
+  fArquivo := TArquivo.Create;
+  try
+    InfoAPI().GetArquivo('', Caminho, FileName);
+    fArquivo.Guid    := FileName;
+    fArquivo.Caminho := Caminho;
+  except
+
   end;
   Result := fArquivo;
 end;
@@ -892,6 +871,56 @@ begin
 end;
 
 function Tcomponentes.inicializaSAT: boolean;
+  procedure carregaSAT;
+  begin
+    try
+      InfoConfig(FConfig);
+
+      with sat do
+      begin
+        SSL.SSLCryptLib                     := cryOpenSSL;
+        SSL.SSLXmlSignLib                   := xsLibXml2;
+
+        Config.XmlSignLib                   := SSL.SSLXmlSignLib;
+        Config.ArqSchema                    := FConfig.cfe.schemas;
+        Config.PaginaDeCodigo               := FConfig.cfe.paginadecodigo;
+        Config.EhUTF8                       := FConfig.cfe.utf;
+        Config.infCFe_versaoDadosEnt        := FConfig.cfe.versaolayout;
+
+        Modelo                              := TACBrSATModelo(FConfig.cfe.modelo) ;
+        ArqLOG                              := FConfig.cfe.arquivolog;
+        NomeDLL                             := FConfig.cfe.caminhodll;
+
+        Config.ide_numeroCaixa              := FConfig.cfe.caixa;
+        Config.ide_tpAmb                    := TpcnTipoAmbiente(FConfig.cfe.ambiente);
+        Config.ide_CNPJ                     := FConfig.cfe.swhouse.cnpj;
+
+        Config.emit_cRegTribISSQN           := TpcnRegTribISSQN(FConfig.emitente.regimeiss);
+        Config.emit_indRatISSQN             := TpcnindRatISSQN(FConfig.emitente.indicadorderateio);
+
+        ConfigArquivos.PastaCFeVenda        := FConfig.cfe.arquivos.pathvenda;
+        ConfigArquivos.PastaEnvio           := FConfig.cfe.arquivos.pathenvio;
+        ConfigArquivos.PastaCFeCancelamento := FConfig.cfe.arquivos.pathcancelamento;
+        ConfigArquivos.SalvarCFe            := FConfig.cfe.arquivos.salvarcfe;
+        ConfigArquivos.SalvarCFeCanc        := FConfig.cfe.arquivos.salvarcancelamento;
+        ConfigArquivos.SalvarEnvio          := FConfig.cfe.arquivos.salvarenvio;
+        ConfigArquivos.SepararPorCNPJ       := FConfig.cfe.arquivos.separarporcnpj;
+        ConfigArquivos.SepararPorModelo     := FConfig.cfe.arquivos.separarpormodelo;
+        ConfigArquivos.SepararPorDia        := FConfig.cfe.arquivos.separarpordia;
+        ConfigArquivos.SepararPorMes        := FConfig.cfe.arquivos.separarpormes;
+        ConfigArquivos.SepararPorAno        := FConfig.cfe.arquivos.separarporano;
+
+        satCodigoDeAtivacao                 := FConfig.cfe.codigodeativacao;
+        satAssinaturaAC                     := FConfig.cfe.swhouse.assinatura;
+      end;
+
+    except
+      on E:Exception do
+      begin
+        Log(Format('Impossível carregar o SAT. Verificar com suporte, o erro %s.', [E.Message]));
+      end;
+    end;
+  end;
 begin
   carregaSAT;
   try

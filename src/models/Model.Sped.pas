@@ -354,7 +354,7 @@ begin
               tbDocumentoAgrupado := TClientDataSet.Create(nil);
               tbDocumentoAgrupado.FieldDefs.Add('cfop', ftString, 10);
               tbDocumentoAgrupado.FieldDefs.Add('csticms', ftString, 10);
-              tbDocumentoAgrupado.FieldDefs.Add('aliqicms', ftCurrency);
+              tbDocumentoAgrupado.FieldDefs.Add('aliqicms', ftFloat);
               tbDocumentoAgrupado.CreateDataSet;
               tbDocumentoAgrupado.Open;
 
