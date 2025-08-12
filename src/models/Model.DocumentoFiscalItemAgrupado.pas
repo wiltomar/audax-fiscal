@@ -9,7 +9,7 @@ type
   TDocumentoFiscalItemAgrupado = class(TBaseR)
   private
     fvl_icms_st: Currency;
-    faliq_icms: Currency;
+    faliq_icms: Double;
     fvl_bc_icms_st: Currency;
     fvl_opr: Currency;
     fvl_red_bc: Currency;
@@ -30,7 +30,7 @@ type
     property vl_icms_st: Currency read fvl_icms_st write fvl_icms_st;
     property vl_red_bc: Currency read fvl_red_bc write fvl_red_bc;
     property vl_ipi: Currency read fvl_ipi write fvl_ipi;
-    property aliq_icms: Currency read faliq_icms write faliq_icms;
+    property aliq_icms: Double read faliq_icms write faliq_icms;
     property vl_desconto: Currency read fvl_desconto write fvl_desconto;
     property cod_obs: String read fcod_obs write fcod_obs;
   end;

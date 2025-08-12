@@ -50,6 +50,7 @@ type
   procedure AddExtended(var Total: Extended; const Valor: Extended);
   procedure AddCurrency(var Total: Currency; const Valor: Currency);
   function Trunca(Valor: Currency; Digitos: Word = 2): Currency;
+  function AStringContains(Target: AString; Element: string): Boolean;
   function FormataDataHora(Momento: TDateTime): string;
   function FusoHorario(): TDateTime;
   function FormataDataHoraZ(Momento: TDateTime): string;
@@ -80,6 +81,7 @@ type
   function URLParams(Params: TArray<string>): string;
   procedure Obliterate(var Obj);
   function IfNull(const Value, Default: variant): variant;
+  function Incomunicavel(E: Exception): Boolean;
   function IntToTObjetivo(const t: Integer): TObjetivo;
   function TobjetivoToInt(const t: TObjetivo): Integer;
   function Includes(Element: LargeInt; Elements: TArray<LargeInt>): Boolean;
@@ -87,7 +89,8 @@ type
 implementation
 
 uses System.Classes, System.IOUtils, System.Variants, System.RegularExpressions,
-  System.Net.URLClient, {$IFDEF MSWINDOWS}Winapi.Windows, Winapi.ShellApi, {$ENDIF}Math, Lib.Excecoes;
+  System.Net.URLClient, {$IFDEF MSWINDOWS}Winapi.Windows, Winapi.ShellApi, {$ENDIF}Math, Lib.Excecoes,
+  REST.Json, REST.Types, IdStack;
 
 class procedure TAHelper<T>.Add(var A: TArray<T>; Value: T);
 begin
@@ -406,6 +409,14 @@ var
 begin
   Fator := Power(10, Digitos);
   Result := Trunc(Valor * Fator) / Fator;
+end;
+
+function AStringContains(Target: AString; Element: string): Boolean;
+begin
+  for var Item in Target do
+    if Item = Element then
+      Exit(True);
+  Result := False;
 end;
 
 function FormataDataHora(Momento: TDateTime): string;
@@ -733,6 +744,19 @@ begin
     result := Default
   else
     result := Value;
+end;
+
+function Incomunicavel(E: Exception): Boolean;
+begin
+  if E is REST.Types.ERESTException then
+    Exit(True);
+  if E is EIdSocketError then
+    case EIdSocketError(E).LastError of
+      10061, 11001: Exit(True)
+    else
+      Exit(False);
+    end;
+  Result := False;
 end;
 
 function IntToTObjetivo(const t: Integer): TObjetivo;

@@ -1,7 +1,7 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{F096E9AB-0950-40F6-A2CB-8A0316F3F8F8}</ProjectGuid>
-        <ProjectVersion>20.1</ProjectVersion>
+        <ProjectVersion>20.3</ProjectVersion>
         <FrameworkType>None</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
@@ -106,9 +106,9 @@
         <Debugger_RunParams>start</Debugger_RunParams>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_MajorVer>2025</VerInfo_MajorVer>
-        <VerInfo_MinorVer>7</VerInfo_MinorVer>
+        <VerInfo_MinorVer>8</VerInfo_MinorVer>
         <VerInfo_Release>1</VerInfo_Release>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=2025.7.1.1;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=2025.7.1;Comments=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=2025.8.1.1;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=2025.8.1;Comments=</VerInfo_Keys>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
         <VerInfo_Build>1</VerInfo_Build>
     </PropertyGroup>
@@ -125,7 +125,7 @@
         <DCCReference Include="Api.Rotas.pas"/>
         <DCCReference Include="Api.Funcoes.pas"/>
         <DCCReference Include="Api.Componentes.pas">
-            <Form>componentes</Form>
+            <Form>Componentes</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
         <DCCReference Include="lib\Lib.Excecoes.pas"/>
@@ -212,6 +212,8 @@
         <DCCReference Include="models\Model.Forma.pas"/>
         <DCCReference Include="models\Model.DocumentoFiscalManifesto.pas"/>
         <DCCReference Include="models\Model.DocumentoFiscalCartaCorrecao.pas"/>
+        <DCCReference Include="models\Model.Empresa.pas"/>
+        <DCCReference Include="lib\Lib.Sistema.DAO.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -253,18 +255,14 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
+                <DeployFile LocalName="..\bin\Win32\Debug\ConstelFiscal.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployFile LocalName="..\bin\Win32\Debug\ConstelFiscal.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>ConstelFiscal.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="W:\solucao\constelfiscal\ConstelFiscal" Configuration="Debug" Class="ProjectOutput">
-                    <Platform Name="Linux64">
-                        <RemoteName>ConstelFiscal</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
+                <DeployFile LocalName="W:\solucao\constelfiscal\ConstelFiscal" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
@@ -294,12 +292,6 @@
                     </Platform>
                     <Platform Name="Android64">
                         <RemoteDir>res\xml</RemoteDir>
-                        <Operation>1</Operation>
-                    </Platform>
-                </DeployClass>
-                <DeployClass Name="AndroidGDBServer">
-                    <Platform Name="Android">
-                        <RemoteDir>library\lib\armeabi-v7a</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -392,6 +384,16 @@
                     </Platform>
                     <Platform Name="Android64">
                         <RemoteDir>res\values-v31</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidSplashStylesV35">
+                    <Platform Name="Android">
+                        <RemoteDir>res\values-v35</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\values-v35</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>

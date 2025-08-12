@@ -9,13 +9,14 @@ uses
   System.JSON,
   REST.Types,
   REST.Client,
-  REST.JSON;
+  REST.JSON, System.IOUtils, IdSSLOpenSSL, IdHTTP;
 
 type
   TAPIService = class
   private
     FServidor: string;
     FToken: string;
+    FConectado: Boolean;
     FRESTClient: TRESTClient;
     FRESTRequest: TRESTRequest;
     FRESTResponse: TRESTResponse;
@@ -29,6 +30,7 @@ type
     function GetArray<T: class, constructor>(Resource: string): TArray<T>;
     function GetPagedArray<T: class, constructor>(Resource: string; Linhas: Integer = 144): TArray<T>;
     function Post<T: class, constructor>(Resource: string; Instance: TObject): T;
+    function GetArquivo(Nome, Caminho: string; var FileName: string): Boolean;
   end;
 
 function InfoAPI(const serverName: string = ''): TAPIService;
@@ -54,9 +56,9 @@ begin
   inherited Create();
   if serverName = '' then
   begin
-    if DebugHook <> 0 then
-      FServidor := 'http://192.168.56.1:3000/api/'
-    else
+//    if DebugHook <> 0 then
+//      FServidor := 'http://192.168.56.1:3000/api/'
+//    else
       FServidor := 'https://atlas.constel.cloud/api/';
   end
   else
@@ -284,6 +286,59 @@ begin
     EHttpResponse.ParamMissing('instance');
   Request(Resource, rmPOST, tkClass, Instance, []);
   Result := TJSON.JsonToObject<T>(TJSONObject(FRESTResponse.JSONValue));
+end;
+
+function TAPIService.GetArquivo(Nome, Caminho: string; var FileName: string): Boolean;
+  function ExtensaoValida(Arquivo: string): Boolean;
+  begin
+    Result := AStringContains(['.png', '.jpg', '.jpeg', '.bmp'], ExtractFileExt(Arquivo));
+  end;
+begin
+  FileName := '';
+  if Caminho.IsEmpty  then
+    Exit(False);
+  var Arquivo := Caminho;
+  var P := Arquivo.LastIndexOf('/');
+  if P > 0 then
+    Arquivo := Arquivo.Substring(P + 1);
+  var FilePath := TPath.GetTempPath + 'ConstelPDV\Arquivos\';
+  if not ForceDirectories(FilePath) then
+    raise Exception.Create('não é possível criar o arquivo de cache local.');
+  FileName := FilePath + Arquivo;
+  if FileExists(FileName) then
+    Exit(ExtensaoValida(FileName));
+  if Caminho.ToLower().StartsWith('http') then
+  begin
+    var ms := TMemoryStream.Create();
+    try
+      var IdSSLIOHandlerSocketOpenSSL := TIdSSLIOHandlerSocketOpenSSL.Create();
+      IdSSLIOHandlerSocketOpenSSL.SSLOptions.SSLVersions := [sslvTLSv1_2];
+      var FIdHTTP := TIdHTTP.Create();
+      FIdHTTP.IOHandler := IdSSLIOHandlerSocketOpenSSL;
+      FIdHTTP.Request.CustomHeaders.FoldLines := False;
+      try
+        FIdHTTP.Get(Caminho, ms);
+        FConectado := True;
+        AppendLog('Requisição - GET ' + Caminho);
+      except
+        on E: Exception do
+        begin
+          FileName := '';
+          Lib.Funcoes.AppendLogError(E.ClassName + ': ' + E.Message);
+          if Lib.Funcoes.Incomunicavel(E) then
+
+            FConectado := False;
+          Exit(False);
+        end;
+        //
+      end;
+      ms.SaveToFile(FileName);
+    finally
+      ms.Free();
+    end;
+    Exit(ExtensaoValida(FileName));
+  end;
+  Result := False;
 end;
 
 end.

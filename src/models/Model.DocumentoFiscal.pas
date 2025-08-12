@@ -6,7 +6,7 @@ uses Model.Base, Model.Estabelecimento, Model.Parceiro, Model.Historico,
   Model.Operacao, Model.Item, Model.Unidade, Model.Municipio, Model.Conta,
   Model.OrigemDaMercadoria, Model.NCM, Model.CEST, Model.CFOP, Model.CSTICMS,
   Model.CSTIPI, Model.CSTPISCOFINS, Model.Moeda, Lib.Sistema.Tipos, Lib.Funcoes,
-  Model.Forma;
+  Model.Forma, Model.Empresa;
 
 const
   DOCUMENTOFISCAL_MODELO_NFe = '55';
@@ -175,10 +175,14 @@ type
     ficmsAliquota: Currency;
     ficmsValor: Currency;
     ficmsSTReducaoBase: Currency;
+    ficmsModalidadeDeCalculoMVA: String;
+    ficmsAliquotaMVA: Currency;
     ficmsSTBC: Currency;
     ficmsSTAliquota: Currency;
-    ficmsSTAliquotaMVA: Currency;
     ficmsSTValor: Currency;
+    ffcpSTBC: Currency;
+    ffcpSTAliquota: Currency;
+    ffcpSTValor: Currency;
     fsimplesAliquotaDeCredito: Currency;
     fsimplesICMSAproveitado: Currency;
     fcstIPI: TCSTIPI;
@@ -251,10 +255,14 @@ type
     property icmsAliquota: Currency read ficmsAliquota write ficmsAliquota;
     property icmsValor: Currency read ficmsValor write ficmsValor;
     property icmsSTReducaoBase: Currency read ficmsSTReducaoBase write ficmsSTReducaoBase;
+    property icmsModalidadeDeCalculoMVA: string read ficmsModalidadeDeCalculoMVA write ficmsModalidadeDeCalculoMVA;
+    property icmsAliquotaMVA: Currency read ficmsAliquotaMVA write ficmsAliquotaMVA;
     property icmsSTBC: Currency read ficmsSTBC write ficmsSTBC;
     property icmsSTAliquota: Currency read ficmsSTAliquota write ficmsSTAliquota;
-    property icmsSTAliquotaMVA: Currency read ficmsSTAliquotaMVA write ficmsSTAliquotaMVA;
     property icmsSTValor: Currency read ficmsSTValor write ficmsSTValor;
+    property fcpSTBC: Currency read ffcpSTBC write ffcpSTBC;
+    property fcpSTAliquota: Currency read ffcpSTAliquota write ffcpSTAliquota;
+    property fcpSTValor: Currency read ffcpSTValor write ffcpSTValor;
     property simplesAliquotaDeCredito: Currency read fsimplesAliquotaDeCredito write fsimplesAliquotaDeCredito;
     property simplesICMSAproveitado: Currency read fsimplesICMSAproveitado write fsimplesICMSAproveitado;
     property cstIPI: TCSTIPI read fcstIPI write fcstIPI;
@@ -302,6 +310,7 @@ type
 type
   TDocumentoFiscal = class
   private
+    fempresa: TEmpresa;
     festabelecimento: TEstabelecimentoC;
     fsituacao: SmallInt;
     femissao: TDateTime;
@@ -322,6 +331,8 @@ type
     ficmsValor: Currency;
     ficmsSTBC: Currency;
     ficmsSTValor: Currency;
+    ffcpSTBC: Currency;
+    ffcpSTValor: Currency;
     fipiBC: Currency;
     fipiValor: Currency;
     fpisBC: Currency;
@@ -352,6 +363,7 @@ type
   public
     constructor Create;
     destructor Destroy;
+    property empresa: TEmpresa read fempresa write fempresa;
     property estabelecimento: TEstabelecimentoC read festabelecimento write festabelecimento;
     property situacao: SmallInt read fsituacao write fsituacao;
     property emissao: TDateTime read femissao write femissao;
@@ -372,6 +384,8 @@ type
     property icmsValor: Currency read ficmsValor write ficmsValor;
     property icmsSTBC: Currency read ficmsSTBC write ficmsSTBC;
     property icmsSTValor: Currency read ficmsSTValor write ficmsSTValor;
+    property fcpSTBC: Currency read ffcpSTBC write ffcpSTBC;
+    property fcpSTValor: Currency read ffcpSTValor write ffcpSTValor;
     property ipiBC: Currency read fipiBC write fipiBC;
     property ipiValor: Currency read fipiValor write fipiValor;
     property pisBC: Currency read fpisBC write fpisBC;

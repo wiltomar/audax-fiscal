@@ -10,7 +10,7 @@ uses
   Horse,
   Api.Rotas in 'Api.Rotas.pas',
   Api.Funcoes in 'Api.Funcoes.pas',
-  Api.Componentes in 'Api.Componentes.pas' {componentes: TDataModule},
+  Api.Componentes in 'Api.Componentes.pas' {Componentes: TDataModule},
   Lib.Excecoes in 'lib\Lib.Excecoes.pas',
   Lib.Funcoes in 'lib\Lib.Funcoes.pas',
   Lib.Sistema.Tipos in 'lib\Lib.Sistema.Tipos.pas',
@@ -94,7 +94,9 @@ uses
   Model.InventarioFiscal in 'models\Model.InventarioFiscal.pas',
   Model.Forma in 'models\Model.Forma.pas',
   Model.DocumentoFiscalManifesto in 'models\Model.DocumentoFiscalManifesto.pas',
-  Model.DocumentoFiscalCartaCorrecao in 'models\Model.DocumentoFiscalCartaCorrecao.pas';
+  Model.DocumentoFiscalCartaCorrecao in 'models\Model.DocumentoFiscalCartaCorrecao.pas',
+  Model.Empresa in 'models\Model.Empresa.pas',
+  Lib.Sistema.DAO in 'lib\Lib.Sistema.DAO.pas';
 
 function startApi: boolean;
 begin

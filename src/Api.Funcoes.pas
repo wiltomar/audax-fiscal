@@ -10,6 +10,7 @@ const
   cKey = 31987;
   C1 = 77543;
   C2 = 59381;
+  API_Porta = 9000;
 
 procedure startApi;
 procedure stopApi;
@@ -98,18 +99,12 @@ begin
 end;
 
 procedure startApi;
-var
-  FConfig: TConfig;
 begin
-  InfoConfig(FConfig);
-
-  var Porta := FConfig.porta;
-
-  THorse.Listen(Porta,
+  THorse.Listen(API_Porta,
     procedure
     begin
       if THorse.IsRunning then
-        Log(Format('Api fiscal em execução e escutando na porta %d', [Porta]))
+        Log(Format('Api fiscal em execução e escutando na porta %d', [API_Porta]))
       else
         Log('A api fiscal não está sendo executada no momento.');
     end
