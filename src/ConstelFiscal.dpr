@@ -93,7 +93,8 @@ uses
   Model.Fortes.RegistroDNM in 'models\Model.Fortes.RegistroDNM.pas',
   Model.InventarioFiscal in 'models\Model.InventarioFiscal.pas',
   Model.Forma in 'models\Model.Forma.pas',
-  Model.DocumentoFiscalManifesto in 'models\Model.DocumentoFiscalManifesto.pas';
+  Model.DocumentoFiscalManifesto in 'models\Model.DocumentoFiscalManifesto.pas',
+  Model.DocumentoFiscalCartaCorrecao in 'models\Model.DocumentoFiscalCartaCorrecao.pas';
 
 function startApi: boolean;
 begin

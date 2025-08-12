@@ -4,7 +4,8 @@ interface
 
 uses Classes, SysUtils, Horse, Horse.CORS, System.JSON, Horse.Jhonson, REST.Json,
   Model.DocumentoFiscal, Api.Componentes, System.Net.HttpClient, System.NetEncoding,
-  Model.Inutilizacao, APIService, Api.Funcoes, Model.DocumentoFiscalManifesto;
+  Model.Inutilizacao, APIService, Api.Funcoes, Model.DocumentoFiscalManifesto,
+  Model.DocumentoFiscalCartaCorrecao;
 
 const
   apiVersion = '/api/v1/';
@@ -154,6 +155,40 @@ begin
   end;
 end;
 
+procedure cartaDeCorrecao(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
+var
+  DocumentoFiscalCartaCorrecao: TDocumentoFiscalCartaCorrecao;
+  Resposta: TJSONObject;
+  Error, Msg: String;
+  StatusCode: THttpStatus;
+begin
+  cToken := Req.Headers.Field('Authorization').AsString;
+  InfoAPI().Autentica(cToken);
+
+  DocumentoFiscalCartaCorrecao := TJson.JsonToObject<TDocumentoFiscalCartaCorrecao>(Req.Body);
+
+  try
+    Resposta := TJson.ObjectToJsonObject(Componentes.CartaDeCorrecao(DocumentoFiscalCartaCorrecao, Error, Msg), [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
+    try
+      Resposta := retorno(Resposta, Error, Msg);
+
+      if Error > '' then
+        StatusCode := THTTPStatus.BadRequest
+      else
+        StatusCode := THTTPStatus.OK;
+      Res
+        .Status(StatusCode)
+        .Send<TJSONObject>(Resposta);
+    except
+      Res
+        .Status(THTTPStatus.BadRequest)
+        .Send<TJSONObject>(Resposta);
+    end;
+  finally
+  end;
+end;
+
+
 procedure manifestaDocumento(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 var
   DocumentoFiscalManifesto: TDocumentoFiscalManifesto;
@@ -289,6 +324,7 @@ begin
     .Get(apiVersion + 'fiscal/arquivo/sped', geraSPED)
     .Post(apiVersion + 'fiscal/documento/emite', emiteDFe)
     .Post(apiVersion  + 'fiscal/arquivo/manifesto', manifestaDocumento)
+    .Post(apiVersion  + 'fiscal/arquivo/cartacorrecao', cartaDeCorrecao)
     .Post(apiVersion  + 'fiscal/documento/imprime', imrimeDFe)
     .Post(apiVersion + 'fiscal/documento/estorna', estornaDFe)
     .Post(apiVersion + 'fiscal/arquivo/envia', enviaArquivo);

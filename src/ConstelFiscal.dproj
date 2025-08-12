@@ -211,6 +211,7 @@
         <DCCReference Include="models\Model.InventarioFiscal.pas"/>
         <DCCReference Include="models\Model.Forma.pas"/>
         <DCCReference Include="models\Model.DocumentoFiscalManifesto.pas"/>
+        <DCCReference Include="models\Model.DocumentoFiscalCartaCorrecao.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
