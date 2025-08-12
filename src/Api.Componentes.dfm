@@ -1,4 +1,4 @@
-object componentes: Tcomponentes
+object Componentes: TComponentes
   OnCreate = DataModuleCreate
   Height = 378
   Width = 640

@@ -10,7 +10,7 @@ uses
   Horse,
   Api.Rotas in 'Api.Rotas.pas',
   Api.Funcoes in 'Api.Funcoes.pas',
-  Api.Componentes in 'Api.Componentes.pas' {componentes: TDataModule},
+  Api.Componentes in 'Api.Componentes.pas' {Componentes: TDataModule},
   Lib.Excecoes in 'lib\Lib.Excecoes.pas',
   Lib.Funcoes in 'lib\Lib.Funcoes.pas',
   Lib.Sistema.Tipos in 'lib\Lib.Sistema.Tipos.pas',

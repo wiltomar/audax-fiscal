@@ -8,7 +8,6 @@ uses Classes, SysUtils, Horse, Horse.CORS, System.JSON, Horse.Jhonson, REST.Json
 
 const
   apiVersion = '/api/v1/';
-  build = '2025.8.1-1535.6';
 
 var
   cToken,
