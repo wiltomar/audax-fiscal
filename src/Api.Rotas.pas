@@ -163,7 +163,6 @@ begin
   end;
 end;
 
-<<<<<<< HEAD
 procedure cartaDeCorrecao(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 var
   DocumentoFiscalCartaCorrecao: TDocumentoFiscalCartaCorrecao;
@@ -171,8 +170,8 @@ var
   Error, Msg: String;
   StatusCode: THttpStatus;
 begin
-  cToken := Req.Headers.Field('Authorization').AsString;
-  InfoAPI().Autentica(cToken);
+//  cToken := Req.Headers.Field('Authorization').AsString;
+//  InfoAPI().Autentica(cToken);
 
   DocumentoFiscalCartaCorrecao := TJson.JsonToObject<TDocumentoFiscalCartaCorrecao>(Req.Body);
 
@@ -197,8 +196,6 @@ begin
   end;
 end;
 
-
-=======
 procedure recebeArquivo(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 var
   urlArquivo: string;
@@ -222,7 +219,6 @@ begin
   end;
 end;
 
->>>>>>> 4118f073ff7b1532731fe5d990321e538154085d
 procedure manifestaDocumento(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 var
   DocumentoFiscalManifesto: TDocumentoFiscalManifesto;
