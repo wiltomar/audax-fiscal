@@ -72,7 +72,8 @@ begin
           AddPair('error', E.message);
           AddPair('response', documentoFiscal);
         end;
-        Log(Format('Constel Fiscal versão: %s. Houve o segunite erro na tentativa de uso da API Fiscal: %s.', [build, E.Message]));
+        Error := Format('Constel Fiscal versão: %s. Houve o segunite erro na tentativa de uso da API Fiscal: %s.', [build, E.Message]);
+        Log(Error);
       end;
     end;
 
@@ -99,8 +100,9 @@ begin
 
   try
     cErrors := '';
+    cMsg := '';
 
-    stringStream := Componentes.gerarSPED(Req, cErrors);
+    stringStream := Componentes.gerarSPED(Req, cErrors, cMsg);
     stringStream.Encoding.UTF8;
 
     try
@@ -143,8 +145,12 @@ end;
 
 procedure enviaArquivo(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 begin
+  cToken := Req.Headers.Field('Authorization').AsString;
+  InfoAPI().Autentica(cToken);
+
   cErrors := '';
   cMsg    := '';
+
   try
     Resposta := TJSON.ObjectToJsonObject(Componentes.enviaArquivo(Req.RawWebRequest.Files[0], cErrors, cMsg));
     try
@@ -167,25 +173,23 @@ procedure cartaDeCorrecao(Req: THorseRequest; Res: THorseResponse; Next: TNextPr
 var
   DocumentoFiscalCartaCorrecao: TDocumentoFiscalCartaCorrecao;
   Resposta: TJSONObject;
-  Error, Msg: String;
-  StatusCode: THttpStatus;
 begin
-//  cToken := Req.Headers.Field('Authorization').AsString;
-//  InfoAPI().Autentica(cToken);
+  cToken := Req.Headers.Field('Authorization').AsString;
+  InfoAPI().Autentica(cToken);
+
+  cErrors := '';
+  cMsg := '';
 
   DocumentoFiscalCartaCorrecao := TJson.JsonToObject<TDocumentoFiscalCartaCorrecao>(Req.Body);
 
   try
-    Resposta := TJson.ObjectToJsonObject(Componentes.CartaDeCorrecao(DocumentoFiscalCartaCorrecao, Error, Msg), [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
+    Resposta := TJson.ObjectToJsonObject(Componentes.CartaDeCorrecao(DocumentoFiscalCartaCorrecao, cErrors, cMsg), [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
     try
-      Resposta := retorno(Resposta, Error, Msg);
+      Resposta := retorno(Resposta, cErrors, cMsg);
+      cStatusCode := seEntao(Length(cErrors) = 0, THTTPStatus.Created);
 
-      if Error > '' then
-        StatusCode := THTTPStatus.BadRequest
-      else
-        StatusCode := THTTPStatus.OK;
       Res
-        .Status(StatusCode)
+        .Status(cStatusCode)
         .Send<TJSONObject>(Resposta);
     except
       Res
@@ -193,29 +197,6 @@ begin
         .Send<TJSONObject>(Resposta);
     end;
   finally
-  end;
-end;
-
-procedure recebeArquivo(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
-var
-  urlArquivo: string;
-begin
-  try
-//    Resposta := TJSON.ObjectToJsonObject(Componentes.recebeArquivo('logo', Req.RawWebRequest.Files[0].FileName, urlArquivo, cErrors, cMsg));
-//    try
-//      Resposta := retorno(Resposta, cErrors, cMsg);
-//      cStatusCode := seEntao(Length(cErrors) = 0, THTTPStatus.Found);
-//
-//      Res
-//        .Status(cStatusCode)
-//        .Send<TJSONObject>(Resposta);
-//    except
-//      Res
-//        .Status(THTTPStatus.InternalServerError)
-//        .Send<TJSONObject>(Resposta);
-//    end;
-  finally
-
   end;
 end;
 
@@ -228,8 +209,8 @@ begin
 
   cErrors := '';
   cMsg    := '';
-  DocumentoFiscalManifesto := TJson.JsonToObject<TDocumentoFiscalManifesto>(Req.Body);
 
+  DocumentoFiscalManifesto := TJson.JsonToObject<TDocumentoFiscalManifesto>(Req.Body);
   Resposta := TJson.ObjectToJsonObject(Componentes.manifestarDocumento(DocumentoFiscalManifesto, cErrors, cMsg),
     [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
   try
@@ -249,13 +230,13 @@ end;
 
 procedure emiteDFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 begin
-//  cToken := Req.Headers.Field('Authorization').AsString;
-//  InfoAPI().Autentica(cToken);
+  cToken := Req.Headers.Field('Authorization').AsString;
+  InfoAPI().Autentica(cToken);
 
-  DocumentoFiscal := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
   cErrors := '';
   cMsg    := '';
 
+  DocumentoFiscal := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
   Resposta := TJson.ObjectToJsonObject(Componentes.EmiteDFe(DocumentoFiscal, cErrors, cMsg),
     [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
   try
@@ -276,9 +257,13 @@ procedure estornaDFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 var
   DocumentoFiscalDFe: TDocumentoFiscal;
 begin
-  DocumentoFiscalDFe := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
+  cToken := Req.Headers.Field('Authorization').AsString;
+  InfoAPI().Autentica(cToken);
+
   cErrors := '';
   cMsg    := '';
+
+  DocumentoFiscalDFe := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
 
   try
     Resposta := TJson.ObjectToJsonObject(Componentes.CancelarDFe(DocumentoFiscalDFe, cErrors, cMsg));
@@ -297,12 +282,13 @@ end;
 
 procedure imrimeDFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 begin
-  //cToken := Req.Headers.Field('Authorization').AsString;
-  //InfoAPI().Autentica(cToken);
+  cToken := Req.Headers.Field('Authorization').AsString;
+  InfoAPI().Autentica(cToken);
 
-  DocumentoFiscal := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
   cErrors := '';
   cMsg    := '';
+
+  DocumentoFiscal := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
 
   try
     Resposta := TJson.ObjectToJsonObject(Componentes.ImprimirDFe(DocumentoFiscal, cErrors, cMsg), [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
@@ -343,7 +329,6 @@ begin
       .SetCustomHeader('Access-Control-Expose-Headers', 'Content-Length,Content-Type');
 
     Res.Status(204).Send('');
-    // NÃO chame Next para interromper a cadeia sem exceção!
     Exit;
   end
   else
@@ -365,7 +350,6 @@ begin
     .Use(CORS)
     .Get(apiVersion, index)
     .Get(apiVersion + 'fiscal/arquivo/sped', geraSPED)
-    .Get(apiVersion + 'fiscal/arquivo/recebe', recebeArquivo)
     .Post(apiVersion + 'fiscal/documento/emite', emiteDFe)
     .Post(apiVersion  + 'fiscal/arquivo/manifesto', manifestaDocumento)
     .Post(apiVersion  + 'fiscal/arquivo/cartacorrecao', cartaDeCorrecao)
