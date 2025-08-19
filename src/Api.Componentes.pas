@@ -13,7 +13,8 @@ uses
   {$IFDEF MSWINDOWS}
     WinApi.ActiveX, ACBrSATExtratoESCPOS, ACBrPosPrinter, ACBrSATExtratoFortesFr,
   {$ENDIF}
-  Lib.Sistema.DAO;
+  Lib.Sistema.DAO,
+  Model.Fortes.RegistroCAB, Model.Fortes.RegistroPAR;
 
 const
   docModelos: TArray<String> = ['55', '56', '57', '58', '59', '65'];
@@ -72,7 +73,8 @@ type
     property SatAssinaturaAC: String read FsatAssinaturaAC write FsatAssinaturaAC;
 
     function GerarSPED(Req: THorseRequest; var Erros: string; var Msg: string): TStringStream;
-    procedure GerarArquivoFortesFiscal(const FileName: String; Registros: TList<IRegistro>);
+  //  procedure GerarArquivoFortesFiscal(const FileName: String; Registros: TList<IRegistro>);
+    function gerarArquivoFortesFiscal(Req: THorseRequest; var Erros: string; var Msg: string): TStringStream;
     function EnviaArquivo(const Arquivo: TAbstractWebRequestFile; var erros: string; var msg: string): TArquivo;
     function CartaDeCorrecao(DocumentoFiscalCartaCorrecao: TDocumentoFiscalCartaCorrecao; var Error, Msg: String): TDocumentoFiscalCartaCorrecao;
     function RecebeArquivo(Caminho: String; var FileName: string; var erros: string; var msg: string): TArquivo;
@@ -732,21 +734,65 @@ begin
   Result := fArquivo;
 end;
 
-procedure TComponentes.gerarArquivoFortesFiscal(const FileName: String; Registros: TList<IRegistro>);
+function TComponentes.gerarArquivoFortesFiscal(Req: THorseRequest; var Erros: string; var Msg: string): TStringStream;
 var
-  Lista: TStringList;
-  Registro: IRegistro;
-begin
-  Lista := TStringList.Create;
-  try
-    for Registro in Registros do
-      Lista.Add(Registro.GerarLinha);
+  ListaDeRegistros: TList<IRegistro>;
+  fileStream: TFileStream;
 
-    Lista.SaveToFile(FileName);
-  finally
-    Lista.Free;
+  RegistroCAB: TRegistroCAB;
+  RegistroPAR: TRegistroPAR;
+
+  procedure gerarArquivo(const FileName: String; Registros: TList<IRegistro>);
+  var
+    Lista: TStringList;
+    Registro: IRegistro;
+  begin
+    Lista := TStringList.Create;
+    try
+      for Registro in Registros do
+        Lista.Add(Registro.GerarLinha);
+
+      Lista.SaveToFile(FileName);
+
+      fileStream := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
+    finally
+      Lista.Free;
+    end;       
   end;
+begin
+
+  RegistroCAB := TRegistroCAB.Create;
+  RegistroPAR := TRegistroPAR.Create;
+  
+  ListaDeRegistros := TList<IRegistro>.Create;
+  try   
+    ListaDeRegistros.Add(RegistroCAB);
+    ListaDeRegistros.Add(RegistroPAR);
+    gerarArquivo('C:\Constel\FORTES.txt', ListaDeRegistros);
+  finally
+    ListaDeRegistros.Free;
+  end;
+
+  Result := TStringStream.Create;
+  Result.LoadFromStream(fileStream);
+
 end;
+
+//procedure TComponentes.gerarArquivoFortesFiscal(const FileName: String; Registros: TList<IRegistro>);
+//var
+//  Lista: TStringList;
+//  Registro: IRegistro;
+//begin
+//  Lista := TStringList.Create;
+//  try
+//    for Registro in Registros do
+//      Lista.Add(Registro.GerarLinha);
+//
+//    Lista.SaveToFile(FileName);
+//  finally
+//    Lista.Free;
+//  end;
+//end;
 
 function TComponentes.CancelarDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
 begin

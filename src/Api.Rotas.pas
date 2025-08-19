@@ -4,8 +4,8 @@ interface
 
 uses Classes, SysUtils, Horse, Horse.CORS, System.JSON, Horse.Jhonson, REST.Json,
   Model.DocumentoFiscal, Api.Componentes, System.Net.HttpClient, System.NetEncoding,
-  Model.Inutilizacao, APIService, Api.Funcoes, Model.DocumentoFiscalManifesto,
-  Model.DocumentoFiscalCartaCorrecao;
+  Model.Inutilizacao, APIService, Api.Funcoes, Model.DocumentoFiscalManifesto, System.Generics.Collections,
+  Model.DocumentoFiscalCartaCorrecao, Fortes.IRegistro;
 
 const
   apiVersion = '/api/v1/';
@@ -142,6 +142,61 @@ begin
     end;
   end;
 end;
+
+procedure geraFORTES(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
+var
+  stringStream: TStringStream;
+  Registros: TList<IRegistro>;
+begin
+
+  cToken := Req.Headers.Field('Authorization').AsString;
+  InfoAPI().Autentica(cToken);
+
+  try
+    cErrors := '';
+    cMsg := '';
+
+    stringStream := Componentes.GerarArquivoFortesFiscal(Req, cErrors, cMsg);
+    stringStream.Encoding.UTF8;
+
+    try
+      if Length(cErrors) = 0 then
+      begin
+        Res
+          .Send(stringStream.DataString)
+          .ContentType('text/plain;charset=utf8')
+          .Status(THTTPStatus.Created);
+
+        Log('Requisição realizada com sucesso.');
+      end
+      else
+      begin
+        Res
+          .Send(Format('A solicitação não foi bem sucedida, o erro %s, foi retornado.',
+            [cErrors]))
+          .ContentType('text/plain')
+          .Status(THTTPStatus.BadRequest);
+
+        Log(Format('Ocorreu o seguinte erro na solicitação: %s', [cErrors]));
+      end;
+    finally
+      stringStream.Free;
+    end;
+
+  except
+    on E:Exception do
+    begin
+      Res
+        .Send(Format('Não foi possível gerar o arquivo, com o erro %s.',
+          [E.Message]))
+        .Status(THTTPStatus.InternalServerError);
+      Log(Format('Houve um erro no processamento da requisição. Mensagem: %s',
+                 [E.Message]));
+
+    end;
+  end;
+end;
+
 
 procedure enviaArquivo(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 begin
@@ -349,11 +404,12 @@ begin
     .Use(Jhonson)
     .Use(CORS)
     .Get(apiVersion, index)
-    .Get(apiVersion + 'fiscal/arquivo/sped', geraSPED)
+    .Get(apiVersion  + 'fiscal/arquivo/sped', geraSPED)
+    .Get(apiVersion  + 'fiscal/arquivo/fortes', geraFortes)
     .Post(apiVersion + 'fiscal/documento/emite', emiteDFe)
-    .Post(apiVersion  + 'fiscal/arquivo/manifesto', manifestaDocumento)
-    .Post(apiVersion  + 'fiscal/arquivo/cartacorrecao', cartaDeCorrecao)
-    .Post(apiVersion  + 'fiscal/documento/imprime', imrimeDFe)
+    .Post(apiVersion + 'fiscal/arquivo/manifesto', manifestaDocumento)
+    .Post(apiVersion + 'fiscal/arquivo/cartacorrecao', cartaDeCorrecao)
+    .Post(apiVersion + 'fiscal/documento/imprime', imrimeDFe)
     .Post(apiVersion + 'fiscal/documento/estorna', estornaDFe)
     .Post(apiVersion + 'fiscal/arquivo/envia', enviaArquivo);
 
