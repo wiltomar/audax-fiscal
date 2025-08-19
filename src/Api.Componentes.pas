@@ -763,18 +763,22 @@ begin
 
   RegistroCAB := TRegistroCAB.Create;
   RegistroPAR := TRegistroPAR.Create;
-  
-  ListaDeRegistros := TList<IRegistro>.Create;
-  try   
-    ListaDeRegistros.Add(RegistroCAB);
-    ListaDeRegistros.Add(RegistroPAR);
-    gerarArquivo('C:\Constel\FORTES.txt', ListaDeRegistros);
-  finally
-    ListaDeRegistros.Free;
-  end;
 
-  Result := TStringStream.Create;
-  Result.LoadFromStream(fileStream);
+  try
+  
+    ListaDeRegistros := TList<IRegistro>.Create;
+    try   
+      ListaDeRegistros.Add(RegistroCAB);
+      ListaDeRegistros.Add(RegistroPAR);
+      gerarArquivo('C:\Constel\FORTES.txt', ListaDeRegistros);
+    finally
+      ListaDeRegistros.Free;
+    end;
+    Result := TStringStream.Create;
+    Result.LoadFromStream(fileStream);
+  finally
+    if Assigned(fileStream) then FreeAndNil(fileStream);
+  end;
 
 end;
 
