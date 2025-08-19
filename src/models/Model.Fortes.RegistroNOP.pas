@@ -34,7 +34,7 @@ function TRegistroNOP.GerarLinha: string;
 begin
   Result := Format('%s|%s|%s|%s|', [
   FTipoRegistro,
-  FCodigo,
+  FCodigo.ToString,
   FDescricao,
   IfThen(FEstorno, 'S', 'N')
   ]);

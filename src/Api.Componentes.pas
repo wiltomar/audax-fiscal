@@ -14,7 +14,9 @@ uses
     WinApi.ActiveX, ACBrSATExtratoESCPOS, ACBrPosPrinter, ACBrSATExtratoFortesFr,
   {$ENDIF}
   Lib.Sistema.DAO,
-  Model.Fortes.RegistroCAB, Model.Fortes.RegistroPAR;
+  Model.Fortes.RegistroCAB, Model.Fortes.RegistroPAR, Model.Fortes.RegistroGRP, 
+  Model.Fortes.RegistroUND, Model.Fortes.RegistroNOP, Model.Fortes.RegistroBSS,
+  Model.Fortes.RegistroCDF, Model.Fortes.RegistroCBL;
 
 const
   docModelos: TArray<String> = ['55', '56', '57', '58', '59', '65'];
@@ -741,6 +743,12 @@ var
 
   RegistroCAB: TRegistroCAB;
   RegistroPAR: TRegistroPAR;
+  RegistroGRP: TRegistroGRP;
+  RegistroUND: TRegistroUND;
+  RegistroNOP: TRegistroNOP;
+  RegistroBSS: TRegistroBSS;
+  RegistroCDF: TRegistroCDF;
+  RegistroCBL: TRegistroCBL;
 
   procedure gerarArquivo(const FileName: String; Registros: TList<IRegistro>);
   var
@@ -762,10 +770,22 @@ var
 begin  
   RegistroCAB := TRegistroCAB.Create;
   RegistroPAR := TRegistroPAR.Create;   
+  RegistroGRP := TRegistroGRP.Create;
+  RegistroUND := TRegistroUND.Create;
+  RegistroNOP := TRegistroNOP.Create;
+  RegistroBSS := TRegistroBSS.Create;
+  RegistroCDF := TRegistroCDF.Create;
+  RegistroCBL := TRegistroCBL.Create;
   try        
     ListaDeRegistros := TList<IRegistro>.Create;
     ListaDeRegistros.Add(RegistroCAB);
     ListaDeRegistros.Add(RegistroPAR);
+    ListaDeRegistros.Add(RegistroGRP);
+    ListaDeRegistros.Add(RegistroUND);
+    ListaDeRegistros.Add(RegistroNOP);
+    ListaDeRegistros.Add(RegistroBSS);
+    ListaDeRegistros.Add(RegistroCDF);  
+    ListaDeRegistros.Add(RegistroCBL);  
     
     gerarArquivo('C:\Constel\FORTES.txt', ListaDeRegistros);
     
@@ -775,23 +795,7 @@ begin
     if Assigned(fileStream) then FreeAndNil(fileStream);
     if Assigned(ListaDeRegistros) then FreeAndNil(ListaDeRegistros);
   end;  
-end;
-
-//procedure TComponentes.gerarArquivoFortesFiscal(const FileName: String; Registros: TList<IRegistro>);
-//var
-//  Lista: TStringList;
-//  Registro: IRegistro;
-//begin
-//  Lista := TStringList.Create;
-//  try
-//    for Registro in Registros do
-//      Lista.Add(Registro.GerarLinha);
-//
-//    Lista.SaveToFile(FileName);
-//  finally
-//    Lista.Free;
-//  end;
-//end;
+end;         
 
 function TComponentes.CancelarDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
 begin

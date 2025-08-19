@@ -36,13 +36,13 @@ end;
 
 function TRegistroGRP.GerarLinha: string;
 begin
-  Result := Format('%s|%s|%s|%s|%s|%s|', [
+  Result := Format('%s|%s|%s|%s|%s|%s', [
     FTipoRegistro,
     FCodigo,
     FDescricao,
-    FSituacaoDIEF,
-    FSituacaoProdutoSPED,
-    FGrupoProdutosDIC
+    FSituacaoDIEF.ToString,
+    FSituacaoProdutoSPED.ToString,
+    FGrupoProdutosDIC.ToString
   ]);
 end;
 
