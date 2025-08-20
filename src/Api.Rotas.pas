@@ -230,9 +230,6 @@ end;
 
 procedure emiteDFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 begin
-  cToken := Req.Headers.Field('Authorization').AsString;
-  InfoAPI().Autentica(cToken);
-
   cErrors := '';
   cMsg    := '';
 

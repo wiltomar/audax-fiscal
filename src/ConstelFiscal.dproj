@@ -182,6 +182,7 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="APIService.pas"/>
         <DCCReference Include="Api.Rotas.pas"/>
         <DCCReference Include="Api.Funcoes.pas"/>
         <DCCReference Include="Api.Componentes.pas">
@@ -191,7 +192,8 @@
         <DCCReference Include="lib\Lib.Excecoes.pas"/>
         <DCCReference Include="lib\Lib.Funcoes.pas"/>
         <DCCReference Include="lib\Lib.Sistema.Tipos.pas"/>
-        <DCCReference Include="APIService.pas"/>
+        <DCCReference Include="lib\Lib.Sistema.DAO.pas"/>
+        <DCCReference Include="Fortes.IRegistro.pas"/>
         <DCCReference Include="models\Model.Base.pas"/>
         <DCCReference Include="models\Model.Categoria.pas"/>
         <DCCReference Include="models\Model.Conta.pas"/>
@@ -264,7 +266,6 @@
         <DCCReference Include="models\Model.Fortes.RegistroSVN.pas"/>
         <DCCReference Include="models\Model.Fortes.RegistroCEE.pas"/>
         <DCCReference Include="models\Model.Fortes.RegistroTRA.pas"/>
-        <DCCReference Include="Fortes.IRegistro.pas"/>
         <DCCReference Include="models\Model.Fortes.RegistroCPE.pas"/>
         <DCCReference Include="models\Model.Fortes.RegistroPCE.pas"/>
         <DCCReference Include="models\Model.Fortes.RegistroDNM.pas"/>
@@ -273,7 +274,6 @@
         <DCCReference Include="models\Model.DocumentoFiscalManifesto.pas"/>
         <DCCReference Include="models\Model.DocumentoFiscalCartaCorrecao.pas"/>
         <DCCReference Include="models\Model.Empresa.pas"/>
-        <DCCReference Include="lib\Lib.Sistema.DAO.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

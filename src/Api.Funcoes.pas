@@ -17,7 +17,7 @@ procedure stopApi;
 procedure statusApi;
 procedure InfoConfig(var FConfig: TConfig); overload;
 procedure InfoConfig(const estabelecimento: string; var FConfig: TConfig); overload;
-procedure Log(const Mensagem: String);
+procedure Log(const Mensagem: String; EmArquivo: Boolean = False);
 
 function SomenteDigitos(const S: AnsiString): string;
 function encrypt(const S: string): string;
@@ -73,7 +73,7 @@ begin
   jo := nil;
 end;
 
-procedure Log(const Mensagem: String);
+procedure Log(const Mensagem: String; EmArquivo: Boolean);
 begin
   try
     if Mensagem = EmptyStr then

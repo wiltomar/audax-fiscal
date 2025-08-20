@@ -8,13 +8,15 @@ uses
   System.SysUtils,
   System.AnsiStrings,
   Horse,
+  APIService in 'APIService.pas',
   Api.Rotas in 'Api.Rotas.pas',
   Api.Funcoes in 'Api.Funcoes.pas',
   Api.Componentes in 'Api.Componentes.pas' {Componentes: TDataModule},
   Lib.Excecoes in 'lib\Lib.Excecoes.pas',
   Lib.Funcoes in 'lib\Lib.Funcoes.pas',
   Lib.Sistema.Tipos in 'lib\Lib.Sistema.Tipos.pas',
-  APIService in 'APIService.pas',
+  Lib.Sistema.DAO in 'lib\Lib.Sistema.DAO.pas',
+  Fortes.IRegistro in 'Fortes.IRegistro.pas',
   Model.Base in 'models\Model.Base.pas',
   Model.Categoria in 'models\Model.Categoria.pas',
   Model.Conta in 'models\Model.Conta.pas',
@@ -87,7 +89,6 @@ uses
   Model.Fortes.RegistroSVN in 'models\Model.Fortes.RegistroSVN.pas',
   Model.Fortes.RegistroCEE in 'models\Model.Fortes.RegistroCEE.pas',
   Model.Fortes.RegistroTRA in 'models\Model.Fortes.RegistroTRA.pas',
-  Fortes.IRegistro in 'Fortes.IRegistro.pas',
   Model.Fortes.RegistroCPE in 'models\Model.Fortes.RegistroCPE.pas',
   Model.Fortes.RegistroPCE in 'models\Model.Fortes.RegistroPCE.pas',
   Model.Fortes.RegistroDNM in 'models\Model.Fortes.RegistroDNM.pas',
@@ -95,8 +96,7 @@ uses
   Model.Forma in 'models\Model.Forma.pas',
   Model.DocumentoFiscalManifesto in 'models\Model.DocumentoFiscalManifesto.pas',
   Model.DocumentoFiscalCartaCorrecao in 'models\Model.DocumentoFiscalCartaCorrecao.pas',
-  Model.Empresa in 'models\Model.Empresa.pas',
-  Lib.Sistema.DAO in 'lib\Lib.Sistema.DAO.pas';
+  Model.Empresa in 'models\Model.Empresa.pas';
 
 function startApi: boolean;
 begin

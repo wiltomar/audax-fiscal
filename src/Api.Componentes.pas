@@ -506,7 +506,7 @@ var
       DocumentoFiscal.documentoFiscalNFe.xml := nfe.NotasFiscais.Items[0].XMLAssinado;
       DocumentoFiscal.documentoFiscalNFe.protocolo := nfe.WebServices.Enviar.Protocolo;
 
-      Log(Format('Emitida o documento fiscal de número: %d com chave: %s.', [nfe.NotasFiscais.Items[0].NFe.Ide.nNF,
+      Log(Format('Emitido o documento fiscal de numero: %d com chave: %s.', [nfe.NotasFiscais.Items[0].NFe.Ide.nNF,
                                                                  nfe.NotasFiscais.Items[0].NumID]));
       Msg := nfe.WebServices.Enviar.Msg;
 
@@ -516,7 +516,7 @@ var
     end
     else
     begin
-      Log(Format('Não foi possível emitir o documento fiscal, o seguinte erro ocorreu: %s.', [nfe.WebServices.Retorno.Msg]));
+      Log(Format('Nao foi possivel emitir o documento fiscal, o seguinte erro ocorreu: %s.', [nfe.WebServices.Retorno.Msg]));
       Error := nfe.WebServices.Retorno.Msg;
       documentoFiscalImpresso := DocumentoFiscal;
     end;
@@ -583,8 +583,7 @@ begin
         begin
           xmlDocumento := GerarCFe(DocumentoFiscal);
 
-          var
-            erro: string;
+          var erro: string;
 
           sat.ValidarDadosVenda(AnsiString(xmlDocumento), erro);
           sat.EnviarDadosVenda(AnsiString(xmlDocumento));
@@ -597,9 +596,8 @@ begin
             DocumentoFiscal.documentoFiscalCFe.numero := sat.CFe.ide.nCFe;
             DocumentoFiscal.documentoFiscalCFe.sessao := sat.Resposta.numeroSessao;
             DocumentoFiscal.documentoFiscalCFe.status := sat.Resposta.codigoDeRetorno;
-            DocumentoFiscal.documentoFiscalCFe.formaDeEmissao := StrToIntDef(TpAmbToStr(sat.CFe.ide.tpAmb), 0);
-            Log(Format('Emitido o cupom fiscal: %d com chave: %s.', [sat.CFe.ide.nCFe, sat.CFe.infCFe.ID]));
 
+            Log(Format('Emitido o cupom fiscal: %d com chave: %s.', [sat.CFe.ide.nCFe, sat.CFe.infCFe.ID]));
             Msg := sat.Resposta.mensagemRetorno;
 
             documentoFiscalImpresso := ImprimirDFe(DocumentoFiscal, erro, Msg);
@@ -669,7 +667,6 @@ begin
   except
     on E: Exception do
     begin
-      Log(Format('Houve um erro na tentativa de enviar o documento. Verifique a mensagem a seguir: %s.',[E.Message]));
       if Assigned(documentoFiscalImpresso) then
       begin
         Error  := nfe.WebServices.Retorno.Msg;
@@ -1118,7 +1115,7 @@ begin
       RetirarAcentos          := documentoFiscalSerie.retiraracentos;
       AtualizarXMLCancelado   := documentoFiscalSerie.atualizarxml;
       ExibirErroSchema        := documentoFiscalSerie.exibirerroschema;
-      FormaEmissao            := TpcnTipoEmissao(documentoFiscalSerie.formadeemissao);
+      FormaEmissao            := StrToTpEmis(lOk, IntToStr(documentoFiscalSerie.formadeemissao));
       VersaoDF                := StrToVersaoDF(lOk, documentoFiscalSerie.versaodf);
       ModeloDF                := StrToModeloDF(lOk, modelo);
       FormatoAlerta           := 'TAG:%TAGNIVEL% ID:%ID%/%TAG%(%DESCRICAO%) - %MSG%.';
@@ -1238,7 +1235,7 @@ begin
     Ide.dEmi        := emissao;
     Ide.dSaiEnt     := saida;
     Ide.hSaiEnt     := saida;
-    Ide.tpNF        := tnSaida;
+    Ide.tpNF        := TpcnTipoNFe(natureza);
     Ide.tpEmis      := StrToTpEmis(lOk, IntToStr(DocumentoFiscal.estabelecimento.estabelecimentoFiscalSerie.formadeemissao));
     Ide.tpAmb       := StrToTpAmb(lOk, IntToStr(DocumentoFiscal.estabelecimento.estabelecimentoFiscalSerie.ambiente));
     Ide.verProc     := build;
@@ -1906,9 +1903,16 @@ begin
     Ide.cMunFG    := StrToInt(DocumentoFiscal.estabelecimento.estabelecimentoEnderecos[0].municipio.codigo);
     Ide.finNFe    := fnNormal;
     Ide.tpImp     := tiNFCe;
-    Ide.indFinal  := cfConsumidorFinal;
     Ide.indPres   := pcPresencial;
     Ide.indIntermed := iiSemOperacao;
+
+    if not(Assigned(DocumentoFiscal.parceiro.parceiroDocumentos)) then
+      Ide.indFinal := cfConsumidorFinal
+    else
+    if DocumentoFiscal.parceiro.parceiroDocumentos[0].inscricaoEstadual = '' then
+      Ide.indFinal  := cfConsumidorFinal
+    else
+      Ide.indFinal  := cfNao;
 
     case nfe.Configuracoes.Geral.FormaEmissao of
       teOffLine: begin

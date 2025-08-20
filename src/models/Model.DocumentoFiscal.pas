@@ -313,6 +313,7 @@ type
     fempresa: TEmpresa;
     festabelecimento: TEstabelecimentoC;
     fsituacao: SmallInt;
+    fnatureza: SmallInt;
     femissao: TDateTime;
     fsaida: TDateTime;
     fambiente: Integer;
@@ -366,6 +367,7 @@ type
     property empresa: TEmpresa read fempresa write fempresa;
     property estabelecimento: TEstabelecimentoC read festabelecimento write festabelecimento;
     property situacao: SmallInt read fsituacao write fsituacao;
+    property natureza: SmallInt read fnatureza write fnatureza;
     property emissao: TDateTime read femissao write femissao;
     property saida: TDateTime read fsaida write fsaida;
     property ambiente: Integer read fambiente write fambiente;
