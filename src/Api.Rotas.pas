@@ -28,7 +28,7 @@ implementation
 { TRotas }
 
 function seEntao(AValue: Boolean; const ATrue: THTTPStatus;
-  AFalse: THTTPStatus = THTTPStatus.BadRequest): THTTPStatus;
+  AFalse: THTTPStatus = THTTPStatus.OK): THTTPStatus;
 begin
   if AValue then
     Result := ATrue
