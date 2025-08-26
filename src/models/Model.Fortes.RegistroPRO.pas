@@ -151,13 +151,13 @@ end;
 constructor TRegistroPRO.Create;
 begin
   FTipoRegistro := 'PRO';
-  FOutraUnidade.Create;
+//  FOutraUnidade := FOutraUnidade.Create;
 end;
 
 destructor TRegistroPRO.Destroy;
 begin
-  OutraUnidade.Destroy;
-  inherited Destroy;
+ // OutraUnidade.Destroy;
+//  inherited Destroy;
 end;
 
 function TRegistroPRO.GerarLinha: string;
@@ -165,32 +165,30 @@ var
   Linha: TStringList;
 begin
   var Produto := Format(
-    '%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%S|%S|%s|%s|%s|%s|' +
-    '%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|', [
+    '%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s', [
     FTipoRegistro,
-    FCodigo,
+    FCodigo.ToString,
     FDescricao,
     FCodigoUtilizadoEstab,
     FCodigoNCM,
     FUnidadeMedida,
-    FOutraUnidade,
     IntTostr(Integer(FUnidadeMedidaDIEF)),
     IntTostr(Integer(FUnidadeMedidaCENFOP)),
-    FClassificacao,
-    FGrupo,
-    FGenero,
+    FClassificacao.ToString,
+    FGrupo.ToString,
+    FGenero.ToString,
     FCodigoDeBarras,
     FormatFloat('#0.00',FReducao),
-    FCodigoGAM57,
+    FCodigoGAM57.ToString,
     FCSTICMS,
     FCSTIPI,
     FCSTCOFINS,
     FCSTPIS,
-    FCodigoANP,
-    FCSTICMSSimplesNacional,
-    FCSOSN,
-    FProdutoEspecifico,
-    FTipoDeMedicamento,
+    FCodigoANP.ToString,
+    FCSTICMSSimplesNacional.ToString,
+    FCSOSN.ToString,
+    FProdutoEspecifico.ToString,
+    FTipoDeMedicamento.ToString,
     IfThen(FDesativado, 'S', 'N'),
     FCodigoIndicadorContribuicaoPrevidenciaria,
     FTipoDeTributacaoDIA,
@@ -198,24 +196,24 @@ begin
     FIndicadorEspecial,
     FCodigoDaApuracao,
     FCodigoTIPI,
-    FCodigoCombustívelDIEFPA,
+    FCodigoCombustívelDIEFPA.ToString,
     formatFloat('#0.00',FPercentualDeIncentivo),
-    FPrazoDeFruicao,
-    FIndicadorEspecialDeIncentivo,
-    FPercentualDaCSL,
-    FPercentualDoIRPJ,
+    FPrazoDeFruicao.ToString,
+    FIndicadorEspecialDeIncentivo.ToString,
+    FPercentualDaCSL.ToString,
+    FPercentualDoIRPJ.ToString,
     formatFloat('#0.00', FAliqICMSInterna),
     ifThen(FCodigosDaReceitaProdutoEspecifico, 'S', 'N'),
-    FCodReceitaPIS,
+    FCodReceitaPIS.ToString,
     FCodCEST,
-    FCustoDeAquisicao,
+    FormatFloat('#0.00',FCustoDeAquisicao),
     IfThen(FSubstituicaoDeICMS, 'S', 'N'),
     IfThen(FSubstituicaoDeIPI, 'S', 'N'),
     IfThen(FSubstituicaoDeCOFINS, 'S', 'N'),
     IfThen(FSubstituicaoDePISPASEP, 'S', 'N'),
     IfThen(FTributacaoMonofasicaDeCOFINS, 'S', 'N'),
     IfThen(FTributacaoMonofasicaDePIS, 'S', 'N'),
-    FApuracaoDoPISCOFINS,
+    FApuracaoDoPISCOFINS.ToString,
     FCodReceitaRetidoCOFINS,
     FCodReceitaRetidoPIS,
     FCodReceitaRetidoCSL,
@@ -225,14 +223,20 @@ begin
   ]);
 
   Linha := TStringList.Create;
+
+  var  RegistroOUM := TRegistroOUM.Create;
+  var ListaDeRegistros := TList<IRegistro>.Create;
+  ListaDeRegistros.Add(RegistroOUM);
+
   try
-    for var Unidade in FOutraUnidade do
+    for var Unidade in ListaDeRegistros do
     begin
       Linha.Add(Unidade.GerarLinha)
     end;
-    Result := Produto + sLineBreak + Linha.Text;
+    Result := Produto;
   finally
     Linha.Free;
+    ListaDeRegistros.Free;
   end;
 end;
 

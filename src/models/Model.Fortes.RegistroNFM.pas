@@ -240,14 +240,13 @@ constructor TRegistroNFM.Create;
 begin
   FTipoRegistro := 'NFM';
   FListaProdutos := TList<TRegistroPNM>.Create;
-  ListaINM.Create;
-  ListaDNM.Create;
+ // ListaINM.Create;
+ // ListaDNM.Create;
 end;
 
 destructor TRegistroNFM.Destroy;
 begin
   FListaProdutos.Free;
-  ListaINM.Destroy;
   ListaDNM.Destroy;
   inherited;
 end;
@@ -255,7 +254,6 @@ end;
 function TRegistroNFM.GerarLinha: string;
 var
   Builder: TStringBuilder;
-  LinhaINM, LinhaDNM: TStringList;
 begin
   Builder := TStringBuilder.Create;
   try
@@ -355,22 +353,32 @@ begin
       .Append(FormatFloat('#0.00', FICMSMonoRetido)).Append('|')
       .Append(IfThen(FDecreto35395, 'S', 'N')).Append('|');
 
-    LinhaINM := TStringList.Create;
-    try
-      for var inm in FListaINM do
+      var LinhaINM := TStringList.Create;
+      var  RegistroPNM := TRegistroPNM.Create;
+      var ListaDeRegistros := TList<IRegistro>.Create;
+      ListaDeRegistros.Add(RegistroPNM);
+
+      for var pnm in ListaDeRegistros do
       begin
-        LinhaINM.Add(inm.GerarLinha)
+        LinhaINM.Add(pnm.GerarLinha)
       end;
-      for var dnm in FListaDNM do
-      begin
-        LinhaDNM.Add(dnm.GerarLinha)
-      end;
-    finally
-      LinhaINM.Free;
-      LinhaDNM.Free;
-    end;
-    //Result := Builder.ToString;
-    Result := Builder.ToString + sLineBreak + LinhaINM.Text + sLineBreak + LinhaDNM.Text;
+
+//    LinhaINM := TStringList.Create;
+//    try
+//      for var inm in FListaINM do
+//      begin
+//        LinhaINM.Add(inm.GerarLinha)
+//      end;
+//      for var dnm in FListaDNM do
+//      begin
+//        LinhaDNM.Add(dnm.GerarLinha)
+//      end;
+//    finally
+//      LinhaINM.Free;
+//      LinhaDNM.Free;
+//    end;
+    Result := Builder.ToString + sLineBreak + LinhaINM.Text;
+   // Result := Builder.ToString + sLineBreak + LinhaINM.Text + sLineBreak + LinhaDNM.Text;
   finally
     Builder.Free;
   end;

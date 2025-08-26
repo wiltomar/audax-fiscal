@@ -36,7 +36,7 @@ function TRegistroOUM.GerarLinha: string;
 begin
   Result := Format('%s|%s|%s|%s|%s|', [
     FTipoRegistro,
-    CodigoProduto,
+    CodigoProduto.ToString,
     UnidadeDeMedida,
     formatFloat('#0.00',UnidadeEquivalentePadrao),
     CodigoDeBarras

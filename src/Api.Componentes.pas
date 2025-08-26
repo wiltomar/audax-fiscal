@@ -16,7 +16,8 @@ uses
   Lib.Sistema.DAO,
   Model.Fortes.RegistroCAB, Model.Fortes.RegistroPAR, Model.Fortes.RegistroGRP, 
   Model.Fortes.RegistroUND, Model.Fortes.RegistroNOP, Model.Fortes.RegistroBSS,
-  Model.Fortes.RegistroCDF, Model.Fortes.RegistroCBL;
+  Model.Fortes.RegistroCDF, Model.Fortes.RegistroCBL, Model.Fortes.RegistroPRO,
+  Model.Fortes.RegistroNFM;
 
 const
   docModelos: TArray<String> = ['55', '56', '57', '58', '59', '65'];
@@ -749,8 +750,10 @@ var
   RegistroBSS: TRegistroBSS;
   RegistroCDF: TRegistroCDF;
   RegistroCBL: TRegistroCBL;
+  RegistroPRO: TRegistroPRO;
+  RegistroNFM: TRegistroNFM;
 
-  procedure gerarArquivo(const FileName: String; Registros: TList<IRegistro>);
+ procedure gerarArquivo(const FileName: String; Registros: TList<IRegistro>);
   var
     Lista: TStringList;
     Registro: IRegistro;
@@ -776,7 +779,10 @@ begin
   RegistroBSS := TRegistroBSS.Create;
   RegistroCDF := TRegistroCDF.Create;
   RegistroCBL := TRegistroCBL.Create;
-  try        
+  RegistroPRO := TRegistroPRO.Create;
+  RegistroNFM := TRegistroNFM.Create;
+
+  try
     ListaDeRegistros := TList<IRegistro>.Create;
     ListaDeRegistros.Add(RegistroCAB);
     ListaDeRegistros.Add(RegistroPAR);
@@ -786,6 +792,8 @@ begin
     ListaDeRegistros.Add(RegistroBSS);
     ListaDeRegistros.Add(RegistroCDF);  
     ListaDeRegistros.Add(RegistroCBL);  
+    ListaDeRegistros.Add(RegistroPRO);
+    ListaDeRegistros.Add(RegistroNFM);
     
     gerarArquivo('C:\Constel\FORTES.txt', ListaDeRegistros);
     

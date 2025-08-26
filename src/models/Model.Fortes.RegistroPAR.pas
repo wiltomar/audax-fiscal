@@ -97,8 +97,6 @@ type
     property IndicativoDeNIF: SmallInt read FIndicativoDeNIF write FIndicativoDeNIF;
     property NdeIdentificaçãoFiscal: double read FNdeIdentificaçãoFiscal write FNdeIdentificaçãoFiscal;
     property FormaDeTributacao: SmallInt read FFormaDeTributacao write FFormaDeTributacao;
-
-
   end;
 
 implementation
