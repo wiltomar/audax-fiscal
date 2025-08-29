@@ -1313,6 +1313,8 @@ begin
           Prod.CFOP := cfop.codigo
         else
           Prod.CFOP := IntToStr(1000 + StrToInt(cfop.codigo));
+        if Assigned(cest) then
+          Prod.CEST := StringReplace(cest.codigo, '.', '', [rfReplaceAll]);
         Prod.uCom := unidade.codigo;
         Prod.qCom := quantidade;
         Prod.vUnCom := valor;
@@ -2209,18 +2211,6 @@ begin
   Error := '';
   Msg := '';
 
-//  if not Assigned(DocumentoFiscalManifesto.estabelecimento) then
-//    raise Exception.Create('Estabelecimento não informado');
-//
-//  if Length(DocumentoFiscalManifesto.estabelecimento.estabelecimentoDocumentos) <= 0 then
-//    raise Exception.Create('Estabelecimento sem documentação informado');
-//
-//  if DocumentoFiscalManifesto.chave = '' then
-//    raise Exception.Create('Chave não informada');
-//
-//  if DocumentoFiscalManifesto.estabelecimento.estabelecimentoDocumentos[0].documentoNumero = '' then
-//    raise Exception.Create('CNPJ não informado');
-
   carregaNFe(DocumentoFiscalManifesto.estabelecimento, 1, Error, Msg, '55');
 
   var eventoSelecionado := 0;
@@ -2237,8 +2227,8 @@ begin
       Error := 'Evento inválido. Permitidos: 3, 4, 5, 6.'
     else
     begin
-      var lok : Boolean;
-      nfe.Configuracoes.WebServices.Ambiente := StrToTpAmb(lok, DocumentoFiscalManifesto.ambiente.ToString);
+      var lOk : Boolean;
+      nfe.Configuracoes.WebServices.Ambiente := StrToTpAmb(lOk, DocumentoFiscalManifesto.ambiente.ToString);
       nfe.NotasFiscais.Clear;
       nfe.EventoNFe.Evento.Clear;
 
