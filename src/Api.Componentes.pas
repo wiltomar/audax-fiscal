@@ -62,7 +62,6 @@ type
 
     function CancelarDoc(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
     function CancelarCFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
-
   public
     function EmiteDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
     function CancelarDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
@@ -288,9 +287,6 @@ begin
   {$IFDEF MSWINDOWS}
     CoInitialize(nil);
   {$ENDIF}
-
-  Error := '';
-  Msg := '';
 
   try
     case AnsiIndexStr(DocumentoFiscal.modelo, docModelos) of
@@ -573,12 +569,12 @@ begin
               ConsultarNFe(DocumentoFiscal, Error, Msg);
             end;
 
-            if nfe.WebServices.Consulta.cStat = 100 then
+            if (nfe.WebServices.Consulta.cStat = 100) or (nfe.WebServices.Consulta.cStat = 150) then
             begin
               DocumentoFiscal.documentoFiscalNFe.status := IfThen(DocumentoFiscal.estabelecimento.estabelecimentoFiscal.sincrono, nfe.WebServices.Consulta.cStat, nfe.WebServices.Retorno.cStat);
               DocumentoFiscal.documentoFiscalNFe.msgRetorno := IfThen(DocumentoFiscal.estabelecimento.estabelecimentoFiscal.sincrono, nfe.WebServices.Consulta.Msg, nfe.WebServices.Retorno.Msg);
 
-              if (DocumentoFiscal.documentoFiscalNFe.status = 100) and not(IfThen(DocumentoFiscal.estabelecimento.estabelecimentoFiscal.sincrono, nfe.WebServices.Consulta.Protocolo, nfe.WebServices.Retorno.Protocolo) = EmptyStr) then
+              if not(IfThen(DocumentoFiscal.estabelecimento.estabelecimentoFiscal.sincrono, nfe.WebServices.Consulta.Protocolo, nfe.WebServices.Retorno.Protocolo) = EmptyStr) then
               begin
                 DocumentoFiscal.documentoFiscalNFe.chave := nfe.WebServices.Consulta.NFeChave;
                 DocumentoFiscal.documentoFiscalNFe.xml := XMLAssinado;
@@ -639,20 +635,22 @@ begin
       5: {$REGION 'NCFe'}
         begin
           GerarNFCe(DocumentoFiscal, Error, Msg);
-          ConsultarNFe(DocumentoFiscal, Error, Msg);
+          if not(DocumentoFiscal.documentoFiscalNFe.formaDeEmissao = 9) then
+            ConsultarNFe(DocumentoFiscal, Error, Msg);
 
-          if nfe.WebServices.Consulta.cStat = 539 then
+          if (nfe.WebServices.Consulta.cStat = 539) or (nfe.WebServices.Consulta.cStat = 613) then
           begin
             DocumentoFiscal.documentoFiscalNFe.chave := ACBrDFeUtil.ExtrairChaveMsg(nfe.WebServices.Consulta.Msg);
-            ConsultarNFe(DocumentoFiscal, Error, Msg);
+            if not(DocumentoFiscal.documentoFiscalNFe.formaDeEmissao = 9) then
+              ConsultarNFe(DocumentoFiscal, Error, Msg);
           end;
 
-          if nfe.WebServices.Consulta.cStat = 100 then
+          if (nfe.WebServices.Consulta.cStat = 100) or (nfe.WebServices.Consulta.cStat = 150) then
           begin
             DocumentoFiscal.documentoFiscalNFe.status := nfe.WebServices.Consulta.cStat;
             DocumentoFiscal.documentoFiscalNFe.msgRetorno := nfe.WebServices.Consulta.Msg;
 
-            if (nfe.WebServices.Consulta.cStat = 100) and not(nfe.WebServices.Consulta.Protocolo = EmptyStr) then
+            if not(nfe.WebServices.Consulta.Protocolo = EmptyStr) then
             begin
               DocumentoFiscal.documentoFiscalNFe.chave := nfe.WebServices.Consulta.NFeChave;
               DocumentoFiscal.documentoFiscalNFe.xml := nfe.NotasFiscais.Items[0].XML;
@@ -1180,7 +1178,7 @@ begin
     Ide.dEmi        := emissao;
     Ide.dSaiEnt     := saida;
     Ide.hSaiEnt     := saida;
-    Ide.tpNF        := TpcnTipoNFe(natureza);
+    Ide.tpNF        := tnSaida;
     Ide.tpEmis      := StrToTpEmis(lOk, IntToStr(DocumentoFiscal.documentoFiscalNFe.formadeemissao));
     Ide.tpAmb       := StrToTpAmb(lOk, IntToStr(DocumentoFiscal.estabelecimento.estabelecimentoFiscalSerie.ambiente));
     Ide.verProc     := build;

@@ -95,9 +95,6 @@ procedure geraSPED(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 var
   stringStream: TStringStream;
 begin
-  cToken := Req.Headers.Field('Authorization').AsString;
-  InfoAPI().Autentica(cToken);
-
   try
     cErrors := '';
     cMsg := '';
@@ -145,9 +142,6 @@ end;
 
 procedure enviaArquivo(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 begin
-  cToken := Req.Headers.Field('Authorization').AsString;
-  InfoAPI().Autentica(cToken);
-
   cErrors := '';
   cMsg    := '';
 
@@ -174,9 +168,6 @@ var
   DocumentoFiscalCartaCorrecao: TDocumentoFiscalCartaCorrecao;
   Resposta: TJSONObject;
 begin
-  cToken := Req.Headers.Field('Authorization').AsString;
-  InfoAPI().Autentica(cToken);
-
   cErrors := '';
   cMsg := '';
 
@@ -204,9 +195,6 @@ procedure manifestaDocumento(Req: THorseRequest; Res: THorseResponse; Next: TNex
 var
   DocumentoFiscalManifesto: TDocumentoFiscalManifesto;
 begin
-  cToken := Req.Headers.Field('Authorization').AsString;
-  InfoAPI().Autentica(cToken);
-
   cErrors := '';
   cMsg    := '';
 
@@ -254,9 +242,6 @@ procedure estornaDFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 var
   DocumentoFiscalDFe: TDocumentoFiscal;
 begin
-  cToken := Req.Headers.Field('Authorization').AsString;
-  InfoAPI().Autentica(cToken);
-
   cErrors := '';
   cMsg    := '';
 
@@ -279,9 +264,6 @@ end;
 
 procedure imrimeDFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 begin
-  cToken := Req.Headers.Field('Authorization').AsString;
-  InfoAPI().Autentica(cToken);
-
   cErrors := '';
   cMsg    := '';
 
