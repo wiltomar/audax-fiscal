@@ -2221,12 +2221,7 @@ begin
 //  if DocumentoFiscalManifesto.estabelecimento.estabelecimentoDocumentos[0].documentoNumero = '' then
 //    raise Exception.Create('CNPJ não informado');
 
-  carregaNFe(
-    DocumentoFiscalManifesto.estabelecimento,
-    1,
-    Error,
-    Msg,
-    '55');
+  carregaNFe(DocumentoFiscalManifesto.estabelecimento, 1, Error, Msg, '55');
 
   var eventoSelecionado := 0;
 
@@ -2242,13 +2237,9 @@ begin
       Error := 'Evento inválido. Permitidos: 3, 4, 5, 6.'
     else
     begin
-      if DocumentoFiscalManifesto.ambiente = 0 then
-        nfe.Configuracoes.WebServices.Ambiente := taProducao
-      else if DocumentoFiscalManifesto.ambiente = 1 then
-        nfe.Configuracoes.WebServices.Ambiente := taHomologacao
-      else
-        nfe.Configuracoes.WebServices.Ambiente := taHomologacao;
-
+      var lok : Boolean;
+      nfe.Configuracoes.WebServices.Ambiente := StrToTpAmb(lok, DocumentoFiscalManifesto.ambiente.ToString);
+      nfe.NotasFiscais.Clear;
       nfe.EventoNFe.Evento.Clear;
 
       with nfe.EventoNFe.Evento.Add do
