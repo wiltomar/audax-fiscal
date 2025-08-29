@@ -354,7 +354,7 @@ begin
       .Append(IfThen(FDecreto35395, 'S', 'N')).Append('|');
 
       var LinhaINM := TStringList.Create;
-      var  RegistroPNM := TRegistroPNM.Create;
+      var RegistroPNM := TRegistroPNM.Create;
       var ListaDeRegistros := TList<IRegistro>.Create;
       ListaDeRegistros.Add(RegistroPNM);
 

@@ -96,7 +96,8 @@ uses
   Model.DocumentoFiscalManifesto in 'models\Model.DocumentoFiscalManifesto.pas',
   Model.DocumentoFiscalCartaCorrecao in 'models\Model.DocumentoFiscalCartaCorrecao.pas',
   Model.Empresa in 'models\Model.Empresa.pas',
-  Lib.Sistema.DAO in 'lib\Lib.Sistema.DAO.pas';
+  Lib.Sistema.DAO in 'lib\Lib.Sistema.DAO.pas',
+  Model.Fortes in 'models\Model.Fortes.pas';
 
 function startApi: boolean;
 begin

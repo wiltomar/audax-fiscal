@@ -5,6 +5,65 @@ interface
 uses
   Lib.Sistema.Tipos, Model.Base, Model.UF, Model.Municipio;
 
+
+type
+  TParceiroDocumento = class(TBaseR)
+  private
+    fdocumentotipo: SmallInt;
+    fdocumentoNumero: AnsiString;
+    finscricaoEstadual: AnsiString;
+    finscricaoMunicipal: AnsiString;
+    fregimeTributarioICMS: SmallInt;
+    fregimeTributarioISSQN: SmallInt;
+    finicio: TDateTime;
+    fconclusao: TDateTime;
+  public
+    property documentoTipo: SmallInt read fdocumentoTipo write fdocumentoTipo;
+    property documentoNumero: AnsiString read fdocumentoNumero write fdocumentoNumero;
+    property inscricaoEstadual: AnsiString read finscricaoEstadual write finscricaoEstadual;
+    property inscricaoMunicipal: AnsiString read finscricaoMunicipal write finscricaoMunicipal;
+    property regimeTributarioICMS: SmallInt read fregimeTributarioICMS write fregimeTributarioICMS;
+    property regimeTributarioISSQN: SmallInt read fregimeTributarioISSQN write fregimeTributarioISSQN;
+    property inicio: TDateTime read finicio write finicio;
+    property conclusao: TDateTime read fconclusao write fconclusao;
+  end;
+  TParceiroDocumentos = TArray<TParceiroDocumento>;
+
+type
+  TParceiroEndereco = class(TBaseR)
+  private
+    fnome: string;
+    fpessoal: Boolean;
+    fempresarial: Boolean;
+    fentrega: Boolean;
+    fcorrespondencia: Boolean;
+    fcep: string;
+    flogradouro: string;
+    fnumero: Integer;
+    fcomplemento: string;
+    fbairro: string;
+    fuf: TUF;
+    fmunicipio: TMunicipio;
+    freferencia: string;
+  public
+    constructor Create();
+    destructor Destroy(); override;
+    property nome: string read fnome write fnome;
+    property pessoal: Boolean read fpessoal write fpessoal;
+    property empresarial: Boolean read fempresarial write fempresarial;
+    property entrega: Boolean read fentrega write fentrega;
+    property correspondencia: Boolean read fcorrespondencia write fcorrespondencia;
+    property cep: string read fcep write fcep;
+    property logradouro: string read flogradouro write flogradouro;
+    property numero: Integer read fnumero write fnumero;
+    property complemento: string read fcomplemento write fcomplemento;
+    property bairro: string read fbairro write fbairro;
+    property uf: TUF read fuf write fuf;
+    property municipio: TMunicipio read fmunicipio write fmunicipio;
+    property referencia: string read freferencia write freferencia;
+  end;
+  TParceiroEnderecos = TArray<TParceiroEndereco>;
+
 type
   TParceiro = class(TBaseTR)
   private
@@ -13,6 +72,8 @@ type
     festrela: Boolean;
     fpadrao: Boolean;
     fclasse: SmallInt;
+    fparceiroDocumentos: TParceiroDocumentos;
+    fparceiroEnderecos: TParceiroEnderecos;
     function getIniciais(): string;
   public
     constructor Create(Referencia: TParceiro = nil); overload;
@@ -25,6 +86,10 @@ type
     property estrela: Boolean read festrela write festrela;
     property padrao: Boolean read fpadrao write fpadrao;
     property classe: SmallInt read fclasse write fclasse;
+    property parceiroDocumentos: TParceiroDocumentos read fparceiroDocumentos write fparceiroDocumentos;
+    property parceiroEnderecos: TParceiroEnderecos read fparceiroEnderecos write fparceiroEnderecos;
+
+
   end;
   TParceiros = TArray<TParceiro>;
 type
@@ -351,6 +416,20 @@ begin
 end;
 
 destructor TParceiroCEndereco.Destroy();
+begin
+  Obliterate(fuf);
+  Obliterate(fmunicipio);
+end;
+
+{ TParceiroEndereco }
+
+constructor TParceiroEndereco.Create();
+begin
+  fuf := nil;
+  fmunicipio := nil;
+end;
+
+destructor TParceiroEndereco.Destroy();
 begin
   Obliterate(fuf);
   Obliterate(fmunicipio);

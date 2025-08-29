@@ -10,6 +10,7 @@ uses
   System.IOUtils, Model.Config, Soap.EncdDecd, System.Generics.Collections, Lib.Funcoes, Web.HTTPApp,
   Model.Inutilizacao, ACBrSATExtratoFPDF, Horse, Model.Sped, APIService, Fortes.IRegistro, ACBr_fpdf_report,
   Xml.XMLDoc, Xml.XMLIntf, Xml.XMLDom, Model.DocumentoFiscalManifesto, Model.DocumentoFiscalCartaCorrecao,
+  Model.Fortes,
   {$IFDEF MSWINDOWS}
     WinApi.ActiveX, ACBrSATExtratoESCPOS, ACBrPosPrinter, ACBrSATExtratoFortesFr,
   {$ENDIF}
@@ -739,70 +740,112 @@ end;
 
 function TComponentes.gerarArquivoFortesFiscal(Req: THorseRequest; var Erros: string; var Msg: string): TStringStream;
 var
+  fortes: Tfortes;
   ListaDeRegistros: TList<IRegistro>;
   fileStream: TFileStream;
 
-  RegistroCAB: TRegistroCAB;
-  RegistroPAR: TRegistroPAR;
-  RegistroGRP: TRegistroGRP;
-  RegistroUND: TRegistroUND;
-  RegistroNOP: TRegistroNOP;
-  RegistroBSS: TRegistroBSS;
-  RegistroCDF: TRegistroCDF;
-  RegistroCBL: TRegistroCBL;
-  RegistroPRO: TRegistroPRO;
-  RegistroNFM: TRegistroNFM;
+//  RegistroCAB: TRegistroCAB;
+//  RegistroPAR: TRegistroPAR;
+//  RegistroGRP: TRegistroGRP;
+//  RegistroUND: TRegistroUND;
+//  RegistroNOP: TRegistroNOP;
+//  RegistroBSS: TRegistroBSS;
+//  RegistroCDF: TRegistroCDF;
+//  RegistroCBL: TRegistroCBL;
+//  RegistroPRO: TRegistroPRO;
+//  RegistroNFM: TRegistroNFM;
+//
+//  procedure gerarArquivo(const FileName: String; Registros: TList<IRegistro>);
+//  var
+//    Lista: TStringList;
+//    Registro: IRegistro;
+//  begin
+//    Lista := TStringList.Create;
+//    try
+//      for Registro in Registros do
+//        Lista.Add(Registro.GerarLinha);
+//
+//      Lista.SaveToFile(FileName);
+//
+//      fileStream := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
+//    finally
+//      Lista.Free;
+//    end;
+//  end;
+begin
 
- procedure gerarArquivo(const FileName: String; Registros: TList<IRegistro>);
-  var
-    Lista: TStringList;
-    Registro: IRegistro;
-  begin
-    Lista := TStringList.Create;
-    try
-      for Registro in Registros do
-        Lista.Add(Registro.GerarLinha);
-
-      Lista.SaveToFile(FileName);
-
-      fileStream := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
-    finally
-      Lista.Free;
-    end;       
-  end;
-begin  
-  RegistroCAB := TRegistroCAB.Create;
-  RegistroPAR := TRegistroPAR.Create;   
-  RegistroGRP := TRegistroGRP.Create;
-  RegistroUND := TRegistroUND.Create;
-  RegistroNOP := TRegistroNOP.Create;
-  RegistroBSS := TRegistroBSS.Create;
-  RegistroCDF := TRegistroCDF.Create;
-  RegistroCBL := TRegistroCBL.Create;
-  RegistroPRO := TRegistroPRO.Create;
-  RegistroNFM := TRegistroNFM.Create;
+  fortes := TFortes.Create;
 
   try
-    ListaDeRegistros := TList<IRegistro>.Create;
-    ListaDeRegistros.Add(RegistroCAB);
-    ListaDeRegistros.Add(RegistroPAR);
-    ListaDeRegistros.Add(RegistroGRP);
-    ListaDeRegistros.Add(RegistroUND);
-    ListaDeRegistros.Add(RegistroNOP);
-    ListaDeRegistros.Add(RegistroBSS);
-    ListaDeRegistros.Add(RegistroCDF);  
-    ListaDeRegistros.Add(RegistroCBL);  
-    ListaDeRegistros.Add(RegistroPRO);
-    ListaDeRegistros.Add(RegistroNFM);
-    
-    gerarArquivo('C:\Constel\FORTES.txt', ListaDeRegistros);
-    
-    Result := TStringStream.Create;
+
+    var Estabelecimentos := InfoAPI().GetPagedArray<TEstabelecimentoC>(
+       'agente/estabelecimento/sped?estabelecimentoid=' +
+        Req.Query.Field('estabelecimentoid').AsString);
+
+    var dataInicial  := Req.Query.Field('inicio').AsISO8601DateTime;
+    var dataFinal    := Req.Query.Field('conclusao').AsISO8601DateTime;
+    var finalidade   := Req.Query.Field('tipodearquivo').AsInteger;
+    var semMovimento := Req.Query.Field('semmovimento').AsInteger;
+    var inventario   := Req.Query.Field('inventariofiscal').AsString;
+    var nomeArq      :  string;
+
+    for var Estabelecimento in Estabelecimentos do
+    begin
+        fortes.gerar(Estabelecimento, dataInicial, dataFinal, nomeArq, erros);
+        try
+          fileStream := TFileStream.Create(nomeArq, fmOpenRead or fmShareDenyWrite);
+        except
+          On E: Exception do
+            erros := E.Message;
+        end;
+    end;
+
+      Result := TStringStream.Create;
     Result.LoadFromStream(fileStream);
   finally
     if Assigned(fileStream) then FreeAndNil(fileStream);
-    if Assigned(ListaDeRegistros) then FreeAndNil(ListaDeRegistros);
-  end;  
+   // if Assigned(ListaDeRegistros) then FreeAndNil(ListaDeRegistros);
+  end;
+
+
+
+
+
+
+
+
+//  RegistroCAB := TRegistroCAB.Create;
+//  RegistroPAR := TRegistroPAR.Create;
+//  RegistroGRP := TRegistroGRP.Create;
+//  RegistroUND := TRegistroUND.Create;
+//  RegistroNOP := TRegistroNOP.Create;
+//  RegistroBSS := TRegistroBSS.Create;
+//  RegistroCDF := TRegistroCDF.Create;
+//  RegistroCBL := TRegistroCBL.Create;
+//  RegistroPRO := TRegistroPRO.Create;
+//  RegistroNFM := TRegistroNFM.Create;
+//
+//  try
+//    ListaDeRegistros := TList<IRegistro>.Create;
+//    ListaDeRegistros.Add(RegistroCAB);
+//    ListaDeRegistros.Add(RegistroPAR);
+//    ListaDeRegistros.Add(RegistroGRP);
+//    ListaDeRegistros.Add(RegistroUND);
+//    ListaDeRegistros.Add(RegistroNOP);
+//    ListaDeRegistros.Add(RegistroBSS);
+//    ListaDeRegistros.Add(RegistroCDF);
+//    ListaDeRegistros.Add(RegistroCBL);
+//    ListaDeRegistros.Add(RegistroPRO);
+//    ListaDeRegistros.Add(RegistroNFM);
+//
+//    gerarArquivo('C:\Constel\FORTES.txt', ListaDeRegistros);
+//
+//    Result := TStringStream.Create;
+//    Result.LoadFromStream(fileStream);
+//  finally
+//    if Assigned(fileStream) then FreeAndNil(fileStream);
+//    if Assigned(ListaDeRegistros) then FreeAndNil(ListaDeRegistros);
+//  end;
 end;         
 
 function TComponentes.CancelarDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
@@ -2358,6 +2401,8 @@ begin
         nfe.Configuracoes.WebServices.Ambiente := taHomologacao
       else
         nfe.Configuracoes.WebServices.Ambiente := taHomologacao;
+
+      nfe.NotasFiscais.Clear;
 
       nfe.EventoNFe.Evento.Clear;
 

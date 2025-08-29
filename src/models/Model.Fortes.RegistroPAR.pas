@@ -157,53 +157,6 @@ begin
     formatFloat('#0.00',FNdeIdentificaçãoFiscal),
     FFormaDeTributacao.ToString
   ]);
-
-
-//  Result := Format('%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s', [
-//    FTipoRegistro,
-//    FCodigo,
-//    FNome,
-//    FUF,
-//    FCNPJCPF,
-//    FInscricaoEstadual,
-//    FInscricaoMunicipal,
-//    IfThen(FInformaISSDigital, 'S', 'N'),
-//    IfThen(FInformaDIEF, 'S', 'N'),
-//    IfThen(FInformaDIC, 'S', 'N'),
-//    IfThen(FInformaDEMMS, 'S', 'N'),
-//    IfThen(FOrgaoPublico, 'S', 'N'),
-//    IfThen(FInformaLivroEletronico, 'S', 'N'),
-//    IfThen(FFornecedorDeProdPrimario, 'S', 'N'),
-//    IfThen(FSociedadeSimples, 'S', 'N'),
-//    FTipoDeLogradouro.ToString,
-//    FLogradouro,
-//    FNumero.ToString,
-//    FComplemento,
-//    FTipodeBairro.ToString,
-//    FBairro,
-//    FCEP.ToString,
-//    FMunicipio.ToString,
-//    FDDD.ToString,
-//    FTelefone.ToString,
-//    FSuframa,
-//    IfThen(FSubstitutoISS, 'S', 'N'),
-//    FContaRemetentePrestador,
-//    FContaDestinatarioTomador,
-//    FPais.ToString,
-//    IfThen(FExterior, 'S', 'N'),
-//    FIndicadorDoICMS,
-//    FEmail,
-//    IfThen(FHospitais, 'S', 'N'),
-//    IfThen(FAdministradora, 'S', 'N'),
-//    FCNAE21,
-//    IfThen(FCPRB, 'S', 'N'),
-//    IfThen(FSituaçaoTributaria, 'S', 'N'),
-//    IfThen(FProdutorRural, 'S', 'N'),
-//    FIndicativoDaAquisicao,
-//    FIndicativoDeNIF.ToString,
-//    formatFloat('#0.00',FNdeIdentificaçãoFiscal),
-//    FFormaDeTributacao
-//  ]);
 end;
 
 end.
