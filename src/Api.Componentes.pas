@@ -1610,8 +1610,27 @@ begin
           end;
           tPag   := StrToFormaPagamento(lOk, documentoFiscalPagamentos[nCont].formaIndicador);
           vPag   := documentoFiscalPagamentos[nCont].valor;
+
+          if StrToCodigoMP(lOk, DocumentoFiscal.documentoFiscalPagamentos[nCont].formaIndicador) in [mpCartaodeCredito, mpCartaodeDebito, mpPagamentoInstantaneo] then
+          begin
+            if  (Length(Trim(DocumentoFiscal.documentoFiscalPagamentos[nCont].cartaoAutorizacao)) > 0) then
+            begin
+              tpIntegra   := tiPagIntegrado;
+              if not (StrToFormaPagamento(lOk, DocumentoFiscal.documentoFiscalPagamentos[nCont].formaIndicador) = fpPagamentoInstantaneo) then
+              begin
+                CNPJ      := ACBrUtil.Strings.OnlyNumber(DocumentoFiscal.documentoFiscalPagamentos[nCont].cartaoCNPJ);
+                tBand     := TpcnBandeiraCartao(StrToIntDef(DocumentoFiscal.documentoFiscalPagamentos[nCont].cartaoCredenciadora, 27));
+              end
+              else
+                tBand     := bcOutros;
+              cAut        := DocumentoFiscal.documentoFiscalPagamentos[nCont].cartaoAutorizacao;
+            end
+            else
+              tpIntegra   := tiPagNaoIntegrado;
+          end;
+
           pag.vTroco := pag.vTroco + DocumentoFiscal.documentoFiscalPagamentos[nCont].troco;
-         end;
+        end;
       end;
     end;
 
@@ -1624,11 +1643,8 @@ begin
       xTexto := Format('%s. Total %m.', [DocumentoFiscal.referencia, DocumentoFiscal.total]);
     end;
     if (DocumentoFiscal.documentoFiscalNFe.informacoesAdicionaisContribuinte > '') then
-      with NotaF.Nfe.InfAdic.obsCont.New do
-      begin
-        xCampo := 'Obs:';
-        xTexto := DocumentoFiscal.documentoFiscalNFe.informacoesAdicionaisContribuinte;
-      end;
+        NotaF.Nfe.InfAdic.infCpl := DocumentoFiscal.documentoFiscalNFe.informacoesAdicionaisContribuinte;
+
     NotaF.NFe.InfAdic.infAdFisco :=  DocumentoFiscal.documentoFiscalNFe.informacoesAdicionaisFisco;
   end;
 
