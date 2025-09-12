@@ -239,6 +239,7 @@ end;
 constructor TRegistroNFM.Create;
 begin
   FTipoRegistro := 'NFM';
+
   FListaProdutos := TList<TRegistroPNM>.Create;
  // ListaINM.Create;
  // ListaDNM.Create;
@@ -358,10 +359,18 @@ begin
       var ListaDeRegistros := TList<IRegistro>.Create;
       ListaDeRegistros.Add(RegistroPNM);
 
-      for var pnm in ListaDeRegistros do
+      // obs: nao estpa gerando o inm
+      // obs ver um get para todos
+//       var DocumentosFiscais := InfoAPI().GetPagedArray<TDocumentoFiscalSPED>
+//         ('fiscal/documentofiscal/sped?estabelecimentoid=' + EstabelecimentoAux.id +
+//          '&periodo=intervalo&inicio=' + dataIniSped + '&conclusao=' + dataFinSped + '&modelo=55');
+
+      for var inm in ListaDeRegistros do
       begin
-        LinhaINM.Add(pnm.GerarLinha)
+        LinhaINM.Add(inm.GerarLinha)
       end;
+
+      //================================================================
 
 //    LinhaINM := TStringList.Create;
 //    try
@@ -377,7 +386,7 @@ begin
 //      LinhaINM.Free;
 //      LinhaDNM.Free;
 //    end;
-    Result := Builder.ToString + sLineBreak + LinhaINM.Text;
+     Result := Builder.ToString + LinhaINM.Text+ sLineBreak + LinhaINM.Text;
    // Result := Builder.ToString + sLineBreak + LinhaINM.Text + sLineBreak + LinhaDNM.Text;
   finally
     Builder.Free;

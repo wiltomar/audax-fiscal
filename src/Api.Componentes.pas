@@ -787,7 +787,7 @@ begin
     var finalidade   := Req.Query.Field('tipodearquivo').AsInteger;
     var semMovimento := Req.Query.Field('semmovimento').AsInteger;
     var inventario   := Req.Query.Field('inventariofiscal').AsString;
-    var nomeArq      :  string;
+    var nomeArq : string;
 
     for var Estabelecimento in Estabelecimentos do
     begin

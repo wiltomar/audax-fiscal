@@ -68,14 +68,14 @@ begin
     EstabelecimentoAux := Estabelecimento;
 
     try
-
       RegistroCAB;
       RegistroPAR;
-      RegistroGRP;
-//      RegistroUND;
-//      RegistroNOP;
-//      RegistroPRO;
-//      RegistroNFM;
+      // RegistroGRP;
+      RegistroUND;
+      RegistroNOP;
+      RegistroPRO;
+      RegistroNFM;
+
       GeraArquivofs(nomeArquivo);
 
       Result := True;
@@ -99,8 +99,8 @@ begin
 
   RegCabFortes := TRegistroCAB.Create;
   try
-   // RegCabFortes.DataInicial := dataIniSped;
-   // RegCabFortes.DataFinal   := dataFinSped;
+    // RegCabFortes.DataInicial := dataIniSped;
+    // RegCabFortes.DataFinal   := dataFinSped;
     RegCabFortes.Empresa     := EstabelecimentoAux.nome;
     RegCabFortes.Comentario  := 'ACFSICAL ' + UpperCase(MesGeracao) + ' ' + IntToStr(YearOf(dataGeracao));
     FortesLista.Add(RegCabFortes.GerarLinha);
@@ -125,6 +125,8 @@ procedure TFortes.RegistroGRP;
 var
   RegGrpFortes: TRegistroGRP;
 begin
+
+
   var categorias := InfoAPI().GetPagedArray<TCategoria>
            ('recurso/categoria/sped?estabelecimentoid=' + EstabelecimentoAux.id +
             '&periodo=intervalo&inicio=' + dataIniSped + '&conclusao=' +  dataFinSped);
@@ -149,7 +151,7 @@ begin
    RegPnmFortes := TRegistroPNM.Create;
    try
      for var itemdoc in DocumentoFiscal.documentofiscalitens do
-      begin
+     begin
         RegPnmFortes.Produto := strToint(itemdoc.item.codigo);
         if Assigned(itemdoc.cfop) then
           RegPnmFortes.CFOP := strTOint(itemdoc.cfop.codigo);
@@ -211,7 +213,7 @@ begin
        // RegPnmFortes.NaturezaReceitaCOFINS
 
         FortesLista.Add(RegPnmFortes.GerarLinha);
-      end;
+     end;
    finally
      RegPnmFortes.Free;
    end;
@@ -323,7 +325,7 @@ begin
 
       RegistroPNM(documentoFiscal);
 
-      RegistroDNM;
+     // RegistroDNM;
     end;
 
   finally
@@ -425,8 +427,7 @@ begin
       RegOumFortes.UnidadeDeMedida := produto.Unidade.codigo;
       RegOumFortes.UnidadeEquivalentePadrao := 1.00;
       FortesLista.Add(RegOumFortes.GerarLinha);
-
-     end;
+    end;
   finally
     RegProFortes.Free;
     RegOumFortes.Free;
