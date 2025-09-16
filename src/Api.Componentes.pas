@@ -121,6 +121,11 @@ begin
       InfEvento.tpEvento            := teCCe;
     end;
 
+    with nfe.Configuracoes.Geral, DocumentoFiscalCartaCorrecao do
+    begin
+      RetirarAcentos := DocumentoFiscalCartaCorrecao.retiraracentos;
+    end;
+
     var retorno := nfe.EnviarEvento(Sequencia);
 
     if nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.cStat = 573 then
