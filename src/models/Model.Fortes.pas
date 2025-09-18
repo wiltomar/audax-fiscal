@@ -74,7 +74,7 @@ begin
       RegistroUND;
       RegistroNOP;
       RegistroPRO;
-      RegistroNFM;
+      // RegistroNFM;
 
       GeraArquivofs(nomeArquivo);
 
@@ -126,8 +126,7 @@ var
   RegGrpFortes: TRegistroGRP;
 begin
 
-
-  var categorias := InfoAPI().GetPagedArray<TCategoria>
+  var categorias := InfoAPI().GetPagedArray<TRegistroGRP>
            ('recurso/categoria/sped?estabelecimentoid=' + EstabelecimentoAux.id +
             '&periodo=intervalo&inicio=' + dataIniSped + '&conclusao=' +  dataFinSped);
 
@@ -136,7 +135,7 @@ begin
     for var categoria in Categorias do
     begin
       RegGrpFortes.Codigo := categoria.Codigo;
-      RegGrpFortes.Descricao := upperCase(categoria.nome);
+      RegGrpFortes.Descricao := upperCase(categoria.Descricao);
       FortesLista.Add(RegGrpFortes.GerarLinha);
     end;
   finally
@@ -418,7 +417,7 @@ begin
       RegProFortes.UnidadeMedida := produto.Unidade.codigo;
       RegProFortes.CodigoNCM := SomenteDigitos(AnsiString(produto.ncm.codigo));
       RegProFortes.UnidadeMedida := produto.unidade.codigo;
-      if Assigned(produto.vendaoperacao) and Assigned(produto.vendaoperacao.operacaoicms)  then
+      if Assigned(produto.vendaoperacao) and Assigned(produto.vendaoperacao.operacaoicms) then
         RegProFortes.AliqICMSInterna := produto.vendaoperacao.operacaoicms.icmsAliquota;
 
       FortesLista.Add(RegProFortes.GerarLinha);

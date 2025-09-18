@@ -791,16 +791,16 @@ begin
 
     for var Estabelecimento in Estabelecimentos do
     begin
-        fortes.gerar(Estabelecimento, dataInicial, dataFinal, nomeArq, erros);
-        try
-          fileStream := TFileStream.Create(nomeArq, fmOpenRead or fmShareDenyWrite);
-        except
-          On E: Exception do
-            erros := E.Message;
-        end;
+      fortes.gerar(Estabelecimento, dataInicial, dataFinal, nomeArq, erros);
+      try
+        fileStream := TFileStream.Create(nomeArq, fmOpenRead or fmShareDenyWrite);
+      except
+        On E: Exception do
+          erros := E.Message;
+      end;
     end;
 
-      Result := TStringStream.Create;
+    Result := TStringStream.Create;
     Result.LoadFromStream(fileStream);
   finally
     if Assigned(fileStream) then FreeAndNil(fileStream);

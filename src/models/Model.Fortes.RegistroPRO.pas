@@ -157,7 +157,7 @@ end;
 destructor TRegistroPRO.Destroy;
 begin
  // OutraUnidade.Destroy;
-//  inherited Destroy;
+ // inherited Destroy;
 end;
 
 function TRegistroPRO.GerarLinha: string;
