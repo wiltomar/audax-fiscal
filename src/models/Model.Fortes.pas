@@ -410,6 +410,9 @@ begin
   RegOumFortes := TRegistroOUM.Create;
 
   try
+    var operacoes := InfoAPI().GetPagedArray<TVendaOperacao>
+            ('movimento/operacao/sped?estabelecimentoid=' + EstabelecimentoAux.id);
+
     for var produto in Produtos do
     begin
       RegProFortes.Codigo := strTOint(produto.codigo);
@@ -417,14 +420,37 @@ begin
       RegProFortes.UnidadeMedida := produto.Unidade.codigo;
       RegProFortes.CodigoNCM := SomenteDigitos(AnsiString(produto.ncm.codigo));
       RegProFortes.UnidadeMedida := produto.unidade.codigo;
-      if Assigned(produto.vendaoperacao) and Assigned(produto.vendaoperacao.operacaoicms) then
-        RegProFortes.AliqICMSInterna := produto.vendaoperacao.operacaoicms.icmsAliquota;
+
+      // localizar o id para pesquisar a aliquota
+      var ALIQ_ICMS := 0.00;
+      for var Operacao in operacoes do
+      begin
+        if Assigned(produto.vendaoperacao) then
+        begin
+          if produto.vendaoperacao.id = Operacao.id then
+          begin
+            ALIQ_ICMS := Operacao.operacaoicms.icmsAliquota;
+            break;
+          end;
+        end;
+      end;
+
+      if ALIQ_ICMS > 0 then
+        RegProFortes.AliqICMSInterna := ALIQ_ICMS;
 
       FortesLista.Add(RegProFortes.GerarLinha);
 
       RegOumFortes.CodigoProduto := strTOint(produto.codigo);
       RegOumFortes.UnidadeDeMedida := produto.Unidade.codigo;
       RegOumFortes.UnidadeEquivalentePadrao := 1.00;
+
+      //CSTICMS
+      //CSTIPI
+      //CSTIPI
+      //CSTCOFINS
+      //CSTPIS
+
+
       FortesLista.Add(RegOumFortes.GerarLinha);
     end;
   finally
