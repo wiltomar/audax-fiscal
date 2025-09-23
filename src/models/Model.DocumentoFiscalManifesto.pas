@@ -16,6 +16,7 @@ type
     fmotivo: String;
     femitente: String;
     fambiente: SmallInt;
+    fxml: String;
   public
     property estabelecimento: TEstabelecimentoC read festabelecimento write festabelecimento;
     property chave: String read fchave write fchave;
@@ -24,6 +25,7 @@ type
     property motivo: String read fmotivo write fmotivo;
     property emitente: String read femitente write femitente;
     property ambiente: SmallInt read fambiente write fambiente;
+    property xml: String read fxml write fxml;
   end;
 
 implementation
