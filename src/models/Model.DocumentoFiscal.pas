@@ -41,6 +41,7 @@ type
     fformaDeEmissao: smallint;
     findicadorIntermediador: smallint;
     ftipoImpressao: char;
+    fpreDANFe: boolean;
     ffinalidadeEmissao: smallint;
     fconsumidorFinal: smallint;
     ftipoDeAtendimento: smallint;
@@ -63,6 +64,7 @@ type
     property formaDeEmissao: smallint read fformaDeEmissao write fformaDeEmissao;
     property indicadorIntermediador: smallint read findicadorIntermediador write findicadorIntermediador;
     property tipoImpressao: char read ftipoImpressao write ftipoImpressao;
+    property preDANFe: boolean read fpreDANFe write fpreDANFe default False;
     property finalidadeEmissao: smallint read ffinalidadeEmissao write ffinalidadeEmissao;
     property consumidorFinal: smallint read fconsumidorFinal write fconsumidorFinal;
     property tipoDeAtendimento: smallint read ftipoDeAtendimento write ftipoDeAtendimento;
@@ -177,9 +179,11 @@ type
     ficmsSTReducaoBase: Currency;
     ficmsModalidadeDeCalculoMVA: String;
     ficmsAliquotaMVA: Currency;
+    fsomaICMSSTNaBaseDeCalculo: boolean;
     ficmsSTBC: Currency;
     ficmsSTAliquota: Currency;
     ficmsSTValor: Currency;
+    ficmsSTValorSomado: Currency;
     ffcpSTBC: Currency;
     ffcpSTAliquota: Currency;
     ffcpSTValor: Currency;
@@ -257,9 +261,11 @@ type
     property icmsSTReducaoBase: Currency read ficmsSTReducaoBase write ficmsSTReducaoBase;
     property icmsModalidadeDeCalculoMVA: string read ficmsModalidadeDeCalculoMVA write ficmsModalidadeDeCalculoMVA;
     property icmsAliquotaMVA: Currency read ficmsAliquotaMVA write ficmsAliquotaMVA;
+    property somaICMSSTNaBaseDeCalculo: boolean read fsomaICMSSTNaBaseDeCalculo write fsomaICMSSTNaBaseDeCalculo;
     property icmsSTBC: Currency read ficmsSTBC write ficmsSTBC;
     property icmsSTAliquota: Currency read ficmsSTAliquota write ficmsSTAliquota;
     property icmsSTValor: Currency read ficmsSTValor write ficmsSTValor;
+    property icmsSTValorSomado: Currency read ficmsSTValorSomado write ficmsSTValorSomado;
     property fcpSTBC: Currency read ffcpSTBC write ffcpSTBC;
     property fcpSTAliquota: Currency read ffcpSTAliquota write ffcpSTAliquota;
     property fcpSTValor: Currency read ffcpSTValor write ffcpSTValor;

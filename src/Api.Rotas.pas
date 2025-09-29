@@ -11,9 +11,7 @@ const
   apiVersion = '/api/v1/';
 
 var
-  cToken,
-  cErrors,
-  cMsg: string;
+  cErrors, cMsg: string;
   cStatusCode: THTTPStatus;
   DocumentoFiscal: TDocumentoFiscal;
   Resposta: TJSONObject;
@@ -26,6 +24,12 @@ type
 implementation
 
 { TRotas }
+
+procedure LimpaVariaveis;
+begin
+  cErrors := EmptyStr;
+  cMsg := EmptyStr;
+end;
 
 function seEntao(AValue: Boolean; const ATrue: THTTPStatus;
   AFalse: THTTPStatus = THTTPStatus.OK): THTTPStatus;
@@ -95,10 +99,9 @@ procedure geraSPED(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 var
   stringStream: TStringStream;
 begin
+  InfoAPI().Autentica(Req.Headers.Field('Authorization').AsString);
+  LimpaVariaveis;
   try
-    cErrors := '';
-    cMsg := '';
-
     stringStream := Componentes.gerarSPED(Req, cErrors, cMsg);
     stringStream.Encoding.UTF8;
 
@@ -130,21 +133,18 @@ begin
     on E:Exception do
     begin
       Res
-        .Send(Format('Não foi possível gerar o arquivo, com o erro %s.',
-          [E.Message]))
+        .Send(Format('Não foi possível gerar o arquivo, com o erro %s.',  [E.Message]))
         .Status(THTTPStatus.InternalServerError);
-      Log(Format('Houve um erro no processamento da requisição. Mensagem: %s',
-                 [E.Message]));
 
+      Log(Format('Houve um erro no processamento da requisição. Mensagem: %s', [E.Message]));
     end;
   end;
 end;
 
 procedure enviaArquivo(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 begin
-  cErrors := '';
-  cMsg    := '';
-
+  InfoAPI().Autentica(Req.Headers.Field('Authorization').AsString);
+  LimpaVariaveis;
   try
     Resposta := TJSON.ObjectToJsonObject(Componentes.enviaArquivo(Req.RawWebRequest.Files[0], cErrors, cMsg));
     try
@@ -168,9 +168,8 @@ var
   DocumentoFiscalCartaCorrecao: TDocumentoFiscalCartaCorrecao;
   Resposta: TJSONObject;
 begin
-  cErrors := '';
-  cMsg := '';
-
+  InfoAPI().Autentica(Req.Headers.Field('Authorization').AsString);
+  LimpaVariaveis;
   DocumentoFiscalCartaCorrecao := TJson.JsonToObject<TDocumentoFiscalCartaCorrecao>(Req.Body);
 
   try
@@ -195,10 +194,10 @@ procedure manifestaDocumento(Req: THorseRequest; Res: THorseResponse; Next: TNex
 var
   DocumentoFiscalManifesto: TDocumentoFiscalManifesto;
 begin
-  cErrors := '';
-  cMsg    := '';
-
+  InfoAPI().Autentica(Req.Headers.Field('Authorization').AsString);
+  LimpaVariaveis;
   DocumentoFiscalManifesto := TJson.JsonToObject<TDocumentoFiscalManifesto>(Req.Body);
+
   Resposta := TJson.ObjectToJsonObject(Componentes.manifestarDocumento(DocumentoFiscalManifesto, cErrors, cMsg),
     [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
   try
@@ -215,14 +214,34 @@ begin
   end;
 end;
 
-
 procedure emiteDFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 begin
-  cErrors := '';
-  cMsg    := '';
-
+  LimpaVariaveis;
   DocumentoFiscal := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
+
   Resposta := TJson.ObjectToJsonObject(Componentes.EmiteDFe(DocumentoFiscal, cErrors, cMsg),
+    [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
+  try
+    Resposta := retorno(Resposta, cErrors, cMsg);
+    cStatusCode := seEntao(Length(cErrors) = 0, THTTPStatus.Created);
+
+    Res
+      .Status(cStatusCode)
+      .Send<TJSONObject>(Resposta);
+  except
+    Res
+      .Status(THTTPStatus.InternalServerError)
+      .Send<TJSONObject>(Resposta);
+  end;
+end;
+
+procedure preDANFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
+begin
+  InfoAPI().Autentica(Req.Headers.Field('Authorization').AsString);
+  LimpaVariaveis;
+  DocumentoFiscal := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
+
+  Resposta := TJson.ObjectToJsonObject(Componentes.preDANFe(DocumentoFiscal, cErrors, cMsg),
     [joIgnoreEmptyStrings, joIgnoreEmptyArrays, joDateIsUTC, joDateFormatISO8601]);
   try
     Resposta := retorno(Resposta, cErrors, cMsg);
@@ -242,9 +261,8 @@ procedure estornaDFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 var
   DocumentoFiscalDFe: TDocumentoFiscal;
 begin
-  cErrors := '';
-  cMsg    := '';
-
+  InfoAPI().Autentica(Req.Headers.Field('Authorization').AsString);
+  LimpaVariaveis;
   DocumentoFiscalDFe := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
 
   try
@@ -264,9 +282,8 @@ end;
 
 procedure imrimeDFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 begin
-  cErrors := '';
-  cMsg    := '';
-
+  InfoAPI().Autentica(Req.Headers.Field('Authorization').AsString);
+  LimpaVariaveis;
   DocumentoFiscal := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
 
   try
@@ -330,12 +347,12 @@ begin
     .Get(apiVersion, index)
     .Get(apiVersion + 'fiscal/arquivo/sped', geraSPED)
     .Post(apiVersion + 'fiscal/documento/emite', emiteDFe)
+    .Post(apiVersion + 'fiscal/documento/predanfe', preDANFe)
     .Post(apiVersion  + 'fiscal/arquivo/manifesto', manifestaDocumento)
     .Post(apiVersion  + 'fiscal/arquivo/cartacorrecao', cartaDeCorrecao)
     .Post(apiVersion  + 'fiscal/documento/imprime', imrimeDFe)
     .Post(apiVersion + 'fiscal/documento/estorna', estornaDFe)
     .Post(apiVersion + 'fiscal/arquivo/envia', enviaArquivo);
-
 end;
 
 end.
