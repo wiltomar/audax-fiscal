@@ -120,6 +120,11 @@ begin
       InfEvento.tpEvento            := teCCe;
     end;
 
+    with nfe.Configuracoes.Geral, DocumentoFiscalCartaCorrecao do
+    begin
+      RetirarAcentos := DocumentoFiscalCartaCorrecao.retiraracentos;
+    end;
+
     var retorno := nfe.EnviarEvento(Sequencia);
 
     if nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.cStat = 573 then
@@ -2289,8 +2294,17 @@ begin
            (nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.cStat <> 135) then
           Error := 'O seguinte erro ocorreu na tentativa de manifestar o documento: ' + nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.xMotivo
         else
+        begin
           Msg := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.xMotivo;
-          Result := DocumentoFiscalManifesto;
+          if eventoSelecionado in [3,4] then
+          begin
+            var ufEstabelecimento := UFtoCUF(DocumentoFiscalManifesto.estabelecimento.estabelecimentoEnderecos[0].uf.sigla);
+
+            nfe.DistribuicaoDFePorChaveNFe(ufEstabelecimento, DocumentoFiscalManifesto.estabelecimento.estabelecimentoDocumentos[0].documentoNumero, DocumentoFiscalManifesto.chave);
+            DocumentoFiscalManifesto.xml := nfe.WebServices.DistribuicaoDFe.retDistDFeInt.docZip[0].XML;
+          end;
+        end;
+        Result := DocumentoFiscalManifesto;
       end;
     end;
   except

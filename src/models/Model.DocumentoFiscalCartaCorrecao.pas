@@ -16,6 +16,7 @@ type
     fprotocolo: String;
     frecebimento: TDateTime;
     fstatus: SmallInt;
+    fretiraracentos: boolean;
   public
     property estabelecimento: TEstabelecimentoC read festabelecimento write festabelecimento;
     property chave: String read fchave write fchave;
@@ -25,6 +26,7 @@ type
     property protocolo: String read fprotocolo write fprotocolo;
     property recebimento: TDateTime read frecebimento write frecebimento;
     property status: SmallInt read fstatus write fstatus;
+    property retiraracentos: boolean read fretiraracentos write fretiraracentos;
   end;
 
 implementation
