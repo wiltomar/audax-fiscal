@@ -20,6 +20,7 @@ type
     fcst_icms: String;
     fvl_icms: Currency;
     fvl_bc_icms: Currency;
+    fdocumentofiscalid: String;
   public
     property cst_icms : String read fcst_icms write fcst_icms;
     property cfop : String read fcfop write fcfop;
@@ -33,6 +34,7 @@ type
     property aliq_icms: Double read faliq_icms write faliq_icms;
     property vl_desconto: Currency read fvl_desconto write fvl_desconto;
     property cod_obs: String read fcod_obs write fcod_obs;
+    property documentofiscalid: String read fdocumentofiscalid write fdocumentofiscalid;
   end;
 
 implementation

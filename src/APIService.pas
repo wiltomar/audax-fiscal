@@ -56,9 +56,9 @@ begin
   inherited Create();
   if serverName = '' then
   begin
-//    if DebugHook <> 0 then
-//      FServidor := 'http://192.168.56.1:3000/api/'
-//    else
+    if DebugHook <> 0 then
+      FServidor := 'http://192.168.0.165:3000/api/'
+    else
       FServidor := 'https://atlas.constel.cloud/api/';
   end
   else
