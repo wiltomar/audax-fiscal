@@ -6,7 +6,8 @@ uses
   Classes, DateUtils, SysUtils, ACBrTXTClass, Variants, ACBrEFDBlocos, StrUtils,
   ACBrSpedFiscal, ACBrBase, ACBrEFDBloco_K_Class, ACBrEFDBloco_K, Midas,
   ACBrEFDBloco_0, ACBrEFDBloco_0_Class, Model.Estabelecimento, APIService,
-  DBClient, DB, Model.Operacao, Api.Funcoes, model.Base, Model.InventarioFiscal;
+  DBClient, DB, Model.Operacao, Api.Funcoes, model.Base, Model.InventarioFiscal,
+  System.Generics.Collections;
 
 type
   TSped = class
@@ -111,6 +112,7 @@ var
   valorTtotalGeralIcms: Currency;
   valorTotDebitosBlocoE: Currency;
   valorOutrosCredICMSST: Currency;
+  DocumentosFiscaisC190Aux : TObjectList<TDocumentoFiscalItemAgrupado>;
 begin
   valorTtotalGeralIcms  := 0;
   valorOutrosCredICMSST := 0;
@@ -364,6 +366,48 @@ begin
                 + '&periodo=intervalo&inicio=' + dataIniSped + '&conclusao=' +
                 dataFinSped);
 
+              var itensDocumentoFiscal: String;
+              var inicio: boolean := true;
+              var qtdeIntens : Integer;
+              DocumentosFiscaisC190Aux := TObjectList<TDocumentoFiscalItemAgrupado>.Create(True);
+
+              for var documentoFiscal in DocumentosFiscais do
+              begin
+                qtdeIntens := qtdeIntens+1;
+                if inicio then
+                begin
+                  itensDocumentoFiscal := documentoFiscal.id;
+                  inicio := false;
+                end
+                else
+                  itensDocumentoFiscal := itensDocumentoFiscal + ',' + documentoFiscal.id;
+
+                if (qtdeIntens = 150) then
+                begin
+                  inicio := true;
+                  qtdeIntens := 0;
+                  var DocumentosFiscaisC1902 := InfoAPI().GetArray<TDocumentoFiscalItemAgrupado>('fiscal/documentofiscal/sped?estabelecimentoid=' +
+                      Estabelecimento.id + '&documentofiscalid in (' + itensDocumentoFiscal + ')'+ '&agrupado=1');
+
+                  for var itemAgrupado in DocumentosFiscaisC1902 do
+                  begin
+                    DocumentosFiscaisC190Aux.Add(itemAgrupado);
+                  end;
+                  itensDocumentoFiscal := '';
+                end;
+              end;
+
+              if (qtdeIntens < 150) then
+              begin
+                var DocumentosFiscaisC1902 := InfoAPI().GetArray<TDocumentoFiscalItemAgrupado>('fiscal/documentofiscal/sped?estabelecimentoid=' +
+                    Estabelecimento.id + '&documentofiscalid in (' + itensDocumentoFiscal + ')'+ '&agrupado=1');
+
+                for var itemAgrupado in DocumentosFiscaisC1902 do
+                begin
+                  DocumentosFiscaisC190Aux.Add(itemAgrupado);
+                end;
+              end;
+
               var
               valorTotalICMS := 0.0;
               for var documentoFiscal in DocumentosFiscais do
@@ -529,54 +573,57 @@ begin
                   end;
                 end;
 
-                var
-                DocumentosFiscaisC190 := InfoAPI()
-                  .GetArray<TDocumentoFiscalItemAgrupado>
-                  ('fiscal/documentofiscal/sped?estabelecimentoid=' +
-                  Estabelecimento.id + '&documentofiscalid=' + documentoFiscal.id +
-                  '&agrupado=1');
+//                var
+//                DocumentosFiscaisC190 := InfoAPI()
+//                  .GetArray<TDocumentoFiscalItemAgrupado>
+//                  ('fiscal/documentofiscal/sped?estabelecimentoid=' +
+//                  Estabelecimento.id + '&documentofiscalid=' + documentoFiscal.id +
+//                  '&agrupado=1');
 
                 valorTotDebitosBlocoE := 0.0;
-                for var documento190 in DocumentosFiscaisC190 do
+                for var documento190 in DocumentosFiscaisC190Aux do
                 begin
-                  tbDocumentoAgrupado.First;
-                  if not tbDocumentoAgrupado.Locate('cfop;csticms;aliqicms',
-                    VarArrayOf([documento190.CFOP, documento190.CST_ICMS,
-                    documento190.ALIQ_ICMS]), []) then
+                  if documento190.documentofiscalid = documentoFiscal.id then
                   begin
-                    tbDocumentoAgrupado.Append;
-                    tbDocumentoAgrupado.fieldByname('cfop').Asstring :=
-                      documento190.CFOP;
-                    tbDocumentoAgrupado.fieldByname('csticms').Asstring :=
-                      documento190.CST_ICMS;
-                    tbDocumentoAgrupado.fieldByname('aliqicms').AsCurrency :=
-                      documento190.ALIQ_ICMS;
-                    tbDocumentoAgrupado.Post;
-
-                    with RegistroC190New do
+                    tbDocumentoAgrupado.First;
+                    if not tbDocumentoAgrupado.Locate('cfop;csticms;aliqicms',
+                      VarArrayOf([documento190.CFOP, documento190.CST_ICMS,
+                      documento190.ALIQ_ICMS]), []) then
                     begin
-                      var
-                      csticms := StrToInt(documento190.CST_ICMS);
-                      ALIQ_ICMS := documento190.ALIQ_ICMS;
-                      VL_BC_ICMS := documento190.VL_BC_ICMS;
-                      VL_ICMS := documento190.VL_ICMS;
-                      VL_BC_ICMS_ST := documento190.VL_BC_ICMS_ST;
-                      VL_ICMS_ST := documento190.VL_ICMS_ST;
-                      VL_RED_BC := documento190.VL_RED_BC;
-                      VL_IPI := documento190.VL_IPI;
-                      CST_ICMS := documento190.CST_ICMS;
-                      CFOP := documento190.CFOP;
-                      VL_OPR := documento190.VL_OPR + documento190.vl_ipi - documento190.vl_desconto;
-                      COD_OBS := documento190.COD_OBS;
+                      tbDocumentoAgrupado.Append;
+                      tbDocumentoAgrupado.fieldByname('cfop').Asstring :=
+                        documento190.CFOP;
+                      tbDocumentoAgrupado.fieldByname('csticms').Asstring :=
+                        documento190.CST_ICMS;
+                      tbDocumentoAgrupado.fieldByname('aliqicms').AsCurrency :=
+                        documento190.ALIQ_ICMS;
+                      tbDocumentoAgrupado.Post;
 
-                      valorOutrosCredICMSST := valorOutrosCredICMSST + documento190.VL_ICMS_ST;
-
-                      if (copy(documento190.CFOP, 1, 1) = '5') or
-                        (copy(documento190.CFOP, 1, 1) = '6') or
-                        (copy(documento190.CFOP, 1, 1) = '7') or
-                        (documento190.CFOP = '1605') then
+                      with RegistroC190New do
                       begin
-                        valorTotDebitosBlocoE := valorTotDebitosBlocoE + VL_ICMS;
+                        var
+                        csticms := StrToInt(documento190.CST_ICMS);
+                        ALIQ_ICMS := documento190.ALIQ_ICMS;
+                        VL_BC_ICMS := documento190.VL_BC_ICMS;
+                        VL_ICMS := documento190.VL_ICMS;
+                        VL_BC_ICMS_ST := documento190.VL_BC_ICMS_ST;
+                        VL_ICMS_ST := documento190.VL_ICMS_ST;
+                        VL_RED_BC := documento190.VL_RED_BC;
+                        VL_IPI := documento190.VL_IPI;
+                        CST_ICMS := documento190.CST_ICMS;
+                        CFOP := documento190.CFOP;
+                        VL_OPR := documento190.VL_OPR + documento190.vl_ipi - documento190.vl_desconto;
+                        COD_OBS := documento190.COD_OBS;
+
+                        valorOutrosCredICMSST := valorOutrosCredICMSST + documento190.VL_ICMS_ST;
+
+                        if (copy(documento190.CFOP, 1, 1) = '5') or
+                          (copy(documento190.CFOP, 1, 1) = '6') or
+                          (copy(documento190.CFOP, 1, 1) = '7') or
+                          (documento190.CFOP = '1605') then
+                        begin
+                          valorTotDebitosBlocoE := valorTotDebitosBlocoE + VL_ICMS;
+                        end;
                       end;
                     end;
                   end;
