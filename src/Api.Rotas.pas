@@ -261,7 +261,6 @@ procedure estornaDFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 var
   DocumentoFiscalDFe: TDocumentoFiscal;
 begin
-  InfoAPI().Autentica(Req.Headers.Field('Authorization').AsString);
   LimpaVariaveis;
   DocumentoFiscalDFe := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
 
@@ -282,7 +281,6 @@ end;
 
 procedure imrimeDFe(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 begin
-  InfoAPI().Autentica(Req.Headers.Field('Authorization').AsString);
   LimpaVariaveis;
   DocumentoFiscal := TJson.JsonToObject<TDocumentoFiscal>(Req.Body);
 

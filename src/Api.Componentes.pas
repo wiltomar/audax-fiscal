@@ -17,7 +17,7 @@ uses
 
 const
   docModelos: TArray<String> = ['55', '56', '57', '58', '59', '65'];
-  build = '2025.9.26';
+  build = '2025.9.30';
   xPathComum = 'C:\Constel\Constel Fiscal';
 
 type
@@ -1224,11 +1224,12 @@ begin
     Ide.finNFe      := StrToFinNFe(lOk, IntToStr(documentoFiscalNFe.finalidadeEmissao));
     Ide.indIntermed := TindIntermed(documentoFiscalNFe.indicadorIntermediador);
 
-    if not(Assigned(DocumentoFiscal.parceiro.parceiroDocumentos)) then
+    if not(Assigned(DocumentoFiscal.parceiro.parceiroDocumentos)) or not(Assigned(DocumentoFiscal.parceiro.parceiroEnderecos)) then
     begin
-      Error := 'Parceiro sem documento cadastrado';
+      Error := 'Parceiro sem documento ou endereço cadastrado';
       Exit;
     end;
+
     if Length(DocumentoFiscal.parceiro.parceiroDocumentos[0].documentoNumero) > 11 then
       Ide.indFinal  := cfNao
     else
