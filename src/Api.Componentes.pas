@@ -6,19 +6,16 @@ uses
   System.SysUtils, System.StrUtils, System.Classes, IniFiles, ACBrBase, ACBrSAT, Lib.Sistema.Tipos,
   ACBrDFeSSL, ACBrSATClass, pcnConversao, pcnConversaoNFe, Model.DocumentoFiscal, Model.Estabelecimento,
   pcnCFe, ACBrDFe, ACBrNFe, ACBrMail, ACBrUtil.Strings, ACBrUtil.Math, ACBrDFeUtil, ACBrNFeNotasFiscais,
-  Api.Funcoes, System.Math, System.NetEncoding, ACBrNFeDANFeFPDF, ACBrSATExtratoClass, ACBrNFCeDANFeFPDF,
-  System.IOUtils, Model.Config, Soap.EncdDecd, System.Generics.Collections, Lib.Funcoes, Web.HTTPApp,
-  Model.Inutilizacao, ACBrSATExtratoFPDF, Horse, Model.Sped, APIService, Fortes.IRegistro, ACBr_fpdf_report,
-  Xml.XMLDoc, Xml.XMLIntf, Xml.XMLDom, Model.DocumentoFiscalManifesto, Model.DocumentoFiscalCartaCorrecao,
-  {$IFDEF MSWINDOWS}
-    WinApi.ActiveX, ACBrSATExtratoESCPOS, ACBrPosPrinter, ACBrSATExtratoFortesFr,
-  {$ENDIF}
-  Lib.Sistema.DAO;
+  Api.Funcoes, System.Math, System.NetEncoding, ACBrNFeDANFeFPDF, ACBrSATExtratoClass, System.IOUtils,
+  Model.Config, Soap.EncdDecd, System.Generics.Collections, Lib.Funcoes, Web.HTTPApp, Model.Inutilizacao,
+  ACBrSATExtratoFPDF, Horse, Model.Sped, APIService, Fortes.IRegistro, ACBr_fpdf_report, Xml.XMLDoc,
+  Xml.XMLIntf, Xml.XMLDom, Model.DocumentoFiscalManifesto, Model.DocumentoFiscalCartaCorrecao, WinApi.ActiveX,
+  ACBrSATExtratoESCPOS, ACBrPosPrinter, ACBrSATExtratoFortesFr, Lib.Sistema.DAO;
 
 const
-  docModelos: TArray<String> = ['55', '56', '57', '58', '59', '65'];
-  build = '2025.9.30';
-  xPathComum = 'C:\Constel\Constel Fiscal';
+  modelos: TArray<String> = ['55', '56', '57', '58', '59', '65'];
+  build = '2025.10.6';
+  pathComum = 'C:\Constel\Constel Fiscal';
 
 type
   TArquivo = class
@@ -41,12 +38,7 @@ type
     FSatCodigoDeAtivacao: String;
     FSatAssinaturaAC: String;
     FRespTec: Boolean;
-    FVersao: Real;
-    FVersaoSB: SmallInt;
-
-    {$IFDEF MSWINDOWS}
-      FImpressora: TACBrPosPrinter;
-    {$ENDIF}
+    FImpressora: TACBrPosPrinter;
 
     function InicializaSAT: Boolean;
 
@@ -55,7 +47,7 @@ type
     procedure CarregaEmail;
 
     function CalculaTributos(const vProd: Double; const NCM: string): Double;
-    function  GerarCFe(const DocumentoFiscal: TDocumentoFiscal): string;
+    function  GerarCFe(const DocumentoFiscal: TDocumentoFiscal): AnsiString;
     procedure GerarNFe(const DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String);
     procedure GerarNFCe(const DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String);
 
@@ -110,7 +102,7 @@ begin
 
     nfe.EventoNFe.Evento.Clear;
     Sequencia := DocumentoFiscalCartaCorrecao.sequencia + 1;
-    with nfe.EventoNFe.Evento.Add do
+    with nfe.EventoNFe.Evento.New do
     begin
       InfEvento.chNFe               := DocumentoFiscalCartaCorrecao.chave;
       InfEvento.CNPJ                := DocumentoFiscalCartaCorrecao.estabelecimento.estabelecimentoDocumentos[0].documentoNumero;
@@ -125,7 +117,7 @@ begin
       RetirarAcentos := DocumentoFiscalCartaCorrecao.retiraracentos;
     end;
 
-    var retorno := nfe.EnviarEvento(Sequencia);
+    nfe.EnviarEvento(Sequencia);
 
     if nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.cStat = 573 then
       Error := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.xMotivo
@@ -139,14 +131,14 @@ begin
 
       Msg := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.xMotivo;
     end;
-    Result := DocumentoFiscalCartaCorrecao;
   except
     on E: Exception do
     begin
-      CodigoRetorno := 0;
       Error := 'Erro ao emitir carta de correÃ§Ã£o: ' + E.Message;
+      Result := DocumentoFiscalCartaCorrecao;
     end;
   end;
+  Result := DocumentoFiscalCartaCorrecao;
 end;
 
 function Tcomponentes.ConsultarNFe(var DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): Boolean;
@@ -175,21 +167,21 @@ procedure TComponentes.DataModuleCreate(Sender: TObject);
   begin
     Lista := TStringList.Create;
     try
-      Lista.Add(xPathComum + '\arquivos\documentos\nfe\eventos');
-      Lista.Add(xPathComum + '\arquivos\documentos\nfe\envio');
-      Lista.Add(xPathComum + '\arquivos\documentos\nfe\inutilizacoes');
-      Lista.Add(xPathComum + '\arquivos\documentos\nfe\notas');
-      Lista.Add(xPathComum + '\arquivos\documentos\nfe\pdf');
+      Lista.Add(pathComum + '\arquivos\documentos\nfe\eventos');
+      Lista.Add(pathComum + '\arquivos\documentos\nfe\envio');
+      Lista.Add(pathComum + '\arquivos\documentos\nfe\inutilizacoes');
+      Lista.Add(pathComum + '\arquivos\documentos\nfe\notas');
+      Lista.Add(pathComum + '\arquivos\documentos\nfe\pdf');
 
-      Lista.Add(xPathComum + '\arquivos\documentos\manifesto');
+      Lista.Add(pathComum + '\arquivos\documentos\manifesto');
 
-      Lista.Add(xPathComum + '\arquivos\documentos\cfe\pdf');
+      Lista.Add(pathComum + '\arquivos\documentos\cfe\pdf');
 
-      Lista.Add(xPathComum + '\arquivos\estabelecimentos');
-      Lista.Add(xPathComum + '\arquivos\schemas\nfe');
-      Lista.Add(xPathComum + '\arquivos\schemas\cfe');
+      Lista.Add(pathComum + '\arquivos\estabelecimentos');
+      Lista.Add(pathComum + '\arquivos\schemas\nfe');
+      Lista.Add(pathComum + '\arquivos\schemas\cfe');
 
-      Lista.Add(xPathComum + '\arquivos\texto\sped');
+      Lista.Add(pathComum + '\arquivos\texto\sped');
 
       for var Dir in Lista do
       begin
@@ -207,9 +199,7 @@ procedure TComponentes.DataModuleCreate(Sender: TObject);
     end;
   end;
 begin
-  {$IFDEF MSWINDOWS}
-    RemoveDataModule(self);
-  {$ENDIF}
+  RemoveDataModule(self);
   ChecarPastas;
 end;
 
@@ -223,11 +213,11 @@ function TComponentes.ImprimirDFe(DocumentoFiscal: TDocumentoFiscal; var Error, 
     CC := TStringList.Create;
 
     MmEmailMsg := TStringList.Create;
-    MmEmailMsg.Add('Segue documento fiscal eletrônico referente a ');
-    MmEmailMsg.Add('sua compra realizada conosco no dia ' + FormatDateTime('dd/mm/yyyy', DocumentoFiscal.emissao));
+    MmEmailMsg.Add(AnsiString('Segue documento fiscal eletronico referente a '));
+    MmEmailMsg.Add(Ansistring('sua compra realizada conosco no dia ' + FormatDateTime('dd/mm/yyyy', DocumentoFiscal.emissao)));
 
     try
-      case AnsiIndexStr(DocumentoFiscal.modelo, docModelos) of
+      case AnsiIndexStr(DocumentoFiscal.modelo, modelos) of
         0, 5:
         begin
           var Danfe: TACBrNFeDANFeFPDF;
@@ -242,19 +232,17 @@ function TComponentes.ImprimirDFe(DocumentoFiscal: TDocumentoFiscal; var Error, 
           Nfe.DANFE := Danfe;
           Nfe.NotasFiscais.Clear;
 
-          {$IFDEF MSWINDOWS}
-            CoInitialize(nil);
-          {$ENDIF}
+          CoInitialize(nil);
 
           XmlDocumento := DocumentoFiscal.documentoFiscalNFe.xml;
           if Nfe.NotasFiscais.LoadFromString(xmlDocumento) then
           begin
-            MmEmailMsg.Add('de número ' + IntToStr(DocumentoFiscal.documentoFiscalNFe.numero));
+            MmEmailMsg.Add(AnsiString('de numero '+ IntToStr(DocumentoFiscal.documentoFiscalNFe.numero)));
 
             CarregaEmail;
             Nfe.NotasFiscais.Items[0].EnviarEmail(
               DocumentoFiscal.email,
-              'Constel Docs [Documento Fiscal nº ' + IntToStr(DocumentoFiscal.documentoFiscalNFe.numero) + ']',
+              AnsiString('Constel Docs [Documento Fiscal numero ' + IntToStr(DocumentoFiscal.documentoFiscalNFe.numero) + ']'),
               TStrings(mmEmailMsg),
               True,
               CC,
@@ -290,12 +278,10 @@ var
   xmlDocumento, documento: String;
   stream: TMemoryStream;
 begin
-  {$IFDEF MSWINDOWS}
-    CoInitialize(nil);
-  {$ENDIF}
+  CoInitialize(nil);
 
   try
-    case AnsiIndexStr(DocumentoFiscal.modelo, docModelos) of
+    case AnsiIndexStr(DocumentoFiscal.modelo, modelos) of
       0, 5:
         begin
           if (DocumentoFiscal.documentoFiscalNFe.chave > '') and ((DocumentoFiscal.documentoFiscalNFe.status = 100) and (DocumentoFiscal.documentoFiscalNFe.protocolo > '') or
@@ -308,7 +294,6 @@ begin
                 begin
                   var nfe: TACBrNFe;
                   var danfe: TACBrNFeDANFeFPDF;
-                  var danfce: TACBrNFCeDANFeFPDF;
                   var empresaLogo: string := '';
 
                   if Assigned(documentoFiscal.empresa) and (documentoFiscal.empresa.imagem <> '') then
@@ -318,20 +303,13 @@ begin
                   nfe := TACBrNFe.Create(nil);
                   nfe.NotasFiscais.Clear;
 
+                  danfe := TACBrNFeDANFeFPDF.Create(Self);
+                  danfe.TipoDANFE := tiRetrato;
+
                   if DocumentoFiscal.modelo = '65' then
-                  begin
-                    danfce := TACBrNFCeDANFeFPDF.Create(Self);
-                    danfce.TipoDANFE := tiNFCe;
+                    danfe.TipoDANFE := tiNFCe;
 
-                    nfe.DANFE := danfce;
-                  end
-                  else
-                  begin
-                    danfe := TACBrNFeDANFeFPDF.Create(Self);
-                    danfe.TipoDANFE := tiRetrato;
-                    nfe.DANFE := danfe;
-                  end;
-
+                  nfe.DANFE := danfe;
                   try
                     with nfe.DANFE do
                     begin
@@ -342,13 +320,12 @@ begin
 
                     if nfe.NotasFiscais.LoadFromString(xmlDocumento) then
                     begin
-                      nfe.DANFE.PathPDF := xPathComum + '\arquivos\documentos\nfe\pdf';
+                      nfe.DANFE.PathPDF := pathComum + '\arquivos\documentos\nfe\pdf';
                       nfe.DANFE.ImprimirDANFE;
                     end;
 
                   finally
-                    if Assigned(danfe) then danfe.Free;
-                    if Assigned(danfce) then danfce.Free;
+                    danfe.Free;
                     nfe.Free;
                   end;
                 end;
@@ -359,33 +336,24 @@ begin
                   var nfe: TACBrNFe;
                   nfe := TACBrNFe.Create(nil);
                   var empresaLogo: string := '';
+                  var danfe: TACBrNFeDANFeFPDF;
+                  danfe := TACBrNFeDANFeFPDF.Create(Self);
 
                   if Assigned(documentoFiscal.empresa) and (documentoFiscal.empresa.imagem <> '') then
                     if not(TDAO.GetArquivo(documentoFiscal.Empresa.nome, documentoFiscal.Empresa.imagem, empresaLogo)) then
                       empresaLogo := '';
                   try
                     nfe.NotasFiscais.Clear;
+                    danfe.TipoDANFE := tiRetrato;
 
                     if DocumentoFiscal.modelo = '65' then
-                    begin
-                      var danfe: TACBrNFCeDANFeFPDF;
-                      danfe := TACBrNFCeDANFeFPDF.Create(Self);
-
                       danfe.TipoDANFE := tiNFCe;
-
-                      nfe.DANFE := danfe;
-                    end
-                    else
-                    begin
-                      var danfe: TACBrNFeDANFeFPDF;
-                      danfe := TACBrNFeDANFeFPDF.Create(Self);
-                      nfe.DANFE := danfe;
-                    end;
+                    nfe.DANFE := danfe;
 
                     if nfe.NotasFiscais.LoadFromString(documentoFiscal.documentoFiscalNFe.xml) then
                     begin
                       var pastaPDF: string;
-                      pastaPDF := xPathComum + '\arquivos\documentos\nfe\pdf';
+                      pastaPDF := pathComum + '\arquivos\documentos\nfe\pdf';
 
                       with nfe.DANFE do
                       begin
@@ -430,7 +398,6 @@ begin
           toNenhum: ;
           toImpressao:
             begin
-            {$IFDEF MSWINDOWS}
               Fimpressora := TACBrPosPrinter.Create(Self);
               var Extrato := TACBrSATExtratoESCPOS.Create(Fimpressora);
               Extrato.PosPrinter := Fimpressora;
@@ -443,20 +410,13 @@ begin
               end;
 
               sat.ImprimirExtrato;
-            {$ELSE}
-              //
-            {$ENDIF}
             end;
           toEmail:
             EmailDFe(DocumentoFiscal, Error, Msg);
           toBase64:
             begin
-              {$IFDEF MSWINDOWS}
-                var Extrato := TACBrSATExtratoFortes.Create(Self);
-              {$ELSE}
-                var Extrato := TACBrSATExtratoFPDF.Create(Self);
-              {$ENDIF}
-              Extrato.PathPDF := xPathComum + '/arquivos/documentos/cfe/pdf';
+              var Extrato := TACBrSATExtratoFortes.Create(Self);
+              Extrato.PathPDF := pathComum + '/arquivos/documentos/cfe/pdf';
 
               with Extrato do
               begin
@@ -489,20 +449,19 @@ begin
       Msg := Format('Documento fiscal de numero: %d com chave: %s, impresso..', [
                     DocumentoFiscal.documentoFiscalNFe.numero,
                     DocumentoFiscal.documentoFiscalNFe.chave]);
-
-    Result := documentoFiscal;
-
   except
     on E: Exception do
-      Error := E.Message;
+    begin
+      Error   := E.Message;
+      Result  := documentoFiscal;
+    end;
   end;
-
-
+  Result := documentoFiscal;
 end;
 
 function TComponentes.EmiteDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
 var
-  xmlDocumento: string;
+  xmlDocumento: AnsiString;
   documentoFiscalImpresso: TDocumentoFiscal;
 
   procedure ProcessaNFe;
@@ -556,7 +515,7 @@ begin
       Result := DocumentoFiscal;
       Exit;
     end;
-    case AnsiIndexStr(DocumentoFiscal.modelo, docModelos) of
+    case AnsiIndexStr(DocumentoFiscal.modelo, modelos) of
       0: {$REGION 'NFe'}
         begin
           GerarNFe(DocumentoFiscal, Error, Msg);
@@ -619,8 +578,8 @@ begin
           var
             erro: string := '';
 
-          sat.ValidarDadosVenda(AnsiString(xmlDocumento), erro);
-          sat.EnviarDadosVenda(AnsiString(xmlDocumento));
+          sat.ValidarDadosVenda(xmlDocumento, erro);
+          sat.EnviarDadosVenda(xmlDocumento);
 
           if sat.Resposta.codigoDeRetorno = 6000 then
           begin
@@ -716,11 +675,9 @@ end;
 
 function TComponentes.PreDANFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
 var
-  xmlDocumento: string;
   documentoFiscalPreDanfe: TDocumentoFiscal;
 begin
   try
-    documentoFiscalPreDanfe := nil;
     if not Assigned(DocumentoFiscal.estabelecimento.estabelecimentoFiscal) then
     begin
       Error := 'Estabelecimento fiscal nÃ£o configurado.';
@@ -738,10 +695,13 @@ begin
         documentoFiscalPreDANFe := ImprimirDFe(DocumentoFiscal, Error, Msg, True);
       end;
     end;
-
     Result := documentoFiscalPreDanfe;
   except
-
+    on E: Exception do
+    begin
+      Error := E.Message;
+      Result := documentoFiscal;
+    end;
   end;
 end;
 
@@ -777,9 +737,6 @@ begin
 end;
 
 function TComponentes.recebeArquivo(Caminho: String; var FileName: string; var erros: string; var msg: string): TArquivo;
-var
-  lStream: TMemoryStream;
-  ArquivoNome, ArquivoURL: string;
 begin
   var fArquivo: TArquivo;
   fArquivo := TArquivo.Create;
@@ -812,7 +769,7 @@ end;
 function TComponentes.CancelarDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
 begin
   var DocumentoFiscalCancelado: TDocumentoFiscal := nil;
-  case AnsiIndexStr(DocumentoFiscal.modelo, docModelos) of
+  case AnsiIndexStr(DocumentoFiscal.modelo, modelos) of
     0, 5: DocumentoFiscalCancelado := CancelarDoc(DocumentoFiscal, Error, Msg);
     4: DocumentoFiscalCancelado := CancelarCFe(DocumentoFiscal, Error, Msg);
   end;
@@ -1052,7 +1009,6 @@ begin
     Error := Format('Erro de certificado. Certificado vencido em %s.', [FormatDateTime('dd/mm/yyyy', nfe.ssl.CertDataVenc)]);
     Exit;
   end;
-
 end;
 
 procedure TComponentes.carregaEmail;
@@ -1112,11 +1068,11 @@ begin
       SalvarEvento            := True;
       SepararPorCNPJ          := True;
       SepararPorModelo        := True;
-      PathSchemas             := xPathComum + '\arquivos\schemas\nfe';
-      PathNFe                 := xPathComum + '\arquivos\documentos\nfe\notas';
-      PathInu                 := xPathComum + '\arquivos\documentos\nfe\inutilizacoes';
-      PathEvento              := xPathComum + '\arquivos\documentos\nfe\eventos';
-      PathSalvar              := xPathComum + '\arquivos\documentos\nfe\envio';
+      PathSchemas             := pathComum + '\arquivos\schemas\nfe';
+      PathNFe                 := pathComum + '\arquivos\documentos\nfe\notas';
+      PathInu                 := pathComum + '\arquivos\documentos\nfe\inutilizacoes';
+      PathEvento              := pathComum + '\arquivos\documentos\nfe\eventos';
+      PathSalvar              := pathComum + '\arquivos\documentos\nfe\envio';
     end;
 
     carregaCertificado(estabelecimento.estabelecimentoFiscalSerie, Error, Msg);
@@ -1336,7 +1292,7 @@ begin
 
     for var refCont := 0 to Length(documentoFiscalNFe.documentoFiscalNFeReferencia) - 1 do
     begin
-      with NotaF.NFe.Ide.NFref.Add, documentoFiscalNFe.documentoFiscalNFeReferencia[refCont] do
+      with NotaF.NFe.Ide.NFref.New, documentoFiscalNFe.documentoFiscalNFeReferencia[refCont] do
       begin
         refNFe := documentoFiscalChave;
       end;
@@ -1444,7 +1400,6 @@ begin
               vBaseDeCalculo := vBaseDeCalculo + icmsBC;
               vTotalICMS := vTotalICMS + vICMS;
             end;
-
             vBaseDeCalculoICMSST := vBaseDeCalculoICMSST + icmsSTBC;
             vTotalICMSST := vTotalICMSST + vICMSST;
             vTotalTributos := vTotalTributos + vTotTrib;
@@ -1679,7 +1634,7 @@ begin
 
 end;
 
-function TComponentes.GerarCFe(const DocumentoFiscal: TDocumentoFiscal): string;
+function TComponentes.GerarCFe(const DocumentoFiscal: TDocumentoFiscal): AnsiString;
 var
   TotalItem, TotalImposto, TotalGeral: Double;
   lOk: Boolean;
@@ -2088,8 +2043,11 @@ begin
             vICMSSTDeson := 0;
             motDesICMSST := mdiOutros;
 
-            vBaseDeCalculo := vBaseDeCalculo + icmsBC;
-            vTotalICMS := vTotalICMS + vICMS;
+            if (Emit.CRT in [crtRegimeNormal, crtSimplesExcessoReceita]) or (cstICMS.codigo = '900') then
+            begin
+              vBaseDeCalculo := vBaseDeCalculo + icmsBC;
+              vTotalICMS := vTotalICMS + vICMS;
+            end;
             vBaseeDeCalculoICMSST := vBaseeDeCalculoICMSST + icmsSTBC;
             vTotalICMSST := vTotalICMSST + vICMSST;
             vTotalTributos := vTotalTributos + vTotTrib;
@@ -2246,15 +2204,14 @@ end;
 
 function TComponentes.ManifestarDocumento(DocumentoFiscalManifesto: TDocumentoFiscalManifesto; var Error, Msg: String): TDocumentoFiscalManifesto;
 var
-  xmlDocumento: String;
-  estabelecimentoNumero, chave, documentoNumero: String;
-  eventoParametro, ultimoNSU: String;
+  DocumentoFiscalManifestado: TDocumentoFiscalManifesto;
 begin
-  carregaNFe(DocumentoFiscalManifesto.estabelecimento, 1, Error, Msg, '55');
+  DocumentoFiscalManifestado := DocumentoFiscalManifesto;
+  carregaNFe(DocumentoFiscalManifestado.estabelecimento, 1, Error, Msg, '55');
 
   var eventoSelecionado := 0;
 
-  case DocumentoFiscalManifesto.codevento of
+  case DocumentoFiscalManifestado.codevento of
      200: eventoSelecionado := 3;
      210: eventoSelecionado := 4;
      220: eventoSelecionado := 5;
@@ -2267,17 +2224,17 @@ begin
     else
     begin
       var lOk : Boolean;
-      nfe.Configuracoes.WebServices.Ambiente := StrToTpAmb(lOk, DocumentoFiscalManifesto.ambiente.ToString);
+      nfe.Configuracoes.WebServices.Ambiente := StrToTpAmb(lOk, DocumentoFiscalManifestado.ambiente.ToString);
       nfe.NotasFiscais.Clear;
       nfe.EventoNFe.Evento.Clear;
 
-      with nfe.EventoNFe.Evento.Add do
+      with nfe.EventoNFe.Evento.New do
       begin
         InfEvento.cOrgao          := 91;
-        InfEvento.chNFe           := DocumentoFiscalManifesto.chave;
-        InfEvento.CNPJ            := DocumentoFiscalManifesto.estabelecimento.estabelecimentoDocumentos[0].documentoNumero;
+        InfEvento.chNFe           := DocumentoFiscalManifestado.chave;
+        InfEvento.CNPJ            := DocumentoFiscalManifestado.estabelecimento.estabelecimentoDocumentos[0].documentoNumero;
         InfEvento.dhEvento        := Now;
-        InfEvento.detEvento.xJust := Trim(UpperCase(DocumentoFiscalManifesto.motivo));
+        InfEvento.detEvento.xJust := Trim(UpperCase(DocumentoFiscalManifestado.motivo));
 
         case eventoSelecionado of
           3: InfEvento.tpEvento := teManifDestConfirmacao;
@@ -2287,9 +2244,9 @@ begin
         end;
       end;
 
-      if DocumentoFiscalManifesto.documentoNumero > 0 then
+      if DocumentoFiscalManifestado.documentoNumero > 0 then
       begin
-        nfe.EnviarEvento(DocumentoFiscalManifesto.documentoNumero);
+        nfe.EnviarEvento(DocumentoFiscalManifestado.documentoNumero);
 
         if (nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Count > 0) and
            (nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.cStat <> 135) then
@@ -2299,13 +2256,12 @@ begin
           Msg := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.xMotivo;
           if eventoSelecionado in [3,4] then
           begin
-            var ufEstabelecimento := UFtoCUF(DocumentoFiscalManifesto.estabelecimento.estabelecimentoEnderecos[0].uf.sigla);
+            var ufEstabelecimento := UFtoCUF(DocumentoFiscalManifestado.estabelecimento.estabelecimentoEnderecos[0].uf.sigla);
 
-            nfe.DistribuicaoDFePorChaveNFe(ufEstabelecimento, DocumentoFiscalManifesto.estabelecimento.estabelecimentoDocumentos[0].documentoNumero, DocumentoFiscalManifesto.chave);
-            DocumentoFiscalManifesto.xml := nfe.WebServices.DistribuicaoDFe.retDistDFeInt.docZip[0].XML;
+            nfe.DistribuicaoDFePorChaveNFe(ufEstabelecimento, DocumentoFiscalManifestado.estabelecimento.estabelecimentoDocumentos[0].documentoNumero, DocumentoFiscalManifestado.chave);
+            DocumentoFiscalManifestado.xml := nfe.WebServices.DistribuicaoDFe.retDistDFeInt.docZip[0].XML;
           end;
         end;
-        Result := DocumentoFiscalManifesto;
       end;
     end;
   except
@@ -2315,6 +2271,7 @@ begin
       Result := DocumentoFiscalManifesto;
     end;
   end;
+  Result := DocumentoFiscalManifestado;
 end;
 
 function TComponentes.gerarSPED(Req: THorseRequest; var Error: string; var Msg: string): TStringStream;
