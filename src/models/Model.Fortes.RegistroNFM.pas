@@ -386,7 +386,7 @@ begin
 //      LinhaINM.Free;
 //      LinhaDNM.Free;
 //    end;
-     Result := Builder.ToString + LinhaINM.Text+ sLineBreak + LinhaINM.Text;
+     Result := Builder.ToString + LinhaINM.Text;//+ sLineBreak;
    // Result := Builder.ToString + sLineBreak + LinhaINM.Text + sLineBreak + LinhaDNM.Text;
   finally
     Builder.Free;

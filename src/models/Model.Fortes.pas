@@ -74,7 +74,7 @@ begin
       RegistroUND;
       RegistroNOP;
       RegistroPRO;
-      // RegistroNFM;
+      RegistroNFM;
 
       GeraArquivofs(nomeArquivo);
 
