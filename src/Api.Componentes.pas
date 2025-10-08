@@ -14,7 +14,7 @@ uses
 
 const
   modelos: TArray<String> = ['55', '56', '57', '58', '59', '65'];
-  build = '2025.10.6';
+  build = '2025.10.8';
   pathComum = 'C:\Constel\Constel Fiscal';
 
 type
@@ -526,45 +526,45 @@ begin
               var XMLAssinado := nfe.NotasFiscais.Items[0].XMLAssinado;
               ConsultarNFe(DocumentoFiscal, Error, Msg);
 
-              if nfe.WebServices.Consulta.cStat = 613 then
-              begin
-                Error := 'Documento fiscal emitido por outro aplicativo: ' + nfe.WebServices.Consulta.Msg;
-                Result := documentoFiscal;
-                Exit;
-              end;
+              case nfe.WebServices.Consulta.cStat of
+                100, 150:
+                  begin
+                    DocumentoFiscal.documentoFiscalNFe.status := IfThen(DocumentoFiscal.estabelecimento.estabelecimentoFiscal.sincrono, nfe.WebServices.Consulta.cStat, nfe.WebServices.Retorno.cStat);
+                    DocumentoFiscal.documentoFiscalNFe.msgRetorno := IfThen(DocumentoFiscal.estabelecimento.estabelecimentoFiscal.sincrono, nfe.WebServices.Consulta.Msg, nfe.WebServices.Retorno.Msg);
 
-              if nfe.WebServices.Consulta.cStat = 539 then
-              begin
-                DocumentoFiscal.documentoFiscalNFe.chave := ACBrDFeUtil.ExtrairChaveMsg(nfe.WebServices.Consulta.Msg);
-                ConsultarNFe(DocumentoFiscal, Error, Msg);
-              end;
+                    if not(IfThen(DocumentoFiscal.estabelecimento.estabelecimentoFiscal.sincrono, nfe.WebServices.Consulta.Protocolo, nfe.WebServices.Retorno.Protocolo) = EmptyStr) then
+                    begin
+                      DocumentoFiscal.documentoFiscalNFe.chave := nfe.WebServices.Consulta.NFeChave;
+                      DocumentoFiscal.documentoFiscalNFe.xml := XMLAssinado;
+                      DocumentoFiscal.documentoFiscalNFe.protocolo := nfe.WebServices.Consulta.protNFe.nProt;
 
-              if (nfe.WebServices.Consulta.cStat = 100) or (nfe.WebServices.Consulta.cStat = 150) then
-              begin
-                DocumentoFiscal.documentoFiscalNFe.status := IfThen(DocumentoFiscal.estabelecimento.estabelecimentoFiscal.sincrono, nfe.WebServices.Consulta.cStat, nfe.WebServices.Retorno.cStat);
-                DocumentoFiscal.documentoFiscalNFe.msgRetorno := IfThen(DocumentoFiscal.estabelecimento.estabelecimentoFiscal.sincrono, nfe.WebServices.Consulta.Msg, nfe.WebServices.Retorno.Msg);
+                      Msg := Format('Documento fiscal de numero: %d com chave: %s, %s.', [
+                                    DocumentoFiscal.documentoFiscalNFe.numero,
+                                    DocumentoFiscal.documentoFiscalNFe.chave,
+                                    IfThen(DocumentoFiscal.estabelecimento.estabelecimentoFiscal.sincrono, nfe.WebServices.Consulta.Msg, nfe.WebServices.Retorno.Msg)]);
 
-                if not(IfThen(DocumentoFiscal.estabelecimento.estabelecimentoFiscal.sincrono, nfe.WebServices.Consulta.Protocolo, nfe.WebServices.Retorno.Protocolo) = EmptyStr) then
-                begin
-                  DocumentoFiscal.documentoFiscalNFe.chave := nfe.WebServices.Consulta.NFeChave;
-                  DocumentoFiscal.documentoFiscalNFe.xml := XMLAssinado;
-                  DocumentoFiscal.documentoFiscalNFe.protocolo := nfe.WebServices.Consulta.protNFe.nProt;
-
-                  Msg := Format('Documento fiscal de numero: %d com chave: %s, %s.', [
-                                DocumentoFiscal.documentoFiscalNFe.numero,
-                                DocumentoFiscal.documentoFiscalNFe.chave,
-                                IfThen(DocumentoFiscal.estabelecimento.estabelecimentoFiscal.sincrono, nfe.WebServices.Consulta.Msg, nfe.WebServices.Retorno.Msg)]);
-
-                  documentoFiscalImpresso := ImprimirDFe(DocumentoFiscal, Error, Msg);
-                end
+                      documentoFiscalImpresso := ImprimirDFe(DocumentoFiscal, Error, Msg);
+                    end
+                    else
+                    begin
+                      Error := Format('Não foi possível emitir o documento fiscal, o seguinte erro ocorreu: %s.', [nfe.WebServices.Consulta.Msg]);
+                      documentoFiscalImpresso := DocumentoFiscal;
+                    end;
+                  end;
+                204, 539:
+                  begin
+                    DocumentoFiscal.documentoFiscalNFe.chave := ACBrDFeUtil.ExtrairChaveMsg(nfe.WebServices.Consulta.Msg);
+                    ConsultarNFe(DocumentoFiscal, Error, Msg);
+                  end;
+                613:
+                  begin
+                    Error := 'Documento fiscal emitido por outro aplicativo: ' + nfe.WebServices.Consulta.Msg;
+                    Result := documentoFiscal;
+                    Exit;
+                  end
                 else
-                begin
-                  Error := Format('Não foi possível emitir o documento fiscal, o seguinte erro ocorreu: %s.', [nfe.WebServices.Consulta.Msg]);
-                  documentoFiscalImpresso := DocumentoFiscal;
-                end;
-              end
-              else
-                ProcessaNFe;
+                  ProcessaNFe;
+              end;
             end
             else
               ProcessaNFe;
@@ -612,7 +612,14 @@ begin
           if not(DocumentoFiscal.documentoFiscalNFe.formaDeEmissao = 9) then
             ConsultarNFe(DocumentoFiscal, Error, Msg);
 
-          if (nfe.WebServices.Consulta.cStat = 539) or (nfe.WebServices.Consulta.cStat = 613) then
+          if nfe.WebServices.Consulta.cStat = 613 then
+          begin
+            Error := 'Documento fiscal emitido por outro aplicativo: ' + nfe.WebServices.Consulta.Msg;
+            Result := documentoFiscal;
+            Exit;
+          end;
+
+          if (nfe.WebServices.Consulta.cStat = 204) or (nfe.WebServices.Consulta.cStat = 539) then
           begin
             DocumentoFiscal.documentoFiscalNFe.chave := ACBrDFeUtil.ExtrairChaveMsg(nfe.WebServices.Consulta.Msg);
             if not(DocumentoFiscal.documentoFiscalNFe.formaDeEmissao = 9) then
@@ -807,9 +814,9 @@ begin
         infEvento.dhEvento        := now;
         infEvento.tpEvento        := teCancelamento;
         if Length(DocumentoFiscal.documentoFiscalNFe.cancelamentoJustificativa) > 15 then
-          infEvento.detEvento.xJust := DocumentoFiscal.documentoFiscalNFe.cancelamentoJustificativa
+          infEvento.detEvento.xJust := TiraAcentos(DocumentoFiscal.documentoFiscalNFe.cancelamentoJustificativa)
         else
-          infEvento.detEvento.xJust := 'Operação de ' + DocumentoFiscal.referencia + ' foi extornada.';
+          infEvento.detEvento.xJust := TiraAcentos('Operação de ' + DocumentoFiscal.referencia + ' foi extornada.');
       end;
 
       nfe.EnviarEvento(DocumentoFiscal.documentoFiscalNFe.numero);
@@ -1211,11 +1218,11 @@ begin
       end;
       teContingencia: begin
         Ide.dhCont := date;
-        Ide.xJust  := 'Modo de contingência ativado, problema com a SEFAZ';
+        Ide.xJust  := TiraAcentos('Modo de contingência ativado, problema com a SEFAZ');
       end;
       teSVCRS: begin
         Ide.dhCont := date;
-        Ide.xJust  := 'Contingência SVCRS habilitado por problemas com a SEFAZ';
+        Ide.xJust  := TiraAcentos('Contingência SVCRS habilitado por problemas com a SEFAZ');
       end;
     end;
 
@@ -1858,15 +1865,15 @@ begin
     case Ide.tpEmis of
       teOffLine: begin
         Ide.dhCont := date;
-        Ide.xJust  := 'Problemas de comunicação com a SEFAZ devido a falha na internet.';
+        Ide.xJust  := TiraAcentos('Problemas de comunicação com a SEFAZ devido a falha na internet.');
       end;
       teContingencia: begin
         Ide.dhCont := date;
-        Ide.xJust  := 'Modo de contingência ativado, por problema com a SEFAZ';
+        Ide.xJust  := TiraAcentos('Modo de contingência ativado, por problema com a SEFAZ');
       end;
       teSVCRS: begin
         Ide.dhCont := date;
-        Ide.xJust  := 'Contingência SVCRS habilitado por problemas com a SEFAZ';
+        Ide.xJust  := TiraAcentos('Contingência SVCRS habilitado por problemas com a SEFAZ');
       end;
     end;
 
@@ -2234,7 +2241,7 @@ begin
         InfEvento.chNFe           := DocumentoFiscalManifestado.chave;
         InfEvento.CNPJ            := DocumentoFiscalManifestado.estabelecimento.estabelecimentoDocumentos[0].documentoNumero;
         InfEvento.dhEvento        := Now;
-        InfEvento.detEvento.xJust := Trim(UpperCase(DocumentoFiscalManifestado.motivo));
+        InfEvento.detEvento.xJust := TiraAcentos(Trim(UpperCase(DocumentoFiscalManifestado.motivo)));
 
         case eventoSelecionado of
           3: InfEvento.tpEvento := teManifDestConfirmacao;
@@ -2247,6 +2254,7 @@ begin
       if DocumentoFiscalManifestado.documentoNumero > 0 then
       begin
         nfe.EnviarEvento(DocumentoFiscalManifestado.documentoNumero);
+        documentoFiscalManifestado.status := nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.cStat;
 
         if (nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Count > 0) and
            (nfe.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.cStat <> 135) then
