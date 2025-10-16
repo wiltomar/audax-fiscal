@@ -6,8 +6,7 @@ uses
   Classes, DateUtils, SysUtils, ACBrTXTClass, Variants, ACBrEFDBlocos, StrUtils,
   ACBrSpedFiscal, ACBrBase, ACBrEFDBloco_K_Class, ACBrEFDBloco_K, Midas,
   ACBrEFDBloco_0, ACBrEFDBloco_0_Class, Model.Estabelecimento, APIService,
-  DBClient, DB, Model.Operacao, Api.Funcoes, model.Base, Model.InventarioFiscal,
-  System.Generics.Collections;
+  DBClient, DB, Model.Operacao, Api.Funcoes, model.Base, Model.InventarioFiscal,  System.Generics.Collections;
 
 type
   TSped = class
@@ -112,6 +111,7 @@ var
   valorTtotalGeralIcms: Currency;
   valorTotDebitosBlocoE: Currency;
   valorOutrosCredICMSST: Currency;
+
   DocumentosFiscaisC190Aux : TObjectList<TDocumentoFiscalItemAgrupado>;
 begin
   valorTtotalGeralIcms  := 0;
@@ -374,13 +374,21 @@ begin
               for var documentoFiscal in DocumentosFiscais do
               begin
                 qtdeIntens := qtdeIntens+1;
+
+                if documentoFiscal.situacao = 90 then
+                begin
+                   documentoFiscal.id := '';
+                end;
+
                 if inicio then
                 begin
                   itensDocumentoFiscal := documentoFiscal.id;
                   inicio := false;
                 end
                 else
-                  itensDocumentoFiscal := itensDocumentoFiscal + ',' + documentoFiscal.id;
+                begin
+                   itensDocumentoFiscal := itensDocumentoFiscal + ',' + documentoFiscal.id;
+                end;
 
                 if (qtdeIntens = 150) then
                 begin
@@ -456,7 +464,10 @@ begin
                   dataDoc := documentoFiscal.emissao;
                   DT_DOC := documentoFiscal.emissao;
                   DT_E_S := documentoFiscal.emissao;
-                  VL_DOC := documentoFiscal.total + documentoFiscal.ipiValor - documentoFiscal.desconto;
+
+                  if documentoFiscal.situacao <> 90 then
+                    VL_DOC := documentoFiscal.total + documentoFiscal.ipiValor - documentoFiscal.desconto;
+
                   IND_PGTO := TACBrIndPgto(documentoFiscal.indicadorpagamento);
                   VL_DESC := documentoFiscal.desconto;
                   VL_ABAT_NT := documentoFiscal.desconto;
@@ -479,7 +490,9 @@ begin
                     valorTtotalGeralIcms := valorTtotalGeralIcms + itemdoc.icmsValor;
                     valorTotalICMS := valorTotalICMS + documentoFiscal.icmsValor;
                   end;
-                  VL_MERC := subtotalItem;
+                  if documentoFiscal.situacao <> 90 then
+                   VL_MERC := subtotalItem;
+
                   IND_FRT := TACBrIndFrt(documentoFiscal.indicadorfrete);
                   VL_FRT := documentoFiscal.frete;
                   VL_SEG := documentoFiscal.valorseguro;
@@ -579,7 +592,13 @@ begin
 //                  ('fiscal/documentofiscal/sped?estabelecimentoid=' +
 //                  Estabelecimento.id + '&documentofiscalid=' + documentoFiscal.id +
 //                  '&agrupado=1');
-
+                //dá pr melhorar filtrando o objeto
+//                  Item := DocumentosFiscaisC190Aux.FirstOrDefault(
+//    function(const Obj: TDocumentoFiscalItemAgrupado): Boolean
+//    begin
+//      Result := Obj.Id = 123;
+//    end);
+//
                 valorTotDebitosBlocoE := 0.0;
                 for var documento190 in DocumentosFiscaisC190Aux do
                 begin
@@ -591,18 +610,14 @@ begin
                       documento190.ALIQ_ICMS]), []) then
                     begin
                       tbDocumentoAgrupado.Append;
-                      tbDocumentoAgrupado.fieldByname('cfop').Asstring :=
-                        documento190.CFOP;
-                      tbDocumentoAgrupado.fieldByname('csticms').Asstring :=
-                        documento190.CST_ICMS;
-                      tbDocumentoAgrupado.fieldByname('aliqicms').AsCurrency :=
-                        documento190.ALIQ_ICMS;
+                      tbDocumentoAgrupado.fieldByname('cfop').Asstring := documento190.CFOP;
+                      tbDocumentoAgrupado.fieldByname('csticms').Asstring := documento190.CST_ICMS;
+                      tbDocumentoAgrupado.fieldByname('aliqicms').AsCurrency := documento190.ALIQ_ICMS;
                       tbDocumentoAgrupado.Post;
 
                       with RegistroC190New do
                       begin
-                        var
-                        csticms := StrToInt(documento190.CST_ICMS);
+                        var csticms := StrToInt(documento190.CST_ICMS);
                         ALIQ_ICMS := documento190.ALIQ_ICMS;
                         VL_BC_ICMS := documento190.VL_BC_ICMS;
                         VL_ICMS := documento190.VL_ICMS;
@@ -617,10 +632,8 @@ begin
 
                         valorOutrosCredICMSST := valorOutrosCredICMSST + documento190.VL_ICMS_ST;
 
-                        if (copy(documento190.CFOP, 1, 1) = '5') or
-                          (copy(documento190.CFOP, 1, 1) = '6') or
-                          (copy(documento190.CFOP, 1, 1) = '7') or
-                          (documento190.CFOP = '1605') then
+                        if (copy(documento190.CFOP, 1, 1) = '5') or (copy(documento190.CFOP, 1, 1) = '6') or
+                           (copy(documento190.CFOP, 1, 1) = '7') or (documento190.CFOP = '1605') then
                         begin
                           valorTotDebitosBlocoE := valorTotDebitosBlocoE + VL_ICMS;
                         end;
@@ -629,6 +642,8 @@ begin
                   end;
                 end;
               end;
+
+              DocumentosFiscaisC190Aux.Free;
 
               if (Estabelecimento.estabelecimentoDocumentos[0].spedperfil = 'A') then
               begin
@@ -1050,3 +1065,4 @@ begin
 end;
 
 end.
+
