@@ -356,8 +356,11 @@ begin
 
       var LinhaINM := TStringList.Create;
       var RegistroPNM := TRegistroPNM.Create;
+      var RegistroINM := TRegistroINM.Create;
       var ListaDeRegistros := TList<IRegistro>.Create;
       ListaDeRegistros.Add(RegistroPNM);
+
+    //  RegistroINM.GerarLinha;
 
       // obs: nao estpa gerando o inm
       // obs ver um get para todos
@@ -365,10 +368,11 @@ begin
 //         ('fiscal/documentofiscal/sped?estabelecimentoid=' + EstabelecimentoAux.id +
 //          '&periodo=intervalo&inicio=' + dataIniSped + '&conclusao=' + dataFinSped + '&modelo=55');
 
-      for var inm in ListaDeRegistros do
-      begin
-        LinhaINM.Add(inm.GerarLinha)
-      end;
+//      for var inm in ListaDeRegistros do
+//      begin
+//        LinhaINM.Add(inm.GerarLinha)
+//      end;
+    //  RegistroINM(documentoFiscal);
 
       //================================================================
 
@@ -386,6 +390,7 @@ begin
 //      LinhaINM.Free;
 //      LinhaDNM.Free;
 //    end;
+
      Result := Builder.ToString + LinhaINM.Text;//+ sLineBreak;
    // Result := Builder.ToString + sLineBreak + LinhaINM.Text + sLineBreak + LinhaDNM.Text;
   finally

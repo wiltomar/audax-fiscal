@@ -11,10 +11,10 @@ type
   TOperacaoIcms = class(TBaseR)
   private
     fid: string;
-    ficmsAliquota: Currency;
+    ficmsaliquota: Currency;
   public
     property id: string read fid write fid;
-    property icmsAliquota: Currency read ficmsAliquota write ficmsAliquota;
+    property icmsaliquota: Currency read ficmsaliquota write ficmsaliquota;
   end;
 
   TVendaOperacao = class(TBaseR)

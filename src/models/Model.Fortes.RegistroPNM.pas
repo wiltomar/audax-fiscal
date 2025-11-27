@@ -412,7 +412,8 @@ begin
       .Append(FloatToStr(FAliquotaMonoRetidoAnterior)).Append('|')
       .Append(FloatToStr(FValorICMSMonoRetidoAnterior)).Append('|');
 
-    Result := sLineBreak + Builder.ToString;
+     // Result := sLineBreak + Builder.ToString;
+       Result := Builder.ToString;
   finally
     Builder.Free;
   end;

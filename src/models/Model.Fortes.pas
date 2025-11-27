@@ -429,7 +429,7 @@ begin
         begin
           if produto.vendaoperacao.id = Operacao.id then
           begin
-            ALIQ_ICMS := Operacao.operacaoicms.icmsAliquota;
+            ALIQ_ICMS := Operacao.operacaoicms.icmsaliquota;
             break;
           end;
         end;
@@ -449,7 +449,6 @@ begin
       //CSTIPI
       //CSTCOFINS
       //CSTPIS
-
 
       FortesLista.Add(RegOumFortes.GerarLinha);
     end;
