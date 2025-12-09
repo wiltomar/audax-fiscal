@@ -56,7 +56,7 @@ type
 
     function CancelarDoc(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
     function CancelarCFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
-    procedure DownloadDFe;
+    procedure DownloadDFe(estabelecimento: TEstabelecimentoC);
   public
     function EmiteDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
     function CancelarDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
@@ -210,7 +210,7 @@ begin
   ChecarPastas;
 end;
 
-procedure TComponentes.DownloadDFe;
+procedure TComponentes.DownloadDFe(estabelecimento: TEstabelecimentoC);
 var
   i, n        : Integer;
   chaveBaixada, chaveCaminhoGravacao : String;
@@ -229,43 +229,43 @@ begin
     try
       if not Assigned(credencial) then
       begin
-       // Application.ShowMainForm := False;
-       // ShowMessage('Arquivo Config.json não existe.');
-       // Application.Terminate;
-     end;
+
+      end;
     except
     On E:Exception do
-     // ShowMessage(E.Message);
     end;
   finally
     Login.Free();
   end;
-
-  if NSU = '' then
-  begin
-    ultimoNSU := PegarUltimoItemDoArquivo(arquivochave); // mandar '0' para recuperar o ultimo nsu
-    if ultimoNSU = '' then
-      ultimoNSU := '0';
-  end
-  else
-    ultimoNSU := NSU;
-
+//
+//  if NSU = '' then
+//  begin
+//    ultimoNSU := PegarUltimoItemDoArquivo(arquivochave); // mandar '0' para recuperar o ultimo nsu
+//    if ultimoNSU = '' then
+//      ultimoNSU := '0';
+//  end
+//  else
+//    ultimoNSU := NSU;
+//
   if ambiente = '1' then
     nfe.Configuracoes.WebServices.Ambiente := taProducao
   else if ambiente = '2' then
     nfe.Configuracoes.WebServices.Ambiente := taHomologacao
   else
   begin
-   // ShowMessage('Informe no config.ini a propriedade manifesto/ambiente');
+     // ShowMessage('Informe no config.ini a propriedade manifesto/ambiente');
   end;
-
   nfe.Configuracoes.Arquivos.Salvar := True;
   nfe.Configuracoes.WebServices.TimeOut := 120000;
+  //nfe.Configuracoes.Arquivos.PathSalvar := caminhoExe + 'arquivos\documentos\manifesto';
 
-  nfe.Configuracoes.Arquivos.PathSalvar := caminhoExe + 'arquivos\documentos\manifesto';
+
+  var CNPJ := Estabelecimento.estabelecimentoDocumentos[0].documentoNumero;
+  nfe.Configuracoes.Arquivos.PathSalvar := pathComum + '\arquivos\documentos\nfe\manifesto\' + CNPJ;
 
   try
-    nfe.Configuracoes.Certificados.ArquivoPFX := InfoConfig().emitente.certificado.caminhopfx;
+    nfe.Configuracoes.Certificados.ArquivoPFX := Estabelecimento.estabelecimentoFiscalSerie.certificadourl; //ver
+    //InfoConfig().emitente.certificado.caminhopfx;
   except
     on E: Exception do
     begin
@@ -273,61 +273,61 @@ begin
       //  ShowMessage('Arquivo pfx não encontrado!');
     end;
   end;
-
+//
   try
-    nfe.Configuracoes.Certificados.Senha := InfoConfig().emitente.certificado.senhadocertificado;
+    nfe.Configuracoes.Certificados.Senha := Estabelecimento.estabelecimentoFiscalSerie.certificadosenha;
   except on E: Exception do
      begin
        // Application.ShowMainForm := False;
        // ShowMessage('Ocorreu um erro! senha não encontrada.');
       end;
   end;
-
-  var schemas := InfoConfig().nfe.Arquivos.PathSchemas;
-  if schemas = '' then
-  begin
-   // Application.ShowMainForm := False;
-   // ShowMessage('Ocorreu um erro! caminho do arquivo schemas não encontrdo.');
-  end;
-
-  nfe.Configuracoes.Arquivos.PathSchemas := schemas;
-
-  try
-    nfe.DistribuicaoDFePorUltNSU(InfoConfig().codigoEstado, InfoConfig().Emitente.CNPJ, ultimoNSU);
-
-    NSU := nfe.WebServices.DistribuicaoDFe.retDistDFeInt.ultNSU;
-    n   := nfe.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Count -1;
-    for i:= 0 to n do
-    begin
-      chaveBaixada := nfe.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Items[i].resDFe.chDFe;
-      data         := nfe.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Items[i].resDFe.dhEmi;
-      NSU          := nfe.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Items[i].NSU;
-
-      if nfe.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Items[i].resDFe.xNome > '' then
-      begin
-
-        var achouchave := false;
-        achouchave := ExisteChaveNoArquivo(arquivochave, chaveBaixada);
-        if not achouchave then
-        begin
-          GravaManifestoFiscal(i);
-        end;
-
-        AdicionarItemJSON(arquivochave, chaveBaixada, NSU );
-
-      end;
-    end;
-    Timer1.Interval := tempoConsulta * 65 * 65 * 1000;
-  except
-    on E: Exception do
-    begin
-      Application.ShowMainForm := False;
-      GravarLog(E.Message);
-      ShowAutoCloseMessage('VERIFIQUE SE TEM UM OUTRO SERVIÇO SENDO USADO!!  ' + E.Message, 6000); // Fecha após 1 minuto
-    end;
-  end;
-
-  Timer1.Interval := tempoConsulta * 65 * 65 * 1000;
+//
+//  var schemas := InfoConfig().nfe.Arquivos.PathSchemas;
+//  if schemas = '' then
+//  begin
+//   // Application.ShowMainForm := False;
+//   // ShowMessage('Ocorreu um erro! caminho do arquivo schemas não encontrdo.');
+//  end;
+//
+//  nfe.Configuracoes.Arquivos.PathSchemas := schemas;
+//
+//  try
+//    nfe.DistribuicaoDFePorUltNSU(InfoConfig().codigoEstado, InfoConfig().Emitente.CNPJ, ultimoNSU);
+//
+//    NSU := nfe.WebServices.DistribuicaoDFe.retDistDFeInt.ultNSU;
+//    n   := nfe.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Count -1;
+//    for i:= 0 to n do
+//    begin
+//      chaveBaixada := nfe.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Items[i].resDFe.chDFe;
+//      data         := nfe.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Items[i].resDFe.dhEmi;
+//      NSU          := nfe.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Items[i].NSU;
+//
+//      if nfe.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Items[i].resDFe.xNome > '' then
+//      begin
+//
+//        var achouchave := false;
+//        achouchave := ExisteChaveNoArquivo(arquivochave, chaveBaixada);
+//        if not achouchave then
+//        begin
+//          GravaManifestoFiscal(i);
+//        end;
+//
+//        AdicionarItemJSON(arquivochave, chaveBaixada, NSU );
+//
+//      end;
+//    end;
+//    Timer1.Interval := tempoConsulta * 65 * 65 * 1000;
+//  except
+//    on E: Exception do
+//    begin
+//      Application.ShowMainForm := False;
+//      GravarLog(E.Message);
+//      ShowAutoCloseMessage('VERIFIQUE SE TEM UM OUTRO SERVIÇO SENDO USADO!!  ' + E.Message, 6000); // Fecha após 1 minuto
+//    end;
+//  end;
+//
+//  Timer1.Interval := tempoConsulta * 65 * 65 * 1000;
 end;
 
 function TComponentes.ImprimirDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String; preDANFe: Boolean): TDocumentoFiscal;
@@ -2412,7 +2412,17 @@ end;
 function TComponentes.ManifestoFiscal(Req: THorseRequest; var Error,
   Msg: string): TStringStream;
 begin
-   ////
+    var Estabelecimentos := InfoAPI().GetPagedArray<TEstabelecimentoC>(
+      'agente/estabelecimento/sped?estabelecimentoid=' +
+      Req.Query.Field('estabelecimentoid').AsString);
+
+    for var Estabelecimento in Estabelecimentos do
+    begin
+
+
+
+    end;
+
 end;
 
 function TComponentes.gerarSPED(Req: THorseRequest; var Error: string; var Msg: string): TStringStream;
