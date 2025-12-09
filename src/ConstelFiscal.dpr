@@ -96,7 +96,8 @@ uses
   Model.Forma in 'models\Model.Forma.pas',
   Model.DocumentoFiscalManifesto in 'models\Model.DocumentoFiscalManifesto.pas',
   Model.DocumentoFiscalCartaCorrecao in 'models\Model.DocumentoFiscalCartaCorrecao.pas',
-  Model.Empresa in 'models\Model.Empresa.pas';
+  Model.Empresa in 'models\Model.Empresa.pas',
+  Model.ManifestoFiscal in 'models\Model.ManifestoFiscal.pas';
 
 function startApi: boolean;
 begin

@@ -10,7 +10,8 @@ uses
   Model.Config, Soap.EncdDecd, System.Generics.Collections, Lib.Funcoes, Web.HTTPApp, Model.Inutilizacao,
   ACBrSATExtratoFPDF, Horse, Model.Sped, APIService, Fortes.IRegistro, ACBr_fpdf_report, Xml.XMLDoc,
   Xml.XMLIntf, Xml.XMLDom, Model.DocumentoFiscalManifesto, Model.DocumentoFiscalCartaCorrecao, WinApi.ActiveX,
-  ACBrSATExtratoESCPOS, ACBrPosPrinter, ACBrSATExtratoFortesFr, Lib.Sistema.DAO;
+  ACBrSATExtratoESCPOS, ACBrPosPrinter, ACBrSATExtratoFortesFr, Lib.Sistema.DAO, Vcl.ExtCtrls, Model.ManifestoFiscal,
+  System.DateUtils;
 
 const
   modelos: TArray<String> = ['55', '56', '57', '58', '59', '65'];
@@ -55,6 +56,7 @@ type
 
     function CancelarDoc(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
     function CancelarCFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
+    procedure DownloadDFe;
   public
     function EmiteDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
     function CancelarDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String): TDocumentoFiscal;
@@ -70,10 +72,15 @@ type
     function CartaDeCorrecao(DocumentoFiscalCartaCorrecao: TDocumentoFiscalCartaCorrecao; var Error, Msg: String): TDocumentoFiscalCartaCorrecao;
     function RecebeArquivo(Caminho: String; var FileName: string; var erros: string; var msg: string): TArquivo;
     function ManifestarDocumento(DocumentoFiscalManifesto: TDocumentoFiscalManifesto; var Error, Msg: String): TDocumentoFiscalManifesto;
+    function ManifestoFiscal(Req: THorseRequest; var Error: string; var Msg: string): TStringStream;
+    procedure GeraTimer;
+
   end;
 
 var
-  Componentes: TComponentes;
+  Componentes: TComponentes; timer: TTimer; credencial: TCredencial; nsu: string;
+  ambiente: string; caminhoExe: string;
+
 
 implementation
 
@@ -201,6 +208,126 @@ procedure TComponentes.DataModuleCreate(Sender: TObject);
 begin
   RemoveDataModule(self);
   ChecarPastas;
+end;
+
+procedure TComponentes.DownloadDFe;
+var
+  i, n        : Integer;
+  chaveBaixada, chaveCaminhoGravacao : String;
+  data        : TDateTime;
+  token       : String;
+  json        : TStringList;
+  Notificacao : TnotificacaoUsuario;
+  ultimoNSU: String;
+begin
+  var Login := TLogin.Create();
+  try
+    Login.username := '';//usuario;
+    Login.password := '';//senha;
+    Login.timezone := TTimeZone.Local.Abbreviation;
+    credencial := InfoAPI().Post<TCredencial>('auth/login', Login);
+    try
+      if not Assigned(credencial) then
+      begin
+       // Application.ShowMainForm := False;
+       // ShowMessage('Arquivo Config.json não existe.');
+       // Application.Terminate;
+     end;
+    except
+    On E:Exception do
+     // ShowMessage(E.Message);
+    end;
+  finally
+    Login.Free();
+  end;
+
+  if NSU = '' then
+  begin
+    ultimoNSU := PegarUltimoItemDoArquivo(arquivochave); // mandar '0' para recuperar o ultimo nsu
+    if ultimoNSU = '' then
+      ultimoNSU := '0';
+  end
+  else
+    ultimoNSU := NSU;
+
+  if ambiente = '1' then
+    nfe.Configuracoes.WebServices.Ambiente := taProducao
+  else if ambiente = '2' then
+    nfe.Configuracoes.WebServices.Ambiente := taHomologacao
+  else
+  begin
+   // ShowMessage('Informe no config.ini a propriedade manifesto/ambiente');
+  end;
+
+  nfe.Configuracoes.Arquivos.Salvar := True;
+  nfe.Configuracoes.WebServices.TimeOut := 120000;
+
+  nfe.Configuracoes.Arquivos.PathSalvar := caminhoExe + 'arquivos\documentos\manifesto';
+
+  try
+    nfe.Configuracoes.Certificados.ArquivoPFX := InfoConfig().emitente.certificado.caminhopfx;
+  except
+    on E: Exception do
+    begin
+      //  Application.ShowMainForm := False;
+      //  ShowMessage('Arquivo pfx não encontrado!');
+    end;
+  end;
+
+  try
+    nfe.Configuracoes.Certificados.Senha := InfoConfig().emitente.certificado.senhadocertificado;
+  except on E: Exception do
+     begin
+       // Application.ShowMainForm := False;
+       // ShowMessage('Ocorreu um erro! senha não encontrada.');
+      end;
+  end;
+
+  var schemas := InfoConfig().nfe.Arquivos.PathSchemas;
+  if schemas = '' then
+  begin
+   // Application.ShowMainForm := False;
+   // ShowMessage('Ocorreu um erro! caminho do arquivo schemas não encontrdo.');
+  end;
+
+  nfe.Configuracoes.Arquivos.PathSchemas := schemas;
+
+  try
+    nfe.DistribuicaoDFePorUltNSU(InfoConfig().codigoEstado, InfoConfig().Emitente.CNPJ, ultimoNSU);
+
+    NSU := nfe.WebServices.DistribuicaoDFe.retDistDFeInt.ultNSU;
+    n   := nfe.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Count -1;
+    for i:= 0 to n do
+    begin
+      chaveBaixada := nfe.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Items[i].resDFe.chDFe;
+      data         := nfe.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Items[i].resDFe.dhEmi;
+      NSU          := nfe.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Items[i].NSU;
+
+      if nfe.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Items[i].resDFe.xNome > '' then
+      begin
+
+        var achouchave := false;
+        achouchave := ExisteChaveNoArquivo(arquivochave, chaveBaixada);
+        if not achouchave then
+        begin
+          GravaManifestoFiscal(i);
+        end;
+
+        AdicionarItemJSON(arquivochave, chaveBaixada, NSU );
+
+      end;
+    end;
+    Timer1.Interval := tempoConsulta * 65 * 65 * 1000;
+  except
+    on E: Exception do
+    begin
+      Application.ShowMainForm := False;
+      GravarLog(E.Message);
+      ShowAutoCloseMessage('VERIFIQUE SE TEM UM OUTRO SERVIÇO SENDO USADO!!  ' + E.Message, 6000); // Fecha após 1 minuto
+    end;
+  end;
+
+  Timer1.Interval := tempoConsulta * 65 * 65 * 1000;
 end;
 
 function TComponentes.ImprimirDFe(DocumentoFiscal: TDocumentoFiscal; var Error, Msg: String; preDANFe: Boolean): TDocumentoFiscal;
@@ -2282,6 +2409,12 @@ begin
   Result := DocumentoFiscalManifestado;
 end;
 
+function TComponentes.ManifestoFiscal(Req: THorseRequest; var Error,
+  Msg: string): TStringStream;
+begin
+   ////
+end;
+
 function TComponentes.gerarSPED(Req: THorseRequest; var Error: string; var Msg: string): TStringStream;
 var
   fileStream: TFileStream;
@@ -2325,6 +2458,14 @@ begin
     if Assigned(sped) then FreeAndNil(sped);
   end;
 
+end;
+
+procedure TComponentes.GeraTimer;
+begin
+  Timer := TTimer.Create(nil);
+  Timer.Interval := 1000;
+  // Timer.OnTimer := ;
+  Timer.Enabled := True;
 end;
 
 end.

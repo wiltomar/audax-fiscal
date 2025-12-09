@@ -95,6 +95,53 @@ begin
     .Status(THTTPStatus.OK);
 end;
 
+procedure geraManifesto(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
+var
+  stringStream: TStringStream;
+begin
+  InfoAPI().Autentica(Req.Headers.Field('Authorization').AsString);
+  LimpaVariaveis;
+  try
+    stringStream := Componentes.ManifestoFiscal(Req, cErrors, cMsg);
+    stringStream.Encoding.UTF8;
+
+    try
+      if Length(cErrors) = 0 then
+      begin
+        Res
+          .Send(stringStream.DataString)
+          .ContentType('text/plain;charset=utf8')
+          .Status(THTTPStatus.Created);
+
+        Log('Requisição realizada com sucesso.');
+      end
+      else
+      begin
+        Res
+          .Send(Format('A solicitação não foi bem sucedida, o erro %s, foi retornado.',
+            [cErrors]))
+          .ContentType('text/plain')
+          .Status(THTTPStatus.BadRequest);
+
+        Log(Format('Ocorreu o seguinte erro na solicitação: %s', [cErrors]));
+      end;
+    finally
+      stringStream.Free;
+    end;
+
+  except
+    on E:Exception do
+    begin
+      Res
+        .Send(Format('Não foi possível gerar o arquivo, com o erro %s.',  [E.Message]))
+        .Status(THTTPStatus.InternalServerError);
+
+      Log(Format('Houve um erro no processamento da requisição. Mensagem: %s', [E.Message]));
+    end;
+  end;
+end;
+
+
 procedure geraSPED(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
 var
   stringStream: TStringStream;
@@ -350,7 +397,8 @@ begin
     .Post(apiVersion  + 'fiscal/arquivo/cartacorrecao', cartaDeCorrecao)
     .Post(apiVersion  + 'fiscal/documento/imprime', imrimeDFe)
     .Post(apiVersion + 'fiscal/documento/estorna', estornaDFe)
-    .Post(apiVersion + 'fiscal/arquivo/envia', enviaArquivo);
+    .Post(apiVersion + 'fiscal/arquivo/envia', enviaArquivo)
+    .Post(apiVersion + 'fiscal/arquivo/manifestofiscal', geraManifesto);
 end;
 
 end.

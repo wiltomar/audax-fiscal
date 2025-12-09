@@ -23,8 +23,8 @@ object Componentes: TComponentes
     Rede.proxy_porta = 0
     OnGetcodigoDeAtivacao = satGetcodigoDeAtivacao
     OnGetsignAC = satGetsignAC
-    Left = 10
-    Top = 90
+    Left = 18
+    Top = 98
   end
   object nfe: TACBrNFe
     MAIL = mail
@@ -38,7 +38,7 @@ object Componentes: TComponentes
     Configuracoes.WebServices.AguardarConsultaRet = 0
     Configuracoes.WebServices.QuebradeLinha = '|'
     Configuracoes.RespTec.IdCSRT = 0
-    Left = 10
+    Left = 18
     Top = 10
   end
   object mail: TACBrMail
@@ -50,7 +50,7 @@ object Componentes: TComponentes
     Attempts = 3
     DefaultCharset = UTF_8
     IDECharset = CP1252
-    Left = 70
-    Top = 10
+    Left = 86
+    Top = 18
   end
 end
