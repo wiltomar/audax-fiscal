@@ -6,7 +6,8 @@ uses Model.Base, Model.Estabelecimento, Model.Parceiro, Model.Historico,
   Model.Operacao, Model.Item, Model.Unidade, Model.Municipio, Model.Conta,
   Model.OrigemDaMercadoria, Model.NCM, Model.CEST, Model.CFOP, Model.CSTICMS,
   Model.CSTIPI, Model.CSTPISCOFINS, Model.Moeda, Lib.Sistema.Tipos, Lib.Funcoes,
-  Model.Forma, Model.Empresa;
+  Model.Forma, Model.Empresa, Model.CSTISEL, Model.CSTIBSCBS, Model.ClassificacaoFiscalIBSCBS,
+  Model.ClassificacaoFiscalISel;
 
 const
   DOCUMENTOFISCAL_MODELO_NFe = '55';
@@ -226,6 +227,24 @@ type
     ffcpValorICMSUFDestinatario: Currency;
     ffcpValorICMSUFRemetente: Currency;
     ffcpValorICMSRelativoFCPUDDestino: Currency;
+    fcstISel: TCSTISEL;
+    fclassificacaoFiscalISel: TClassificacaoFiscalISel;
+    fiselaliquota: Currency;
+    fiselaliquotaespecifica: Currency;
+    fcstIBSCBS: TCSTIBSCBS;
+    fclassificacaoFiscalIBSCBS: TClassificacaoFiscalIBSCBS;
+    fibsaliquotaestadual: Currency;
+    fibsaliquotaestadualdiferimento: Currency;
+    fibsaliquotaestadualreducao: Currency;
+    fibsaliquotaestadualefetiva: Currency;
+    fibsaliquotamunicipal: Currency;
+    fibsaliquotamunicipaldiferimento: Currency;
+    fibsaliquotamunicipalreducao: Currency;
+    fibsaliquotamunicipalefetiva: Currency;
+    fcbsaliquota: Currency;
+    fcbsaliquotadiferimento: Currency;
+    fcbsaliquotareducao: Currency;
+    fcbsaliquotaefetiva: Currency;
     fpedidoNumero: Integer;
     fpedidoItem: Integer;
     finformacoesAdicionais: string;
@@ -308,6 +327,24 @@ type
     property fcpValorICMSUFDestinatario: Currency read ffcpValorICMSUFDestinatario write ffcpValorICMSUFDestinatario;
     property fcpValorICMSUFRemetente: Currency read ffcpValorICMSUFRemetente write ffcpValorICMSUFRemetente;
     property fcpValorICMSRelativoFCPUDDestino: Currency read ffcpValorICMSRelativoFCPUDDestino write ffcpValorICMSRelativoFCPUDDestino;
+    property cstISel: TCSTISEL read fcstISel write fcstISel;
+    property classificacaoFiscalISel: TClassificacaoFiscalISel read fclassificacaoFiscalISel write fclassificacaoFiscalISel;
+    property iselaliquota: Currency read fiselaliquota write fiselaliquota;
+    property iselaliquotaespecifica: Currency read fiselaliquotaespecifica write fiselaliquotaespecifica;
+    property cstIBSCBS: TCSTIBSCBS read fcstIBSCBS write fcstIBSCBS;
+    property classificacaoFiscalIBSCBS: TClassificacaoFiscalIBSCBS read fclassificacaoFiscalIBSCBS write fclassificacaoFiscalIBSCBS;
+    property ibsaliquotaestadual: Currency read fibsaliquotaestadual write fibsaliquotaestadual;
+    property ibsaliquotaestadualdiferimento: Currency read fibsaliquotaestadualdiferimento write fibsaliquotaestadualdiferimento;
+    property ibsaliquotaestadualreducao: Currency read fibsaliquotaestadualreducao write fibsaliquotaestadualreducao;
+    property ibsaliquotaestadualefetiva: Currency read fibsaliquotaestadualefetiva write fibsaliquotaestadualefetiva;
+    property ibsaliquotamunicipal: Currency read fibsaliquotamunicipal write fibsaliquotamunicipal;
+    property ibsaliquotamunicipaldiferimento: Currency read fibsaliquotamunicipaldiferimento write fibsaliquotamunicipaldiferimento;
+    property ibsaliquotamunicipalreducao: Currency read fibsaliquotamunicipalreducao write fibsaliquotamunicipalreducao;
+    property ibsaliquotamunicipalefetiva: Currency read fibsaliquotamunicipalefetiva write fibsaliquotamunicipalefetiva;
+    property cbsaliquota: Currency read fcbsaliquota write fcbsaliquota;
+    property cbsaliquotadiferimento: Currency read fcbsaliquotadiferimento write fcbsaliquotadiferimento;
+    property cbsaliquotareducao: Currency read fcbsaliquotareducao write fcbsaliquotareducao;
+    property cbsaliquotaefetiva: Currency read fcbsaliquotaefetiva write fcbsaliquotaefetiva;
     property pedidoNumero: Integer read fpedidoNumero write fpedidoNumero;
     property pedidoItem: Integer read fpedidoItem write fpedidoItem;
     property informacoesAdicionais: string read finformacoesAdicionais write finformacoesAdicionais;

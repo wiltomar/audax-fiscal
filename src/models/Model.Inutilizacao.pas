@@ -8,8 +8,6 @@ type
   TInutilizacao = class(TBase)
   private
     fambiente: String;
-    fstatus: smallint;
-    fmotivo: string;
     fuf: Smallint;
     fano: smallint;
     fcnpj: string;
@@ -19,11 +17,15 @@ type
     fnumerofinal: smallint;
     frecebimento: TDateTime;
     fprotocolo: string;
+    fstatus: smallint;
+    fmotivo: string;
+    fmensagem: string;
     fxml: string;
   public
     property ambiente: String read fambiente write fambiente;
     property status: smallint read fstatus write fstatus;
     property motivo: string read fmotivo write fmotivo;
+    property mensagem: string read fmensagem write fmensagem;
     property uf: Smallint read fuf write fuf;
     property ano: smallint read fano write fano;
     property cnpj: string read fcnpj write fcnpj;

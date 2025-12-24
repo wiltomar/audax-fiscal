@@ -164,7 +164,6 @@
         <DCC_Define>NOGUI;$(DCC_Define)</DCC_Define>
         <DCC_Namespace>Imaging;$(DCC_Namespace)</DCC_Namespace>
         <Debugger_RunParams>start</Debugger_RunParams>
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_MajorVer>2025</VerInfo_MajorVer>
         <VerInfo_MinorVer>10</VerInfo_MinorVer>
         <VerInfo_Release>10</VerInfo_Release>
@@ -274,6 +273,10 @@
         <DCCReference Include="models\Model.DocumentoFiscalManifesto.pas"/>
         <DCCReference Include="models\Model.DocumentoFiscalCartaCorrecao.pas"/>
         <DCCReference Include="models\Model.Empresa.pas"/>
+        <DCCReference Include="models\Model.CSTIBSCBS.pas"/>
+        <DCCReference Include="models\Model.CSTISEL.pas"/>
+        <DCCReference Include="models\Model.ClassificacaoFiscalIBSCBS.pas"/>
+        <DCCReference Include="models\Model.ClassificacaoFiscalISel.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -316,6 +319,12 @@
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="..\bin\Win32\Debug\ConstelFiscal.exe" Configuration="Debug" Class="ProjectOutput"/>
+                <DeployFile LocalName="C:\Constel\Constel Fiscal\ConstelFiscal.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>ConstelFiscal.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="W:\solucao\constelfiscal\ConstelFiscal" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="iOSSimulator">

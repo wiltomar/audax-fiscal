@@ -33,6 +33,7 @@ type
     findicadorDeRateioISSQN: SmallInt;
     fcnae: TCnae;
     fspedperfil: String;
+    fsimplesDestacaIVA: Boolean;
     fambienteEmissaoNFe: SmallInt;
     fambienteEmissaoNFCe: SmallInt;
     fambienteEmissaoCFe: SmallInt;
@@ -54,6 +55,7 @@ type
     property indicadorDeRateioISSQN: SmallInt read findicadorDeRateioISSQN write findicadorDeRateioISSQN;
     property cnae: TCnae read fcnae write fcnae;
     property spedperfil: String read fspedperfil write fspedperfil;
+    property simplesDestacaIVA: Boolean read fsimplesDestacaIVA write fsimplesDestacaIVA;
     property ambienteEmissaoNFe: SmallInt read fambienteEmissaoNFe write fambienteEmissaoNFe;
     property ambienteEmissaoNFCe: SmallInt read fambienteEmissaoNFCe write fambienteEmissaoNFCe;
     property ambienteEmissaoCFe: SmallInt read fambienteEmissaoCFe write fambienteEmissaoCFe;

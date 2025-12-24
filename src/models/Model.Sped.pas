@@ -98,7 +98,8 @@ begin
 end;
 
 function TSped.gerar(Estabelecimento: TEstabelecimentoC;
-  dataInicial, dataFinal: TDate; out nomeArquivo: String; out cErros: String; finalidade: SmallInt; indMovimento: SmallInt; inventario: string): boolean;
+  dataInicial, dataFinal: TDate; out nomeArquivo: String; out cErros: String;
+  finalidade: SmallInt; indMovimento: SmallInt; inventario: string): boolean;
 var
   I: Integer;
   dataTexto: String;
@@ -112,7 +113,7 @@ var
   valorTotDebitosBlocoE: Currency;
   valorOutrosCredICMSST: Currency;
 
-  DocumentosFiscaisC190Aux : TObjectList<TDocumentoFiscalItemAgrupado>;
+  DocumentosFiscaisC190List : TObjectList<TDocumentoFiscalItemAgrupado>;
 begin
   valorTtotalGeralIcms  := 0;
   valorOutrosCredICMSST := 0;
@@ -144,14 +145,13 @@ begin
       tbOperacao.Open;
 
       var
-      operacoes := InfoAPI().GetPagedArray<TVendaOperacao>
-        ('movimento/operacao/sped?estabelecimentoid=' + Estabelecimento.id);
+        operacoes := InfoAPI().GetPagedArray<TVendaOperacao>
+          ('movimento/operacao/sped?estabelecimentoid=' + Estabelecimento.id);
       for var Operacao in operacoes do
       begin
         tbOperacao.Append;
         tbOperacao.fieldByname('id').Asstring := Operacao.id;
-        tbOperacao.fieldByname('aliqicms').AsCurrency :=
-          Operacao.operacaoicms.icmsAliquota;
+        tbOperacao.fieldByname('aliqicms').AsCurrency := Operacao.operacaoicms.icmsAliquota;
         tbOperacao.Post;
       end;
       tbOperacao.First;
@@ -283,8 +283,7 @@ begin
                     NUM := IntToStr(Parceiro.parceiroenderecos[0].numero);
                     COMPL := Parceiro.parceiroenderecos[0].complemento;
                     BAIRRO := Parceiro.parceiroenderecos[0].BAIRRO;
-                    COD_MUN :=
-                      StrToInt(Parceiro.parceiroenderecos[0].municipio.codigo);
+                    COD_MUN := StrToInt(Parceiro.parceiroenderecos[0].municipio.codigo);
                   end;
                 end;
               end;
@@ -319,9 +318,9 @@ begin
               with Registro0200New do
               begin
                 COD_ITEM := produto.codigo;
-                DESCR_ITEM := produto.NOME;
+                DESCR_ITEM := produto.nome;
                 COD_BARRA := '';
-                UNID_INV := produto.Unidade.codigo;
+                UNID_INV := produto.unidade.codigo;
                 COD_NCM := SomenteDigitos(AnsiString(produto.ncm.codigo));
                 COD_GEN := '';
                 tbOperacao.First;
@@ -369,11 +368,11 @@ begin
               var itensDocumentoFiscal: String;
               var inicio: boolean := true;
               var qtdeIntens : Integer;
-              DocumentosFiscaisC190Aux := TObjectList<TDocumentoFiscalItemAgrupado>.Create(True);
+              DocumentosFiscaisC190List := TObjectList<TDocumentoFiscalItemAgrupado>.Create(True);
 
               for var documentoFiscal in DocumentosFiscais do
               begin
-                qtdeIntens := qtdeIntens+1;
+                qtdeIntens := qtdeIntens + 1;
 
                 if documentoFiscal.situacao = 90 then
                 begin
@@ -394,12 +393,12 @@ begin
                 begin
                   inicio := true;
                   qtdeIntens := 0;
-                  var DocumentosFiscaisC1902 := InfoAPI().GetArray<TDocumentoFiscalItemAgrupado>('fiscal/documentofiscal/sped?estabelecimentoid=' +
+                  var DocumentosFiscaisC190 := InfoAPI().GetArray<TDocumentoFiscalItemAgrupado>('fiscal/documentofiscal/sped?estabelecimentoid=' +
                       Estabelecimento.id + '&documentofiscalid in (' + itensDocumentoFiscal + ')'+ '&agrupado=1');
 
-                  for var itemAgrupado in DocumentosFiscaisC1902 do
+                  for var itemAgrupado in DocumentosFiscaisC190 do
                   begin
-                    DocumentosFiscaisC190Aux.Add(itemAgrupado);
+                    DocumentosFiscaisC190List.Add(itemAgrupado);
                   end;
                   itensDocumentoFiscal := '';
                 end;
@@ -407,12 +406,12 @@ begin
 
               if (qtdeIntens < 150) then
               begin
-                var DocumentosFiscaisC1902 := InfoAPI().GetArray<TDocumentoFiscalItemAgrupado>('fiscal/documentofiscal/sped?estabelecimentoid=' +
+                var DocumentosFiscaisC190 := InfoAPI().GetArray<TDocumentoFiscalItemAgrupado>('fiscal/documentofiscal/sped?estabelecimentoid=' +
                     Estabelecimento.id + '&documentofiscalid in (' + itensDocumentoFiscal + ')'+ '&agrupado=1');
 
-                for var itemAgrupado in DocumentosFiscaisC1902 do
+                for var itemAgrupado in DocumentosFiscaisC190 do
                 begin
-                  DocumentosFiscaisC190Aux.Add(itemAgrupado);
+                  DocumentosFiscaisC190List.Add(itemAgrupado);
                 end;
               end;
 
@@ -466,11 +465,13 @@ begin
                   DT_E_S := documentoFiscal.emissao;
 
                   if documentoFiscal.situacao <> 90 then
+                  begin
                     VL_DOC := documentoFiscal.total + documentoFiscal.ipiValor - documentoFiscal.desconto;
+                    VL_DESC := documentoFiscal.desconto;
+                    VL_ABAT_NT := documentoFiscal.desconto;
+                  end;
 
                   IND_PGTO := TACBrIndPgto(documentoFiscal.indicadorpagamento);
-                  VL_DESC := documentoFiscal.desconto;
-                  VL_ABAT_NT := documentoFiscal.desconto;
 
                   subtotalItem := 0.0;
                   var
@@ -482,31 +483,32 @@ begin
                   totalValorIcms := 0.0;
                   for var itemdoc in documentoFiscal.documentoFiscalItens do
                   begin
-                    subtotalItem := subtotalItem + itemdoc.subtotal;
-                    totalBCicms := totalBCicms + itemdoc.icmsBC;
-                    totalValorIcms := totalValorIcms + itemdoc.icmsValor;
-                    totalBCipi := totalBCipi + itemdoc.ipiBC;
-                    totalValorIpi := totalValorIpi + itemdoc.ipiValor;
-                    valorTtotalGeralIcms := valorTtotalGeralIcms + itemdoc.icmsValor;
-                    valorTotalICMS := valorTotalICMS + documentoFiscal.icmsValor;
+                    subtotalItem          := subtotalItem + itemdoc.subtotal;
+                    totalBCicms           := totalBCicms + itemdoc.icmsBC;
+                    totalValorIcms        := totalValorIcms + itemdoc.icmsValor;
+                    totalBCipi            := totalBCipi + itemdoc.ipiBC;
+                    totalValorIpi         := totalValorIpi + itemdoc.ipiValor;
+                    valorTtotalGeralIcms  := valorTtotalGeralIcms + itemdoc.icmsValor;
+                    valorTotalICMS        := valorTotalICMS + documentoFiscal.icmsValor;
                   end;
+                  IND_FRT       := TACBrIndFrt(documentoFiscal.indicadorfrete);
                   if documentoFiscal.situacao <> 90 then
-                   VL_MERC := subtotalItem;
+                  begin
+                    VL_MERC      := subtotalItem;
+                    VL_FRT        := documentoFiscal.frete;
+                    VL_SEG        := documentoFiscal.valorseguro;
+                    VL_OUT_DA     := documentoFiscal.outrasdespesas;
 
-                  IND_FRT := TACBrIndFrt(documentoFiscal.indicadorfrete);
-                  VL_FRT := documentoFiscal.frete;
-                  VL_SEG := documentoFiscal.valorseguro;
-                  VL_OUT_DA := documentoFiscal.outrasdespesas;
-
-                  VL_ICMS := totalValorIcms;
-                  VL_IPI := totalValorIpi;
-                  VL_PIS := documentoFiscal.valorpis;
-                  VL_COFINS := documentoFiscal.valorcofins;
-                  VL_PIS_ST := documentoFiscal.valorpisst;
-                  VL_COFINS_ST := documentoFiscal.valorcofinsst;
-                  VL_BC_ICMS_ST := documentoFiscal.icmsSTBC;
-                  VL_ICMS_ST := documentoFiscal.icmsSTValor;
-                  VL_BC_ICMS := totalBCicms;
+                    VL_ICMS       := totalValorIcms;
+                    VL_IPI        := totalValorIpi;
+                    VL_PIS        := documentoFiscal.valorpis;
+                    VL_COFINS     := documentoFiscal.valorcofins;
+                    VL_PIS_ST     := documentoFiscal.valorpisst;
+                    VL_COFINS_ST  := documentoFiscal.valorcofinsst;
+                    VL_BC_ICMS_ST := documentoFiscal.icmsSTBC;
+                    VL_ICMS_ST    := documentoFiscal.icmsSTValor;
+                    VL_BC_ICMS    := totalBCicms;
+                  end;
                 end;
 
                 if (Estabelecimento.estabelecimentoDocumentos[0].spedperfil <> 'C') and (documentoFiscal.natureza = 0) then
@@ -516,39 +518,39 @@ begin
                   begin
                     with RegistroC170New do
                     begin
-                      NUM_ITEM := FormatFloat('000', contadorLocal);
-                      COD_ITEM := itemdoc.Item.codigo;
-                      DESCR_COMPL := itemdoc.Item.NOME;
-                      QTD := itemdoc.quantidade;
-                      UNID := itemdoc.Item.Unidade.codigo;
-                      VL_ITEM := itemdoc.total;
-                      VL_DESC := itemdoc.desconto;
-                      CST_ICMS := itemdoc.csticms.codigo;
-                      CFOP := itemdoc.CFOP.codigo;
-                      COD_NAT := '';
-                      VL_BC_ICMS := itemdoc.icmsBC;
-                      ALIQ_ICMS := itemdoc.icmsAliquota;
-                      VL_ICMS := itemdoc.icmsValor;
+                      NUM_ITEM      := FormatFloat('000', contadorLocal);
+                      COD_ITEM      := itemdoc.Item.codigo;
+                      DESCR_COMPL   := itemdoc.Item.NOME;
+                      QTD           := itemdoc.quantidade;
+                      UNID          := itemdoc.Item.Unidade.codigo;
+                      VL_ITEM       := itemdoc.total;
+                      VL_DESC       := itemdoc.desconto;
+                      CST_ICMS      := itemdoc.csticms.codigo;
+                      CFOP          := itemdoc.CFOP.codigo;
+                      COD_NAT       := '';
+                      VL_BC_ICMS    := itemdoc.icmsBC;
+                      ALIQ_ICMS     := itemdoc.icmsAliquota;
+                      VL_ICMS       := itemdoc.icmsValor;
 
                       VL_BC_ICMS_ST := 0;
-                      ALIQ_ST := 0;
-                      VL_ICMS_ST := 0;
+                      ALIQ_ST       := 0;
+                      VL_ICMS_ST    := 0;
 
                       if itemdoc.icmsSTBC > 0 then
                       begin
                         //VL_ITEM := VL_ITEM + itemdoc.icmsSTValor;
                         VL_BC_ICMS_ST := itemdoc.icmsSTBC;
-                        ALIQ_ST := itemdoc.icmsSTAliquota;
-                        VL_ICMS_ST := itemdoc.icmsSTValor;
+                        ALIQ_ST       := itemdoc.icmsSTAliquota;
+                        VL_ICMS_ST    := itemdoc.icmsSTValor;
                       end;
 
-                      IND_APUR := iamensal;
-                      CST_IPI := itemdoc.cstipi.codigo;
-                      COD_ENQ := '';
+                      IND_APUR  := iamensal;
+                      CST_IPI   := itemdoc.cstipi.codigo;
+                      COD_ENQ   := '';
 
                       VL_BC_IPI := 0;
-                      ALIQ_IPI := 0;
-                      VL_IPI := 0;
+                      ALIQ_IPI  := 0;
+                      VL_IPI    := 0;
 
                       if (itemdoc.ipiValor > 0) then
                       begin
@@ -585,22 +587,8 @@ begin
                     end;
                   end;
                 end;
-
-//                var
-//                DocumentosFiscaisC190 := InfoAPI()
-//                  .GetArray<TDocumentoFiscalItemAgrupado>
-//                  ('fiscal/documentofiscal/sped?estabelecimentoid=' +
-//                  Estabelecimento.id + '&documentofiscalid=' + documentoFiscal.id +
-//                  '&agrupado=1');
-                //dá pr melhorar filtrando o objeto
-//                  Item := DocumentosFiscaisC190Aux.FirstOrDefault(
-//    function(const Obj: TDocumentoFiscalItemAgrupado): Boolean
-//    begin
-//      Result := Obj.Id = 123;
-//    end);
-//
                 valorTotDebitosBlocoE := 0.0;
-                for var documento190 in DocumentosFiscaisC190Aux do
+                for var documento190 in DocumentosFiscaisC190List do
                 begin
                   if documento190.documentofiscalid = documentoFiscal.id then
                   begin
@@ -643,7 +631,7 @@ begin
                 end;
               end;
 
-              DocumentosFiscaisC190Aux.Free;
+              DocumentosFiscaisC190List.Free;
 
               if (Estabelecimento.estabelecimentoDocumentos[0].spedperfil = 'A') then
               begin
